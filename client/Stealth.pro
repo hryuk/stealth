@@ -4,15 +4,35 @@
 #
 #-------------------------------------------------
 
-QT       += core gui
+QT       += core gui network
 
 TARGET = Stealth
 TEMPLATE = app
 
 
 SOURCES += main.cpp\
-        stealth.cpp
+        stealth.cpp \
+    connectionmanager.cpp \
+    connection.cpp \
+    server.cpp \
+    messagemanager.cpp
 
-HEADERS  += stealth.h
+HEADERS  += stealth.h \
+    connectionmanager.h \
+    connection.h \
+    server.h \
+    messagemanager.h
 
 FORMS    += stealth.ui
+
+
+
+
+
+
+
+
+
+
+
+

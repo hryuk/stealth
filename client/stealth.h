@@ -3,6 +3,10 @@
 
 #include <QMainWindow>
 
+#include "server.h"
+#include "connectionmanager.h"
+#include "messagemanager.h"
+
 namespace Ui {
     class Stealth;
 }
@@ -17,6 +21,9 @@ public:
 
 private:
     Ui::Stealth *ui;
+    Server* server;
+    ConnectionManager* mngConnection;
+    MessageManager* mngMessage;
 };
 
 #endif // STEALTH_H
