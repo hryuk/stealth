@@ -81,6 +81,8 @@
       <RandomizedBaseAddress>false</RandomizedBaseAddress>
       <FixedBaseAddress>true</FixedBaseAddress>
       <DataExecutionPrevention>true</DataExecutionPrevention>
+      <SetChecksum>true</SetChecksum>
+      <SectionAlignment>32</SectionAlignment>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
