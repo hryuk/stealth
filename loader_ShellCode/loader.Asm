@@ -12,7 +12,8 @@ extern LoadLibraryA
 %undef GetProcAddress
 extern GetProcAddress
 
-
+nop
+nop
 proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 		localdd kernel32
 		;localdd msvcrt
@@ -76,6 +77,12 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	mov ebx,ExitProcess
 	mov [ebx+esi+1],eax	
 	
+	push TlsAllocN
+	push dword %$kernel32
+	call GetProcAddress
+	
+	mov ebx,TlsAlloc
+	mov [ebx+esi+1],eax	
 	
 	push msvcrtN
 	call LoadLibraryA
@@ -200,13 +207,19 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	ecall2 malloc
 	add esp,4
 	mov %$ldr_module,eax
-	;Rellenamos los campos
+	
 	mov ecx,[ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfImage]
 	mov edx,[ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.AddressOfEntryPoint]
 	add edx,edi
+	;Rellenamos los campos
+	push eax
+	call TlsAlloc;Pido un index para el TLS
+	mov ebx,eax
+	pop eax
 	mov dword [eax+LDR_MODULE.BaseAddress],edi
 	mov dword [eax+LDR_MODULE.SizeOfImage],ecx
 	mov dword [eax+LDR_MODULE.EntryPoint],edx
+	mov word [eax+LDR_MODULE.TlsIndex],bx;
 	mov word [eax+LDR_MODULE.LoadCount],1
 	push eax
 
@@ -225,8 +238,11 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	push  dword %$ModName
 	push ebx
 	call AscToUni
-
+	
+	
 	pop eax
+	
+	
 	mov word [eax+LDR_MODULE.FullDllName+UNICODE_STRING.Length],cx
 	mov word [eax+LDR_MODULE.FullDllName+UNICODE_STRING.MaximumLength],cx
 	mov dword [eax+LDR_MODULE.FullDllName+UNICODE_STRING.Buffer],ebx
@@ -348,7 +364,8 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 
 
 	;ahora hay que llamar al dllmain si existe, sino se llama al punto de entrada
-
+	
+	push dword %$PE
 	push dword %$ldr_module
 	push dword %$NewBase
 	call PEEntry
@@ -407,7 +424,10 @@ proc PEGetDirectoryEntry,AddrBase,PE_base, Table
 	mov ebx,%$Table
 	shl ebx,3
 	mov eax,[eax+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.DataDirectory+IMAGE_DATA_DIRECTORY.VirtualAddress+ebx]
+	test eax,eax
+	jz .IsEmpy	
 	add eax,%$AddrBase
+	.IsEmpy:
 	pop ebx
 endp
 proc PEBaseReloc,AddrBase,PE_base
@@ -415,6 +435,70 @@ proc PEBaseReloc,AddrBase,PE_base
 	push dword %$PE_base
 	push dword %$AddrBase
 	call PEGetDirectoryEntry
+	test eax,eax
+	jz .NotFound
+	
+	.NotFound:
+endp
+proc PELoadTls,AddrBase,PE_base
+	localdd TlsDataPlantillaAddr
+	localdd TlsDataPlantillaAddrSize
+	
+	localdd Index
+	endl
+	push IMAGE_DIRECTORY_ENTRY_TLS
+	push dword %$PE_base
+	push dword %$AddrBase
+	call PEGetDirectoryEntry
+	test eax,eax
+	jz .NotFound
+	
+	mov ebx,eax
+	
+	;//Index para el tls
+	ecall2 TlsAlloc
+	mov %$Index, eax
+	mov edx,[ebx+TLS_DIRECTORY.AddressOfIndex];//Cojo la direccion de la variable que contendra el index
+	mov [edx],eax;//Le asigno un index
+	
+	mov edx,[ebx+TLS_DIRECTORY.RawDataStartVA]
+	mov %$TlsDataPlantillaAddr,edx
+	mov ecx,edx
+	sub ecx,[ebx+TLS_DIRECTORY.RawDataEndVA];//Calculo el tamaño de los datos
+	mov %$TlsDataPlantillaAddrSize,ecx
+	
+	push ecx
+	call malloc;//Pido memoria para guardarlo
+	mov esi,eax;//Buffer donde se copiara
+	
+	push ecx
+	push edx
+	push esi
+	call memcpy;//Copio la plantilla al buffert
+	
+	push esi
+	push dword %$Index
+	ecall2 TlsSetValue;//Guardo el buffert en el tls
+	
+	;//Llamo a los TlsCallback
+	
+	mov edx,[ebx+TLS_DIRECTORY.AddressOfCallbacks]
+	
+	.tlsNext:
+	cmp dword [edx],0;//Bucle que recorrera el array hasta encontrarse conque el puntero vale 0
+	je .tlsEnd
+	
+	push 0
+	push 1
+	push dword %$AddrBase
+	call [edx]
+	
+	add edx,4
+	jmp .tlsNext
+	.tlsEnd:
+	
+	.NotFound:
+	popad
 endp
 
 proc PELoadIAT,AddrBase,PE_base
@@ -434,7 +518,7 @@ proc PELoadIAT,AddrBase,PE_base
 	test eax,eax
 	jz .endLoad
 	add eax,dword %$AddrBase
-
+	;//Cargo el modulo que sale en la Import
 	push eax
 	ecall LoadLibraryA
 	mov edx,eax
@@ -449,6 +533,7 @@ proc PELoadIAT,AddrBase,PE_base
 	add eax,%$AddrBase
 	push eax
 	ecall2 VirtualProtect
+	;//Cambio la proteccion para poder escrivir en el FirstThunk las direcciones de las funcciones
 
 	xor ecx,ecx
 .nextImportFunc:
@@ -461,6 +546,7 @@ proc PELoadIAT,AddrBase,PE_base
 	push eax
 	push edx
 	ecall2 GetProcAddress
+	;//Busco la direccion de la funcion importada y la guardo en el THUNK_DATA
 	mov [esi+IMAGE_THUNK_DATA.AddressOfData+ecx],eax
 
 	add ecx,4
@@ -474,18 +560,25 @@ proc PELoadIAT,AddrBase,PE_base
 	add eax,%$AddrBase
 	push eax
 	ecall2 VirtualProtect
+	;//Restauro la proteccion
 	lea ebx,[ebx+IMAGE_IMPORT_DESCRIPTOR_size]
 	jmp .nextImportModule
 .endLoad:
 	popad
 endp
 
-proc PEEntry, base, LDR_Entry
+proc PEEntry, base, LDR_Entry,PE_base
 	endl;Macro para las var locales
 	pushad
+	
+	push dword %$PE_base
+	push dword %$base
+	call PELoadTls
+	
 	mov ebx,%$LDR_Entry
 	
 	PUSH_RELOC_1:
+	;//Busco el dll main para llamarlo
 	push dllmain@
 	push dword %$base
 	ecall2 GetProcAddress
@@ -540,6 +633,7 @@ proc AddLdrModules,module;PLDR_MODULE
 	lea esi,[esi+LDR_MODULE.InMemoryOrderModuleList]
 	lea edi,[eax+LDR_MODULE.InMemoryOrderModuleList]
 	mov ebx,[edi+LIST_ENTRY.Blink]
+	;//Aqui voy buscando el lugar apropiado en InMemoryOrderModuleList para insertar
 .SearchMemoryOrder:
 	cmp [ebx+LDR_MODULE.BaseAddress-LDR_MODULE.InMemoryOrderModuleList],ecx
 	ja .NoFind
@@ -559,6 +653,8 @@ proc AddLdrModules,module;PLDR_MODULE
 .end:
 
 PUSH_RELOC_0:
+	;Hacemos una llamada a GetProcAddress para que se haga a esa nueva lista de modulos
+	;Lo ago por haver visto que la primera llamada a GPA despues de añadir una entrada a veces falla
 	push nulo
 	push dword [esi+LDR_MODULE.BaseAddress-LDR_MODULE.InMemoryOrderModuleList]
 	ecall2 GetProcAddress
@@ -569,6 +665,14 @@ endp
 proc DelLdrModules,module_node
 endp
 ;//Tabla de salto a funciones externas
+TlsAlloc:
+	db 0x68;push 0xffffffff
+	dd -1
+	ret
+TlsSetValue:
+	db 0x68;push 0xffffffff
+	dd -1
+	ret
 ExitProcess:
 	db 0x68;push 0xffffffff
 	dd -1
@@ -600,6 +704,7 @@ kernel32N		db "kernel32",0
 VirtualAllocN	db "VirtualAlloc",0
 VirtualProtectN	db "VirtualProtect",0
 ExitProcessN	db "ExitProcess",0
+TlsAllocN		db "TlsAlloc",0
 
 msvcrtN			db "msvcrt",0
 mallocN			db "malloc",0

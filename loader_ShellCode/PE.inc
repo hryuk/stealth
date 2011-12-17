@@ -44,6 +44,20 @@ IMAGE_SCN_MEM_READ               EQU  40000000h ; Section is readable.
 IMAGE_SCN_MEM_WRITE              EQU  80000000h ; Section is writeable.
 IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE EQU 0x0040;//Indica si puede ser cambiada de base
 
+IMAGE_DIRECTORY_ENTRY_EXPORT		equ 0
+IMAGE_DIRECTORY_ENTRY_IMPORT		equ 1
+IMAGE_DIRECTORY_ENTRY_RESOURCE		equ 2
+IMAGE_DIRECTORY_ENTRY_EXCEPTION		equ 3
+IMAGE_DIRECTORY_ENTRY_SECURITY		equ 4
+IMAGE_DIRECTORY_ENTRY_BASERELOC		equ 5
+IMAGE_DIRECTORY_ENTRY_DEBUG			equ 6
+IMAGE_DIRECTORY_ENTRY_COPYRIGHT		equ 7
+IMAGE_DIRECTORY_ENTRY_GLOBALPTR		equ 8
+IMAGE_DIRECTORY_ENTRY_TLS			equ 9
+IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG	equ 10
+IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT	equ 11
+IMAGE_DIRECTORY_ENTRY_IAT			equ 12
+IMAGE_NUMBEROF_DIRECTORY_ENTRIES	equ 16
 
 STRUC IMAGE_DATA_DIRECTORY
 	.VirtualAddress	RESD 1
@@ -190,4 +204,15 @@ struc IMAGE_BASE_RELOCATION
 ;   BR_TypeOffset       IMAGE_RELOCATION_DATA 1 DUP (?)   ; Array of zero or more relocations (type + RVAs)
 ends
 
-IMAGE_SIZEOF_BASE_RELOCATION  EQU   sizeof(IMAGE_BASE_RELOCATION)   ; 8
+IMAGE_SIZEOF_BASE_RELOCATION  EQU   sizeof(IMAGE_BASE_RELOCATION)   
+
+struc TLS_DIRECTORY
+	.RawDataStartVA		resd 1
+	.RawDataEndVA		resd 1
+	.AddressOfIndex		resd 1
+	.AddressOfCallbacks	resd 1;Array de punteros a las funciones Callback terminado en nulo
+	.SizeOfZeroFill		resd 1
+	.Characteristics	resd 1
+ends
+;//Proto de TLS_Callback
+;//void NTAPI tls_callback(PVOID hinstance, DWORD dwReason, PVOID reservado)

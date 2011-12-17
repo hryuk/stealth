@@ -45,15 +45,17 @@ Group=Added files,Assembly,Resources,Misc,Modules
 1=2
 2=2
 3=2
-4=1
+4=2
 [Collapse]
 3=
-1=,,
+1=
 2=
+4=
 [Size]
-3=0,0,0,0,5684
-1=0,0,0,0,2104
-2=0,0,0,0,294
+3=0,0,0,0,6836
+1=0,0,0,0,10150
+2=0,0,0,0,70
+4=0,0,0,0,391
 [VersionControl]
 Settings=1246
 Milestones=129
@@ -64,7 +66,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=12
+MilestoneOnDateDate=17
 MilestoneOnDateTimeYear=2011
 MilestoneOnDateTimeMonth=12
 MilestoneOnDateTimeDate=10
@@ -110,13 +112,13 @@ ProductVer4Range=0
 [BreakPoint]
 0=
 [Find]
-1="dllmain@"
-2="dllmain"
-3="nulo"
-4="	endp"
-5="	proc"
-6="ret"
-7="retur"
-8="AscToUni"
-9="ecall"
-10="IMAGE_NT"
+1="PEEntry"
+2="PEGetDirectoryEntry"
+3="IMAGE_DIRECTORY_ENTRY_BASERELOC"
+4="tls"
+5="section"
+6="LoadCount"
+7="index"
+8="TLS_DIRECTORY"
+9="dllmain@"
+10="dllmain"
