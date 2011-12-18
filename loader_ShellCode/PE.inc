@@ -61,7 +61,7 @@ IMAGE_NUMBEROF_DIRECTORY_ENTRIES	equ 16
 
 STRUC IMAGE_DATA_DIRECTORY
 	.VirtualAddress	RESD 1
-	.isize 			RESD 1
+	.size 			RESD 1
 ends
 
 STRUC IMAGE_OPTIONAL_HEADER
@@ -190,13 +190,15 @@ IMAGE_REL_BASED_ABSOLUTE      EQU   0
 IMAGE_REL_BASED_HIGH          EQU   1
 IMAGE_REL_BASED_LOW           EQU   2
 IMAGE_REL_BASED_HIGHLOW       EQU   3
+
 IMAGE_REL_BASED_HIGHADJ       EQU   4
 IMAGE_REL_BASED_MIPS_JMPADDR  EQU   5
 
-;IMAGE_RELOCATION_DATA   RECORD      {
-;    RD_RelocType        :4
-;    RD_RelocOffset      :12
-;}
+;typedef struct
+;{
+;  WORD RelocOfs : 12;
+;  WORD RelocType:  4;
+;} IMAGE_RELOCATION_DATA;
 
 struc IMAGE_BASE_RELOCATION
 	.BR_VirtualAddress	resd 1

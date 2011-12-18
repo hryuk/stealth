@@ -418,26 +418,97 @@ proc PEGetSectionHeader,AddrBase,PE_base
 	add eax,%$PE_base
 	add eax,IMAGE_FILE_HEADER_size+IMAGE_NT_HEADERS.FileHeader
 endp
-proc PEGetDirectoryEntry,AddrBase,PE_base, Table
+proc PEGetDirectoryEntry,AddrBase,PE_base, Table,SizeTable_out
 	push ebx
 	mov eax,%$PE_base
 	mov ebx,%$Table
 	shl ebx,3
+	
 	mov eax,[eax+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.DataDirectory+IMAGE_DATA_DIRECTORY.VirtualAddress+ebx]
 	test eax,eax
 	jz .IsEmpy	
-	add eax,%$AddrBase
+		add eax,%$AddrBase
+		mov esi,%$SizeTable_out
+		test esi,esi
+		jz .NotSizeOut
+			mov edx,[eax+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.DataDirectory+IMAGE_DATA_DIRECTORY.size+ebx]
+			mov dword [esi],edx
+		.NotSizeOut:
 	.IsEmpy:
 	pop ebx
 endp
 proc PEBaseReloc,AddrBase,PE_base
+	localdd TableSize
+	localdd Delta
+	endl
+	lea eax,%$TableSize
+	push eax
 	push IMAGE_DIRECTORY_ENTRY_BASERELOC
 	push dword %$PE_base
 	push dword %$AddrBase
 	call PEGetDirectoryEntry
 	test eax,eax
 	jz .NotFound
-	
+		mov esi,%$AddrBase
+		mov eax,%$PE_base
+		;//Obtengo el delta del nuevo modulo
+		sub esi,[eax+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.ImageBase]
+		mov %$Delta,esi
+		;mov ecx,%$TableSize
+		.NextBR:
+			;//Cargo el bloke de reubicacion
+			mov edx,[eax+IMAGE_BASE_RELOCATION.BR_SizeOfBlock]
+			mov ecx,edx
+			mov ebx,[eax+IMAGE_BASE_RELOCATION.BR_VirtualAddress]
+			add ebx,%$AddrBase
+			;//Le añado el tamaño de IMAGE_BASE_RELOCATION para encontrar el array de 
+			add eax,sizeof(IMAGE_BASE_RELOCATION)
+			sub ecx,sizeof(IMAGE_BASE_RELOCATION)
+			.NextEntry:
+			sub ecx,2
+			
+			mov di,[eax+ecx];//IMAGE_RELOCATION_DATA
+			shr di,12;//IMAGE_RELOCATION_DATA.RelocType
+			test di,di;//type == IMAGE_REL_BASED_ABSOLUTE
+			jnz .NotAbsolute
+				jmp .Contibue
+			.NotAbsolute:
+			cmp di,IMAGE_REL_BASED_HIGH
+			jnz .NotHigh
+				movzx edi,word [eax+ecx]
+				and di,0x0fff
+				jmp .Contibue
+				;//Relocaliza solo la parte alta
+				shr esi,16
+				add [edi+ebx+2],si
+				mov esi,%$Delta
+			.NotHigh:
+			cmp di,IMAGE_REL_BASED_LOW
+			jnz .NotLow
+				movzx edi,word [eax+ecx]
+				and di,0x0fff
+				jmp .Contibue
+				;//Relocaliza solo la parte baja
+				add [edi+ebx],si
+			.NotLow:
+			cmp di,IMAGE_REL_BASED_HIGHLOW
+			jnz .NotHighLow
+				movzx edi,word [eax+ecx]
+				and di,0x0fff
+				jmp .Contibue
+				;//Relocalizacion de 32b
+				add [edi+ebx],esi
+			.NotHighLow:
+			.Contibue:
+			
+			;//add eax,2;//Añado el tamaño de IMAGE_RELOCATION_DATA que es de 2 bytes
+			test ecx,ecx
+			jnz .NextEntry
+			add eax,edx
+			sub eax,sizeof(IMAGE_BASE_RELOCATION)
+			
+		sub %$TableSize,edx
+		jnz .NextBR
 	.NotFound:
 endp
 proc PELoadTls,AddrBase,PE_base
@@ -446,6 +517,7 @@ proc PELoadTls,AddrBase,PE_base
 	
 	localdd Index
 	endl
+	push 0
 	push IMAGE_DIRECTORY_ENTRY_TLS
 	push dword %$PE_base
 	push dword %$AddrBase
@@ -453,49 +525,49 @@ proc PELoadTls,AddrBase,PE_base
 	test eax,eax
 	jz .NotFound
 	
-	mov ebx,eax
+		mov ebx,eax
 	
-	;//Index para el tls
-	ecall2 TlsAlloc
-	mov %$Index, eax
-	mov edx,[ebx+TLS_DIRECTORY.AddressOfIndex];//Cojo la direccion de la variable que contendra el index
-	mov [edx],eax;//Le asigno un index
+		;//Index para el tls
+		ecall2 TlsAlloc
+		mov %$Index, eax
+		mov edx,[ebx+TLS_DIRECTORY.AddressOfIndex];//Cojo la direccion de la variable que contendra el index
+		mov [edx],eax;//Le asigno un index
 	
-	mov edx,[ebx+TLS_DIRECTORY.RawDataStartVA]
-	mov %$TlsDataPlantillaAddr,edx
-	mov ecx,edx
-	sub ecx,[ebx+TLS_DIRECTORY.RawDataEndVA];//Calculo el tamaño de los datos
-	mov %$TlsDataPlantillaAddrSize,ecx
+		mov edx,[ebx+TLS_DIRECTORY.RawDataStartVA]
+		mov %$TlsDataPlantillaAddr,edx
+		mov ecx,edx
+		sub ecx,[ebx+TLS_DIRECTORY.RawDataEndVA];//Calculo el tamaño de los datos
+		mov %$TlsDataPlantillaAddrSize,ecx
 	
-	push ecx
-	call malloc;//Pido memoria para guardarlo
-	mov esi,eax;//Buffer donde se copiara
+		push ecx
+		call malloc;//Pido memoria para guardarlo
+		mov esi,eax;//Buffer donde se copiara
 	
-	push ecx
-	push edx
-	push esi
-	call memcpy;//Copio la plantilla al buffert
+		push ecx
+		push edx
+		push esi
+		call memcpy;//Copio la plantilla al buffert
 	
-	push esi
-	push dword %$Index
-	ecall2 TlsSetValue;//Guardo el buffert en el tls
+		push esi
+		push dword %$Index
+		ecall2 TlsSetValue;//Guardo el buffert en el tls
 	
-	;//Llamo a los TlsCallback
+		;//Llamo a los TlsCallback
 	
-	mov edx,[ebx+TLS_DIRECTORY.AddressOfCallbacks]
+		mov edx,[ebx+TLS_DIRECTORY.AddressOfCallbacks]
 	
-	.tlsNext:
-	cmp dword [edx],0;//Bucle que recorrera el array hasta encontrarse conque el puntero vale 0
-	je .tlsEnd
+		.tlsNext:
+		cmp dword [edx],0;//Bucle que recorrera el array hasta encontrarse con el puntero que vale 0
+		je .tlsEnd
 	
-	push 0
-	push 1
-	push dword %$AddrBase
-	call [edx]
+			push 0
+			push 1
+			push dword %$AddrBase
+			call [edx]
 	
-	add edx,4
-	jmp .tlsNext
-	.tlsEnd:
+			add edx,4
+		jmp .tlsNext
+		.tlsEnd:
 	
 	.NotFound:
 	popad
@@ -506,6 +578,7 @@ proc PELoadIAT,AddrBase,PE_base
 		localdd OldProtect
 	endl
 	pushad
+	push 0
 	push IMAGE_DIRECTORY_ENTRY_IMPORT
 	push dword %$PE_base
 	push dword %$AddrBase
