@@ -2,6 +2,7 @@
 #define SERVER_H
 
 #include <QTcpServer>
+#include <QHostAddress>
 
 #include "connection.h"
 

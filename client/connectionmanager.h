@@ -5,9 +5,10 @@
 
 #include "connection.h"
 #include "messagemanager.h"
+#include "crypto.h"
 
 
-#include <Qt>
+#include <QFile>
 
 class ConnectionManager : public QObject
 {

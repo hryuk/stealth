@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/loader.bin</file>
+        <file>res/pluginloader.dll</file>
+    </qresource>
+</RCC>

@@ -15,15 +15,22 @@ SOURCES += main.cpp\
     connectionmanager.cpp \
     connection.cpp \
     server.cpp \
-    messagemanager.cpp
+    messagemanager.cpp \
+    crypto.cpp
 
 HEADERS  += stealth.h \
     connectionmanager.h \
     connection.h \
     server.h \
-    messagemanager.h
+    messagemanager.h \
+    crypto.h
 
 FORMS    += stealth.ui
+
+RESOURCES += \
+    Resource.qrc
+
+
 
 
 

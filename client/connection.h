@@ -9,7 +9,7 @@ class Connection : public QTcpSocket
 
 public:
     enum State {Connecting,Ready,Sending,Reading};
-    enum SetupState {JustConnected,RecivedRelocationDir};
+    enum SetupState {JustConnected,Finished};
 
     Connection();
     SetupState getSetupState();
