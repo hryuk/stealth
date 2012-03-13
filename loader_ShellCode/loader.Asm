@@ -7,10 +7,17 @@
 	
 	
 	section code USE32
-%undef LoadLibraryA
-extern LoadLibraryA
-%undef GetProcAddress
-extern GetProcAddress
+	;quitamos la macro import de estas funciones
+	%undef LoadLibraryA
+	;//extern LoadLibraryA
+	%undef GetProcAddress
+	;//extern GetProcAddress
+	;/////////////////////////////////////////////////////////////////////////////////////////////////
+	;//Para llamar a las apis he creado un macro llamado ecall (Extern Call) que me protege de		//
+	;//los cambios en los registros que hacen muchas apis.Tambien esta el macro ecall2 que es igual	//
+	;//que el anterior, pero no las declara como externas											//
+	;/////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 nop
 nop
@@ -27,26 +34,29 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 
 	call GetDeltaOffset
 	mov esi,eax
+	;//**********************************
+	;* ESI contiene el deltaOffset		*
+	;***********************************//
 	
 	;//Coloco en su sitio estas funciones que son imprescindibles
-	;mov eax,LoadLibrary_
-	;mov ebx,LoadLibraryA
-	;mov [ebx+esi+1],eax
+	mov eax,%$LoadLibrary_
+	mov ebx,LoadLibraryA
+	mov [ebx+esi+1],eax
 	
-	;mov eax,GetProcAddress_
-	;mov ebx,GetProcAddress
-	;mov [ebx+esi+1],eax
+	mov eax,%$GetProcAddress_
+	mov ebx,GetProcAddress
+	mov [ebx+esi+1],eax
 	
 	;//Consigo la direccion de kernel32
 	push kernel32N
 	add [esp],esi
-	call LoadLibraryA
+	ecall2 LoadLibraryA
 	mov dword %$kernel32,eax
 	
 	push VirtualProtectN
 	add [esp],esi
 	push dword %$kernel32
-	call GetProcAddress
+	ecall2 GetProcAddress
 	mov %$VirtualProtect_,eax
 	
 	;//Esta parte es probisional
@@ -62,35 +72,35 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	mov eax,%$VirtualProtect_
 	mov [ebx+esi+1],eax
 	
-	
+	;//Busco las direcciones de las funciones que posteriormente usare
 	push VirtualAllocN
 	push dword %$kernel32
-	call GetProcAddress
+	ecall2 GetProcAddress
 	
 	mov ebx,VirtualAlloc
 	mov [ebx+esi+1],eax	
 	
 	push ExitProcessN
 	push dword %$kernel32
-	call GetProcAddress
+	ecall2 GetProcAddress
 	
 	mov ebx,ExitProcess
 	mov [ebx+esi+1],eax	
 	
 	push TlsAllocN
 	push dword %$kernel32
-	call GetProcAddress
+	ecall2 GetProcAddress
 	
 	mov ebx,TlsAlloc
 	mov [ebx+esi+1],eax	
 	
 	push msvcrtN
-	call LoadLibraryA
+	ecall2 LoadLibraryA
 	;mov dword %$msvcrt,eax
 	
 	push mallocN
 	push eax
-	call GetProcAddress
+	ecall2 GetProcAddress
 	
 	mov ebx,malloc
 	mov [ebx+esi+1],eax	
@@ -103,6 +113,21 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	add [eax+esi+1],esi
 	
 	
+	mov eax,EOF
+	add eax,esi
+	;//Cargo el plugin loader
+	push PluginLoaderName
+	add [esp],esi
+	push eax
+	call LoadLibraryFromMemoy
+	;//Aqui se devuelve la direccion base del modulo cargado
+	
+	
+	;//Se deveria de buscar aqui la funcion de entrada
+	
+	;//Se ejecuta la funcion principal del programa
+	
+	;//Salimos del programa
 	push 0
 	call ExitProcess
 	
@@ -361,10 +386,9 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	push dword %$PE
 	push dword %$NewBase
 	call PELoadIAT
-
-
-	;ahora hay que llamar al dllmain si existe, sino se llama al punto de entrada
 	
+	
+	;//Aqui se empieza a ejecutar el modulo
 	push dword %$PE
 	push dword %$ldr_module
 	push dword %$NewBase
@@ -593,7 +617,7 @@ proc PELoadIAT,AddrBase,PE_base
 	add eax,dword %$AddrBase
 	;//Cargo el modulo que sale en la Import
 	push eax
-	ecall LoadLibraryA
+	ecall2 LoadLibraryA
 	mov edx,eax
 	mov esi,[ebx+IMAGE_IMPORT_DESCRIPTOR.FirstThunk]
 	add esi,dword %$AddrBase
@@ -643,7 +667,7 @@ endp
 proc PEEntry, base, LDR_Entry,PE_base
 	endl;Macro para las var locales
 	pushad
-	
+	;//Cargo y ejecuto los TlsCallback
 	push dword %$PE_base
 	push dword %$base
 	call PELoadTls
@@ -655,12 +679,13 @@ proc PEEntry, base, LDR_Entry,PE_base
 	push dllmain@
 	push dword %$base
 	ecall2 GetProcAddress
+	and dword [ebx+LDR_MODULE.Flags],~LDR_LOAD_IN_PROGRESS;//Quito el flag de carga en proceso
 	test eax,eax
 	jz .nodllmain
 	push dword 0
 	push dword 1
 	push dword %$base
-	call eax
+	call eax	;//Ejecuto el dll main si lo hay
 	or dword [ebx+LDR_MODULE.Flags],LDR_PROCESS_ATTACHED
 	jmp .end
 .nodllmain:
@@ -669,7 +694,7 @@ proc PEEntry, base, LDR_Entry,PE_base
 	push dword 0
 	push dword 1
 	push dword %$base
-	call eax
+	call eax	;//Ejecuto el main si no hay un dll main
 .end:
 	popad
 endp
@@ -758,11 +783,11 @@ VirtualProtect:
 	db 0x68;push 0xffffffff
 	dd -1
 	ret
-;LoadLibraryA:
+LoadLibraryA:
 	db 0x68;push 0xffffffff
 	dd -1
 	ret
-;GetProcAddress:
+GetProcAddress:
 	db 0x68;push 0xffffffff
 	dd -1
 	ret
@@ -773,14 +798,16 @@ malloc:
 	nop
 	nop
 	nop
-kernel32N		db "kernel32",0
-VirtualAllocN	db "VirtualAlloc",0
-VirtualProtectN	db "VirtualProtect",0
-ExitProcessN	db "ExitProcess",0
-TlsAllocN		db "TlsAlloc",0
+PluginLoaderName	db "PluginLoader",0
+kernel32N			db "kernel32",0
+VirtualAllocN		db "VirtualAlloc",0
+VirtualProtectN		db "VirtualProtect",0
+ExitProcessN		db "ExitProcess",0
+TlsAllocN			db "TlsAlloc",0
 
-msvcrtN			db "msvcrt",0
-mallocN			db "malloc",0
+msvcrtN				db "msvcrt",0
+mallocN				db "malloc",0
 
-dllmain@ db "dllmain@12"
-nulo db 0;
+dllmain@ 			db "dllmain@12"
+nulo 				db 0;
+EOF:
