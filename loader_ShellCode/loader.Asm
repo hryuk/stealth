@@ -1,9 +1,8 @@
 	global main
+	[BITS 32]
 
 	%include "loader.inc"
 	%include "kernel32.inc"
-
-	section data USE32
 	
 	
 	section code USE32
