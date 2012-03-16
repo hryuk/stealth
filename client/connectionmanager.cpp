@@ -29,13 +29,13 @@ void ConnectionManager::SetupConnection(Connection *connection)
             TotalToSend.append(PluginLoader);
 
             Crypto Crypt1(TotalToSend);
-            qint32 CheckSum=Crypt1.jenkins_one_at_a_time();
+            quint32 CheckSum=Crypt1.jenkins_one_at_a_time();
             //TODO
             TotalToSend.insert(0,(char*)&CheckSum,4);
             Crypto Crypt2(TotalToSend);
             QString sha1=Crypt1.sha1(QString("karcrack:1234"));
             QMessageBox::information(0,"Hash SHA1",sha1);
-            Crypt1.RC4(sha1.toAscii());
+            Crypt2.RC4(sha1.toAscii());
 
             QMessageBox::information(0,"Checksum","0x"+QString::number(CheckSum,16));
 
