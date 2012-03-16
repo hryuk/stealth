@@ -40,26 +40,25 @@ quint32 Crypto::jenkins_one_at_a_time()
 *    Hash SHA1
 *    Utilizando QCryptographicHash
 #############################################################*/
-QString Crypto::sha1(QByteArray data)
+QByteArray Crypto::sha1(QByteArray data)
 {
     if(data.isEmpty()) return 0;
     QByteArray hash=QCryptographicHash::hash(data,QCryptographicHash::Sha1);
 
-    return hash.toHex();
+    return hash;
 }
 
-QString Crypto::sha1()
+QByteArray Crypto::sha1()
 {
     if(data.isEmpty()) return 0;
 
     return sha1(data);
 }
 
-QString Crypto::sha1(QString data)
+QByteArray Crypto::sha1(QString data)
 {
     return sha1(data.toAscii());
 }
-
 
 /*###########################################################
 *    Encriptacion RC4
@@ -118,4 +117,10 @@ void Crypto::RC4(unsigned char* data,unsigned int datasize,unsigned char* key,un
 QByteArray Crypto::getData()
 {
     return this->data;
+}
+
+void Crypto::setData(QByteArray data)
+{
+    this->data.clear();
+    this->data.append(data);
 }

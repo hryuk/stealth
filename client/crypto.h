@@ -14,11 +14,13 @@ public:
 
     quint32 jenkins_one_at_a_time();
 
-    QString sha1();
-    QString sha1(QByteArray data);
-    QString sha1(QString data);
+    QByteArray sha1();
+    QByteArray sha1(QByteArray data);
+    QByteArray sha1(QString data);
 
     QByteArray RC4(QByteArray key);
+
+    void setData(QByteArray data);
 
 private:
     QByteArray data;

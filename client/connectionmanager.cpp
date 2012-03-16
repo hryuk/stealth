@@ -32,16 +32,16 @@ void ConnectionManager::SetupConnection(Connection *connection)
             quint32 CheckSum=Crypt1.jenkins_one_at_a_time();
             //TODO
             TotalToSend.insert(0,(char*)&CheckSum,4);
-            Crypto Crypt2(TotalToSend);
-            QString sha1=Crypt1.sha1(QString("karcrack:1234"));
-            QMessageBox::information(0,"Hash SHA1",sha1);
-            Crypt2.RC4(sha1.toAscii());
+            Crypt1.setData(TotalToSend);
+            QByteArray sha1=Crypt1.sha1(QString("karcrack:1234"));
+            QMessageBox::information(0,"Hash SHA1",sha1.toHex());
+            Crypt1.RC4(sha1);
 
             QMessageBox::information(0,"Checksum","0x"+QString::number(CheckSum,16));
 
             TotalToSend.clear();
             TotalToSend.append((char*)&CheckSum,4);
-            TotalToSend.append(Crypt2.getData());
+            TotalToSend.append(Crypt1.getData());
 
             connection->write(TotalToSend);
 
