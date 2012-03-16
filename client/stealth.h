@@ -7,6 +7,8 @@
 #include "connectionmanager.h"
 #include "messagemanager.h"
 
+class ConnectionManager;
+
 namespace Ui {
     class Stealth;
 }
@@ -24,6 +26,9 @@ private:
     Server* server;
     ConnectionManager* mngConnection;
     MessageManager* mngMessage;
+
+public slots:
+    void addConnection(Connection* connection);
 };
 
 #endif // STEALTH_H

@@ -3,12 +3,13 @@
 //Delete
 #include <QMessageBox>
 
-ConnectionManager::ConnectionManager(MessageManager* mngMessage,QObject* parent) : QObject(parent)
+ConnectionManager::ConnectionManager(Stealth* stealth,MessageManager* mngMessage,QObject* parent) : QObject(parent)
 {
     this->mngMessage=mngMessage;
+    this->stealth=stealth;
 
     connect(this,SIGNAL(ConnectionEstablished(Connection*)),this,SLOT(addConnection(Connection*)));
-    //connect ConnectionEstablished -> GUI
+    connect(this,SIGNAL(ConnectionEstablished(Connection*)),this->stealth,SLOT(addConnection(Connection*)));
 }
 
 void ConnectionManager::SetupConnection(Connection *connection)
@@ -48,11 +49,6 @@ void ConnectionManager::SetupConnection(Connection *connection)
             connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
             connection->setState(Connection::Ready);
             connection->setSetupState(Connection::Finished);
-    }
-    else if(connection->getSetupState()==Connection::Finished)
-    {
-            connection->setState(Connection::Ready);
-            emit ConnectionEstablished(connection);
     }
 }
 

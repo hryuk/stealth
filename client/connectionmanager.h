@@ -1,24 +1,25 @@
 #ifndef CONNECTIONMANAGER_H
 #define CONNECTIONMANAGER_H
 
-
+#include <QFile>
 
 #include "connection.h"
+#include "stealth.h"
 #include "messagemanager.h"
 #include "crypto.h"
 
-
-#include <QFile>
+class Stealth;
 
 class ConnectionManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit ConnectionManager(MessageManager*,QObject* parent=0);
+    explicit ConnectionManager(Stealth*,MessageManager*,QObject* parent=0);
 
 private:
     QList<Connection*> Connections;
     MessageManager* mngMessage;
+    Stealth* stealth;
 
 public slots:
     void SetupConnection(Connection*);

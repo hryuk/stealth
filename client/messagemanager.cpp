@@ -10,11 +10,10 @@ void MessageManager::readMessage()
     Connection* connection=qobject_cast<Connection*>(sender());
     if(!connection) return;
 
-    //Leer mensaje
-    //Identificar mensaje
-    //Procesar mensaje
+    connection->setState(Connection::Reading);
 
-    //emit newInternalMessage(QByteArray*)
-    //emit newPluginMessage(QByteArray*)
+    //TODO
+
+    connection->setState(Connection::Ready);
 }
 
