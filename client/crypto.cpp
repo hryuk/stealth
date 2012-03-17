@@ -71,13 +71,14 @@ QByteArray Crypto::AES(QByteArray bakey)
     QCA::SymmetricKey key(bakey);
     QCA::InitializationVector iv(16);
 
-    QCA::Cipher cipher(QString("aes128"),QCA::Cipher::CBC,QCA::Cipher::DefaultPadding,QCA::Encode,key,iv);
+    QCA::Cipher cipher(QString("aes128"),QCA::Cipher::CBC,QCA::Cipher::PKCS7,QCA::Encode,key,iv);
 
     QCA::SecureArray u=cipher.process(this->data);
 
     if (cipher.ok())
     {
         QMessageBox::information(0,":P","Encriptacion correcta");
+        QMessageBox::information(0,":P",QString::number(u.toByteArray().size()));
     }
 
     this->data.clear();
