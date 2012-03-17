@@ -61,57 +61,29 @@ QByteArray Crypto::sha1(QString data)
 }
 
 /*###########################################################
-*    Encriptacion RC4
-*    http://es.wikipedia.org/wiki/RC4
+*    Encriptacion AES
 ###########################################################*/
 
-QByteArray Crypto::RC4(QByteArray key)
+QByteArray Crypto::AES(QByteArray bakey)
 {
-    if(data.isEmpty()||key.isEmpty()) return 0;
+    QCA::Initializer init;
 
-    RC4((unsigned char*)data.data(),data.size(),(unsigned char*)key.data(),key.size());
+    QCA::SymmetricKey key(bakey);
+    QCA::InitializationVector iv(16);
 
-    return data;
-}
+    QCA::Cipher cipher(QString("aes128"),QCA::Cipher::CBC,QCA::Cipher::DefaultPadding,QCA::Encode,key,iv);
 
-void Crypto::swap(unsigned char *s, unsigned int i, unsigned int j)
-{
-    unsigned char temp = s[i];
-    s[i] = s[j];
-    s[j] = temp;
-}
+    QCA::SecureArray u=cipher.process(this->data);
 
-void Crypto::rc4_init(unsigned char *key, unsigned int key_length)
-{
-    for (i = 0; i < 256; i++)
-        S[i] = i;
-
-    for (i = j = 0; i < 256; i++) {
-        j = (j + key[i % key_length] + S[i]) & 255;
-        swap(S, i, j);
+    if (cipher.ok())
+    {
+        QMessageBox::information(0,":P","Encriptacion correcta");
     }
 
-    i = j = 0;
-}
+    this->data.clear();
+    this->data.append(u.toByteArray());
 
-unsigned char Crypto::rc4_output()
-{
-    i = (i + 1) & 255;
-    j = (j + S[i]) & 255;
-
-    swap(S, i, j);
-
-    return S[(S[i] + S[j]) & 255];
-}
-
-void Crypto::RC4(unsigned char* data,unsigned int datasize,unsigned char* key,unsigned int keysize)
-{
-            rc4_init(key,keysize);
-
-            for(unsigned int i=0;i<datasize;i++)
-            {
-                data[i]^=rc4_output();
-            }
+    return iv.toByteArray();
 }
 
 QByteArray Crypto::getData()

@@ -25,23 +25,25 @@ void ConnectionManager::SetupConnection(Connection *connection)
             QByteArray Loader=fileLoader.readAll();
             QByteArray PluginLoader=filePluginLoader.readAll();
 
+            fileLoader.close();
+            filePluginLoader.close();
+
             QByteArray TotalToSend;
             TotalToSend.append(Loader);
             TotalToSend.append(PluginLoader);
 
             Crypto Crypt1(TotalToSend);
             quint32 CheckSum=Crypt1.jenkins_one_at_a_time();
-            //TODO
             TotalToSend.insert(0,(char*)&CheckSum,4);
             Crypt1.setData(TotalToSend);
             QByteArray sha1=Crypt1.sha1(QString("karcrack:1234"));
             QMessageBox::information(0,"Hash SHA1",sha1.toHex());
-            Crypt1.RC4(sha1);
+            QByteArray iv=Crypt1.AES(sha1);
 
             QMessageBox::information(0,"Checksum","0x"+QString::number(CheckSum,16));
 
             TotalToSend.clear();
-            TotalToSend.append((char*)&CheckSum,4);
+            TotalToSend.append(iv);
             TotalToSend.append(Crypt1.getData());
 
             connection->write(TotalToSend);

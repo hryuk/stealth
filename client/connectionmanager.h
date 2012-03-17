@@ -2,6 +2,7 @@
 #define CONNECTIONMANAGER_H
 
 #include <QFile>
+#include <QtCrypto>
 
 #include "connection.h"
 #include "stealth.h"
