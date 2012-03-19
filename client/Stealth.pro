@@ -6,8 +6,6 @@
 
 QT += core gui network
 
-CONFIG += crypto
-
 TARGET = Stealth
 TEMPLATE = app
 
@@ -33,6 +31,8 @@ RESOURCES += \
     Resource.qrc
 
 INCLUDEPATH += $$quote(qca-2.0.3/include/QtCrypto)
+
+LIBS += -L$$quote(qca-2.0.3/lib) -lqca2
 
 
 

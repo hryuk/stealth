@@ -68,18 +68,14 @@ QByteArray Crypto::AES(QByteArray bakey)
 {
     QCA::Initializer init;
 
-    QCA::SymmetricKey key(bakey);
+    unsigned int keylen=16;
     QCA::InitializationVector iv(16);
+    QCA::SecureArray password=QCA::hexToArray(bakey.toHex());
 
+    QCA::SymmetricKey key=QCA::PBKDF2("sha1").makeKey(password,0,keylen,1);
     QCA::Cipher cipher(QString("aes128"),QCA::Cipher::CBC,QCA::Cipher::PKCS7,QCA::Encode,key,iv);
 
     QCA::SecureArray u=cipher.process(this->data);
-
-    if (cipher.ok())
-    {
-        QMessageBox::information(0,":P","Encriptacion correcta");
-        QMessageBox::information(0,":P",QString::number(u.toByteArray().size()));
-    }
 
     this->data.clear();
     this->data.append(u.toByteArray());
