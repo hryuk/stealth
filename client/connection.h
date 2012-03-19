@@ -16,10 +16,13 @@ public:
     State getState();
     void setState(State state);
     void setSetupState(SetupState setupState);
+    void setIV(QByteArray IV);
+    QByteArray getIV();
 
 private:
     State state;
     SetupState setupState;
+    QByteArray IV;
 
 };
 

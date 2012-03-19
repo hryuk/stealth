@@ -41,6 +41,7 @@ void ConnectionManager::SetupConnection(Connection *connection)
         TotalToSend.append(Crypt1.getData());
 
         connection->write(TotalToSend);
+        connection->setIV(iv);
 
         connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
         connection->setState(Connection::Ready);
