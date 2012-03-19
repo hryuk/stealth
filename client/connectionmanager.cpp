@@ -30,8 +30,9 @@ void ConnectionManager::SetupConnection(Connection *connection)
         TotalToSend.append(PluginLoader);
 
         Crypto Crypt1(TotalToSend);
-        quint32 CheckSum=Crypt1.jenkins_one_at_a_time();
-        TotalToSend.insert(0,(char*)&CheckSum,4);
+        QByteArray CheckSum=Crypt1.sha1(TotalToSend);
+
+        TotalToSend.insert(0,CheckSum);
         Crypt1.setData(TotalToSend);
         QByteArray sha1=Crypt1.sha1(QString("karcrack:1234"));
         QByteArray iv=Crypt1.AES(sha1);

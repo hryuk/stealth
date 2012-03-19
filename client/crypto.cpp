@@ -8,35 +8,6 @@ Crypto::Crypto(QByteArray data)
 }
 
 /*###########################################################
-*    CheckSum Jenkins
-*    Jenkins (http://goo.gl/cMRaH)
-#############################################################*/
-quint32 Crypto::jenkins_one_at_a_time(char *data,unsigned int len)
-{
-    quint32 hash,i;
-
-    for(hash=i=0;i<len;++i)
-    {
-        hash+=data[i];
-        hash+=(hash<<10);
-        hash^=(hash>>6);
-    }
-
-    hash+=(hash<<3);
-    hash^=(hash>>11);
-    hash+=(hash<<15);
-
-    return hash;
-}
-
-quint32 Crypto::jenkins_one_at_a_time()
-{
-    if(data.isEmpty()) return 0;
-
-    return jenkins_one_at_a_time(data.data(),data.size());
-}
-
-/*###########################################################
 *    Hash SHA1
 *    Utilizando QCryptographicHash
 #############################################################*/
