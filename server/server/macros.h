@@ -83,6 +83,8 @@
         pushc((addr))
     #define callr(addr)\
         call (addr)
+    #define movr(r, addr)\
+        mov (r), (addr)
     #define pushc(addr)\
         push (addr)
 #else
@@ -99,7 +101,7 @@
         //__asm{add DWORD PTR SS:[esp], edi}
 
     /*###############################################################################
-    ** callc:
+    ** callr:
     **    Los calls relativos suelen tener bytes nulos, pera evitar esto hay que 
     **    modificar las direcciones restandoles una constante sin bytes nulos.
     **    NOTA{
@@ -108,12 +110,23 @@
     **        *Se utiliza EAX como registro ya que se da por echo que será cambiado
     **        por la función llamada (¡¡¡¡PELIGRO!!!!)
     **    }
+    ** movr:
+    **    Los movs de direcciones suelen tener bytes nulos, pera evitar esto hay que 
+    **    modificar las direcciones restandoles una constante sin bytes nulos.
+    **    NOTA{
+    **        *La constante K puede necesitar ser cambiada para limpiar todos los
+    **        bytes nulos de todas las direcciones relativas
+    **    }
     *###############################################################################*/
     #define K 0xDEADBEEF
     #define callr(addr)\
         __asm{mov eax, ((addr)-K)}\
         __asm{add eax, (K)}\
         __asm{call eax}
+
+    #define movr(r, addr)\
+        __asm{mov (r), ((addr)-K)}\
+        __asm{add (r), (K)}
 
     /*###############################################################################
     ** pushc:
