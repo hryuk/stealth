@@ -371,34 +371,20 @@ init_decrypt:
         ** Comprobación del checksum:
         **    El checksum esta en el primer DWORD de los datos recibidos.
         **    El algoritmo utilizado para calcular el checksum es: 
-        **        *Jenkins (http://goo.gl/cMRaH)
+        **        *FNV1a (http://goo.gl/1A7ir)
         *###############################################################################*/
 
         mov  ecx, [ebp+_buffLen]        //ECX = buffLen
         mov  esi, [ebp+_pBuff]          //ESI = pBuff
         add  esi, (16 + 4)              //ESI+= (16 + 4) (Saltamos IV y checksum)
-        cdq                             //EDX = 0
-jenkins_one_at_a_time_hash:
-        xor  eax, eax                   //v
-        lodsb                           //al = [esi]; esi++
-        add  edx, eax                   //>hash += key[i];
-        mov  eax, edx                   //v
-        shl  eax, 10                    //v
-        add  edx, eax                   //>hash += (hash << 10);
-        mov  eax, edx                   //v
-        shr  eax, 6                     //v
-        xor  edx, eax                   //>hash ^= (hash >> 6);
-        loop jenkins_one_at_a_time_hash //>(len--);(len < 0)?
 
-        mov  eax, edx                   //v
-        shl  eax, 3                     //v
-        add  edx, eax                   //>hash += (hash << 3);
-        mov  eax, edx                   //v
-        shr  eax, 11                    //v
-        xor  edx, eax                   //>hash ^= (hash >> 11);
-        mov  eax, edx                   //v
-        shl  eax, 15                    //v
-        add  edx, eax                   //>hash += (hash << 15);
+        mov  edx, 2166136261            //hash = 2166136261
+FNV1a:
+        xor  eax, eax                   //v
+        lodsb                           //al = str[i]; i++
+        xor  edx, eax                   //>hash ^= str[i];
+        imul edx, 16777619              //>hash *= 16777619;
+        loop FNV1a                      //>(len--);(len < 0)?
 
         mov  esi, [ebp+_pBuff]          //v
         cmp  edx, [esi + 16]            //v
