@@ -82,7 +82,10 @@
       <FixedBaseAddress>true</FixedBaseAddress>
       <DataExecutionPrevention>true</DataExecutionPrevention>
       <SetChecksum>true</SetChecksum>
-      <SectionAlignment>32</SectionAlignment>
+      <SectionAlignment>
+      </SectionAlignment>
+      <MinimumRequiredVersion>
+      </MinimumRequiredVersion>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

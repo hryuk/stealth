@@ -7,9 +7,9 @@
 **        *Función encargada de generar los identificadores que situan las
 **            direcciones en el 'stack de direcciones'
 **        *Compilación condicionada encargada de generar:
-**            +Un shellcode libre de bytes nulos (TODO)
+**            +Un shellcode libre de bytes nulos
 **            +Direcciones relativas que permitan la reubicación del código
-**            +El Keylogger offline (TODO)
+**            +Un gestor de errores
 *###############################################################################*/
 
 #include "preprocessor/seq/for_each_i.hpp"
@@ -17,16 +17,49 @@
 #include "preprocessor/seq/size.hpp"
 #include "preprocessor/cat.hpp"
 
+
 /*###############################################################################
-** Shellcode:
-**    Si se define la compilación en modo 'shellcode' el código generado no tendrá
-**    bytes nulos ni direcciones estáticas.
+** Error_Check:
+**    Si se define la compilación ERR_CHECK el código generado tendrá
+**    comprobación de errores.
 **    NOTA:{
 **        Se añade código, como consecuencia aumenta el tamaño
 **    }
 *###############################################################################*/
-#define SHELLCODE
-#undef  SHELLCODE
+#define ERR_CHECK
+#undef ERR_CHECK
+
+#ifdef ERR_CHECK
+    /*###############################################################################
+    ** Control de errores:
+    **    Constantes utilizadas en el control de errores.
+    **    Solamente las excepciones críticas serán controladas, y
+    **    se devolverá la constante de error correspondiente como
+    **    'Exit Code' en ExitProcess()@kernel32
+    *###############################################################################*/
+    #define ERR_NO  0x0     //No ha habido ningun error. El server ha finalizado correctamente.
+    #define ERR_FNC 0x1     //Ha habido un error en la funcion LoadFunctions(). Probablemente alguna función no se ha encontrado.
+    #define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexión.
+    #define ERR_MEM 0x3     //Ha habido un error al reservar memoria.
+    #define ERR_SUM 0x4     //Ha habido un error en la suma de comprobación.
+#endif
+
+/*###############################################################################
+** Shellcode:
+**    Si se define la compilación en modo 'shellcode' el código generado no tendrá
+**    bytes nulos ni direcciones estáticas.
+**    Se diferencian dos modos de shellcode:
+**      [+] Direcciones relativas (SC_DELTA)
+**      [+] Bytes nulos (SC_NULL)
+**    
+**    NOTA:{
+**        Se añade código, como consecuencia aumenta el tamaño
+**    }
+*###############################################################################*/
+#define SC_DELTA
+#define SC_NULL
+#undef SC_NULL
+#undef SC_DELTA
 
 /*###############################################################################
 ** HASH_AND_EMIT:
@@ -45,7 +78,7 @@
 #define CRYPT_BYTE(s, st, x) ((((st)>>1)^((x)*(x))))
 
 /*###############################################################################
-** HASH_* :
+** EMIT_* :
 **    Macros que introducen en el binario diferentes datos
 *###############################################################################*/
 #define EMIT_BYTE_ARRAY(SEQ) BOOST_PP_SEQ_FOR_EACH_I(EMIT_BYTE_, 0, SEQ)
@@ -78,39 +111,39 @@
 **    En caso de no estar activada la compilación 'SHELLCODE' estas características
 **    quedan desactivadas.
 *###############################################################################*/
-#ifndef SHELLCODE
-    #define pushr(addr)\
-        pushc((addr))
-    #define callr(addr)\
-        call (addr)
-    #define movr(r, addr)\
-        mov (r), (addr)
-    #define pushc(addr)\
-        push (addr)
-#else
+#ifdef SC_DELTA
+    #define DELTA __asm{add DWORD PTR[esp], edi}
     /*###############################################################################
-    ** pushr:
-    **    Macro que pushea en el stack una dirección y le suma la posición relativa o
-    **    'Delta offset'
-    **    NOTA{Se harcodean los opcodes para ahorrar el opcode de identificador de segmento}
+    ** movr:
+    **    Macro que hace un mov con una direccion estatica y la repara
     **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
     *###############################################################################*/
-    #define pushr(addr)\
-        __asm{pushc((addr))}\
-        EMIT_BYTE_ARRAY((0x01) (0x3C) (0x24))
-        //__asm{add DWORD PTR SS:[esp], edi}
-
+    #define movr(r, addr)\
+        movc((r), (addr))\
+        __asm{add (r), edi}
+#else
+    #define DELTA ;
     /*###############################################################################
-    ** callr:
-    **    Los calls relativos suelen tener bytes nulos, pera evitar esto hay que 
-    **    modificar las direcciones restandoles una constante sin bytes nulos.
-    **    NOTA{
-    **        *La constante K puede necesitar ser cambiada para limpiar todos los
-    **        bytes nulos de todas las direcciones relativas
-    **        *Se utiliza EAX como registro ya que se da por echo que será cambiado
-    **        por la función llamada (¡¡¡¡PELIGRO!!!!)
-    **    }
     ** movr:
+    **    Macro que hace un mov con una direccion estatica y la repara
+    **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
+    *###############################################################################*/
+    #define movr(r, addr)\
+        movc((r), (addr))
+#endif
+
+#ifdef SC_NULL
+    #define K 0xFEEDCAFE
+    /*###############################################################################
+    ** pushc:
+    **    Macro que pushea en el stack una constante y eliminando los bytes nulos
+    **    NOTA{Se harcodean los opcodes para ahorrar el opcode de identificador de segmento}
+    *###############################################################################*/
+    #define pushc(addr)\
+        __asm{push ((addr)-K)}\
+        __asm{add DWORD PTR[esp], K}
+    /*###############################################################################
+    ** movc:
     **    Los movs de direcciones suelen tener bytes nulos, pera evitar esto hay que 
     **    modificar las direcciones restandoles una constante sin bytes nulos.
     **    NOTA{
@@ -118,23 +151,20 @@
     **        bytes nulos de todas las direcciones relativas
     **    }
     *###############################################################################*/
-    #define K 0xDEADBEEF
-    #define callr(addr)\
-        __asm{mov eax, ((addr)-K)}\
-        __asm{add eax, (K)}\
-        __asm{call eax}
-
-    #define movr(r, addr)\
+    #define movc(r, addr)\
         __asm{mov (r), ((addr)-K)}\
         __asm{add (r), (K)}
-
-    /*###############################################################################
-    ** pushc:
-    **    Macro que pushea en el stack una constante y eliminando los bytes nulos
-    **    NOTA{Se harcodean los opcodes para ahorrar el opcode de identificador de segmento}
-    **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
-    *###############################################################################*/
+#else
     #define pushc(addr)\
-        __asm{push ((addr)-K)}\
-        EMIT_BYTE_ARRAY((0x81) (0x04) (0x24)) EMIT_DWORD(K)//__asm{add DWORD PTR SS:[esp], K}
+        __asm{push (addr)}
+    #define movc(r, addr)\
+        __asm{mov (r), (addr)}
 #endif
+/*###############################################################################
+** pushr:
+**    Macro que pushea en el stack una dirección estatica y la repara
+**    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
+*###############################################################################*/
+#define pushr(addr)\
+    pushc((addr))\
+    DELTA
