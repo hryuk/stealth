@@ -103,7 +103,7 @@
 *###############################################################################*/
 #define CREATE_IDS(SEQ)\
     enum IDS{BOOST_PP_SEQ_FOR_EACH_I(ENUM_ITEM, 0, SEQ) STACKSIZE = (BOOST_PP_SEQ_SIZE(SEQ)*4)};
-#define ENUM_ITEM(r, d, i, e) BOOST_PP_CAT(_, e) = ((i + 1)*4),
+#define ENUM_ITEM(r, d, i, e) BOOST_PP_CAT(_, e) = (i*4),
 
 /*###############################################################################
 ** Macros de shellcode:
@@ -111,26 +111,6 @@
 **    En caso de no estar activada la compilación 'SHELLCODE' estas características
 **    quedan desactivadas.
 *###############################################################################*/
-#ifdef SC_DELTA
-    #define DELTA __asm{add DWORD PTR[esp], edi}
-    /*###############################################################################
-    ** movr:
-    **    Macro que hace un mov con una direccion estatica y la repara
-    **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
-    *###############################################################################*/
-    #define movr(r, addr)\
-        movc((r), (addr))\
-        __asm{add (r), edi}
-#else
-    #define DELTA ;
-    /*###############################################################################
-    ** movr:
-    **    Macro que hace un mov con una direccion estatica y la repara
-    **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
-    *###############################################################################*/
-    #define movr(r, addr)\
-        movc((r), (addr))
-#endif
 
 #ifdef SC_NULL
     #define K 0xFEEDCAFE
@@ -142,24 +122,43 @@
     #define pushc(addr)\
         __asm{push ((addr)-K)}\
         __asm{add DWORD PTR[esp], K}
-    /*###############################################################################
-    ** movc:
-    **    Los movs de direcciones suelen tener bytes nulos, pera evitar esto hay que 
-    **    modificar las direcciones restandoles una constante sin bytes nulos.
-    **    NOTA{
-    **        *La constante K puede necesitar ser cambiada para limpiar todos los
-    **        bytes nulos de todas las direcciones relativas
-    **    }
-    *###############################################################################*/
-    #define movc(r, addr)\
-        __asm{mov (r), ((addr)-K)}\
-        __asm{add (r), (K)}
 #else
     #define pushc(addr)\
         __asm{push (addr)}
-    #define movc(r, addr)\
-        __asm{mov (r), (addr)}
 #endif
+
+#ifdef SC_DELTA
+    #define DELTA __asm{add DWORD PTR[esp], edi}
+    /*###############################################################################
+    ** movr:
+    **    Macro que hace un mov con una direccion estatica y la repara
+    **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
+    *###############################################################################*/
+    #ifdef SC_NULL
+        #define movr(r, addr)\
+            __asm{lea (r), [edi+((addr)-(K))]}\
+            __asm{add (r), (K)}
+    #else
+        #define movr(r, addr)\
+            __asm{lea (r), [edi+(addr)]}
+    #endif
+#else
+    #define DELTA ;
+    /*###############################################################################
+    ** movr:
+    **    Macro que hace un mov con una direccion estatica y la repara
+    **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
+    *###############################################################################*/
+    #ifdef SC_NULL
+        #define movr(r, addr)\
+            __asm{mov (r), ((addr)-(K))}\
+            __asm{add (r), (K)}
+    #else
+        #define movr(r, addr)\
+            __asm{mov (r), (addr)}
+    #endif
+#endif
+
 /*###############################################################################
 ** pushr:
 **    Macro que pushea en el stack una dirección estatica y la repara

