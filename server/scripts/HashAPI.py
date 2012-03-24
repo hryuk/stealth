@@ -3,7 +3,6 @@ from pprint import pprint
 def hash(s):
     r = 0
     for x in s:
-        r>>=1
         r^=(ord(x)*ord(x))
     return r
 
