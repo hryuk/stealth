@@ -19,6 +19,7 @@ public:
     QByteArray sha1(QString data);
 
     QByteArray AES(QByteArray key);
+    QByteArray FNV1a_get_offset_basis(QByteArray data);
 
     void setData(QByteArray data);
 

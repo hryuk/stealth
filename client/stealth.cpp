@@ -12,6 +12,26 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 
     //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
     QObject::connect(server,SIGNAL(newConnection(Connection*)),mngConnection,SLOT(SetupConnection(Connection*)));
+
+    QApplication::setStyle(QStyleFactory::create("Plastique"));
+
+    for(int i=0;i<3;i++)
+    {   
+        GroupTreeWidget* ctw;
+        if(i==0)
+        {
+            ctw=new GroupTreeWidget(true);
+            expandedGroup=ctw;
+        }
+        else
+        {
+            ctw=new GroupTreeWidget(false);
+        }
+        ui->MainLayout->addWidget(ctw);
+        connect(this,SIGNAL(destroyed()),ctw,SLOT(deleteLater()));
+        connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
+        lstGroupWidgets.append(ctw);
+    }
 }
 
 Stealth::~Stealth()
@@ -19,9 +39,13 @@ Stealth::~Stealth()
     delete ui;
 }
 
+void Stealth::closeCurrentExpanded(GroupTreeWidget* newExpanded)
+{
+    expandedGroup->setExpanded(false);
+    expandedGroup=newExpanded;
+}
+
 void Stealth::addConnection(Connection *connection)
 {
-    QTreeWidgetItem* item=new QTreeWidgetItem();
-    item->setText(0,connection->peerAddress().toString());
-    ui->treeWidget->addTopLevelItem(item);
+
 }

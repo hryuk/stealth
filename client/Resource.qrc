@@ -2,5 +2,8 @@
     <qresource prefix="/">
         <file>res/loader.bin</file>
         <file>res/pluginloader.dll</file>
+        <file>res/img/the-dark-knight-the-joker-02.png</file>
+        <file>res/img/bullet_arrow_left.png</file>
+        <file>res/img/bullet_arrow_down.png</file>
     </qresource>
 </RCC>

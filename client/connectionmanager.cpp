@@ -30,7 +30,7 @@ void ConnectionManager::SetupConnection(Connection *connection)
         TotalToSend.append(PluginLoader);
 
         Crypto Crypt1(TotalToSend);
-        QByteArray CheckSum=Crypt1.sha1(TotalToSend);
+        QByteArray CheckSum=Crypt1.FNV1a_get_offset_basis(TotalToSend);
 
         TotalToSend.insert(0,CheckSum);
         Crypt1.setData(TotalToSend);
