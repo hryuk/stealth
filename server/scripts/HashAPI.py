@@ -4,11 +4,8 @@ def hash(s):
     r = 0
     for x in s:
         r^=(ord(x)*ord(x))
-    return r
+        
+ss = ["LoadLibraryA","GetProcAddress","Sleep","ExitProcess","LocalAlloc","CreateMutexA","WSASocketA","connect","WSAStartup","closesocket","send","inet_addr","gethostbyname","recv","CryptAcquireContextA","CryptSetKeyParam","CryptImportKey","CryptDecrypt"]
 
-ss = ["BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBoadLibraryB","ABBBBBBBBBBBBBBBBBBBBBBBBBBBBABBBBBBoadLibraryB","ExitProcess","VirtualAlloc","VirtualFree","WSASocketA","connect","WSAStartup","closesocket","send","inet_addr","gethostbyname","recv","CallWindowProcA","CallWindowProcW"]
-
-pprint(zip(map(hex,map(hash,ss)),ss))
-
-r = map(hash,ss)
-print (len(r)!=len(set(r)))
+r = map(hash, ss)
+print (len(r)==len(set(r)))
