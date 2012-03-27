@@ -42,7 +42,6 @@ QByteArray Crypto::FNV1a_get_offset_basis(QByteArray data)
     }
 
     return QByteArray((char*)&r,4);
-
 }
 
 /*###########################################################

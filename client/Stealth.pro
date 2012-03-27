@@ -18,7 +18,6 @@ SOURCES += main.cpp\
     messagemanager.cpp \
     crypto.cpp \
     iteminfo.cpp \
-    delegates.cpp \
     grouptreewidget.cpp \
     customtreewidget.cpp
 
@@ -29,7 +28,6 @@ HEADERS  += stealth.h \
     messagemanager.h \
     crypto.h \
     iteminfo.h \
-    delegates.h \
     grouptreewidget.h \
     customtreewidget.h
 

@@ -25,8 +25,6 @@ public:
 
 private:
     QByteArray data;
-    unsigned char S[256];
-    unsigned int i, j;
 };
 
 #endif // CRYPTO_H
