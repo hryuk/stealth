@@ -102,6 +102,7 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	;mov dword %$msvcrt,eax
 	
 	push mallocN
+	add [esp],esi
 	push eax
 	ecall2 GetProcAddress
 	

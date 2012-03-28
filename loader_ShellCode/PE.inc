@@ -144,10 +144,10 @@ STRUC IMAGE_DOS_HEADER
 	.e_cs		RESW 1
 	.e_lfarlc	RESW 1
 	.e_ovno		RESW 1
-	.e_res4		RESW 1
+	.e_res4		RESW 4
 	.e_oemid	RESW 1
 	.e_oeminfo	RESW 1
-	.e_res2		RESW 1
+	.e_res2		RESW 10
 	.e_lfanew	RESD 1
 ends
 
