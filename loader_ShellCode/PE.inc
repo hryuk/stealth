@@ -153,9 +153,9 @@ ends
 
 struc IMAGE_SECTION_HEADER
 	.Name 					resb 8
+    	.PhysicalAddress:
+    	.VirtualSize:
     .Misc 					resd 1
-    .PhysicalAddress:
-    .VirtualSize:
     .VirtualAddress			resd 1
     .SizeOfRawData			resd 1
     .PointerToRawData		resd 1

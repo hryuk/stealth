@@ -235,7 +235,7 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	mov esi,%$AddrBase
 	mov edi,%$NewBase
 	;Creamos un LDR_MODULE para luego añadir el modulo a la lista
-	push eax				
+	;push eax				
 	
 	push sizeof(LDR_MODULE)
 	ecall2 malloc
@@ -291,9 +291,8 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	mov dword [eax+LDR_MODULE.TimeDateStamp],0
 	mov dword [eax+LDR_MODULE.Flags],LDR_WINE_INTERNAL | LDR_ENTRY_PROCESSED | LDR_LOAD_IN_PROGRESS
 
-	pop eax
 
-
+	mov eax,%$NewBase
 	cmp [ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.ImageBase],eax
 	jne .reloc
 .RelocContinue:
