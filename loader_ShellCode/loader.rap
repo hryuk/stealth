@@ -112,13 +112,13 @@ ProductVer4Range=0
 [BreakPoint]
 0=
 [Find]
-1="PEGetNT_HEADER"
-2="PEEntry"
-3="PELoadTls"
-4="call GetProcA"
-5="GetProcA"
-6="GetProc"
-7="loadlibraryA"
-8="loadlibra"
-9="IMAGE_REL_BASED_ABSOLUTE"
-10="PEGetDirectoryEntry"
+1="popad"
+2="AscToUni"
+3="pop eax"
+4="PEGetNT_HEADER"
+5="PEEntry"
+6="PELoadTls"
+7="call GetProcA"
+8="GetProcA"
+9="GetProc"
+10="loadlibraryA"

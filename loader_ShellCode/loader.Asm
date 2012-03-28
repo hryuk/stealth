@@ -161,7 +161,7 @@ endp
 
 proc memcpy, PDestino,POrigen,size
 	endl
-	popad
+	pushad
 	
 	mov esi,%$POrigen
 	mov edi,%$PDestino
@@ -190,11 +190,15 @@ proc AscToUni, AsciiStr,BuffToCopy
 	
 	mov esi,%$AsciiStr
 	mov edi,%$BuffToCopy
-	xor ecx,ecx;Pomgo a cero
+	xor eax,eax;Pomgo a cero
 	
-	.nextChar:;Para convertir a unicode, ensancho los caracteres con un 0 de relleno para que quede asi: 0xXX 0x00 0xXX 0x00
-	movzx ax,byte [esi+ecx]
-	mov [edi+ecx*2],ax
+	.nextChar:;//Para convertir a unicode, ensancho los caracteres con un 0 de relleno para que quede asi: 0xXX 0x00 0xXX 0x00
+	
+	;movzx ax,byte [esi+ecx]
+	;mov [edi+ecx*2],ax
+	lodsb	;//mov al,[edi]; edi++
+	stosw	;//mov [esi],ax; edi +=2;
+	;inc ecx
 	test eax,eax
 	jnz .nextChar
 	
@@ -231,7 +235,8 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	mov esi,%$AddrBase
 	mov edi,%$NewBase
 	;Creamos un LDR_MODULE para luego añadir el modulo a la lista
-	push eax
+	push eax				
+	
 	push sizeof(LDR_MODULE)
 	ecall2 malloc
 	add esp,4
@@ -244,13 +249,12 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	push eax
 	call TlsAlloc;Pido un index para el TLS
 	mov ebx,eax
-	pop eax
+	mov eax,%$ldr_module
 	mov dword [eax+LDR_MODULE.BaseAddress],edi
 	mov dword [eax+LDR_MODULE.SizeOfImage],ecx
 	mov dword [eax+LDR_MODULE.EntryPoint],edx
 	mov word [eax+LDR_MODULE.TlsIndex],bx;
 	mov word [eax+LDR_MODULE.LoadCount],1
-	push eax
 
 	push dword %$ModName
 	ecall2 lstrlenA
@@ -264,12 +268,13 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	mov ebx,eax
 
 	;push ecx
-	push  dword %$ModName
 	push ebx
+	push  dword %$ModName
 	call AscToUni
 	
 	
-	pop eax
+	;pop eax
+	mov eax,%$ldr_module
 	
 	
 	mov word [eax+LDR_MODULE.FullDllName+UNICODE_STRING.Length],cx
