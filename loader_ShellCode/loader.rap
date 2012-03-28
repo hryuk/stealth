@@ -112,13 +112,13 @@ ProductVer4Range=0
 [BreakPoint]
 0=
 [Find]
-1="IMAGE_SECTION_HEADER"
-2="memcpy"
-3="popad"
-4="AscToUni"
-5="pop eax"
-6="PEGetNT_HEADER"
-7="PEEntry"
-8="PELoadTls"
-9="call GetProcA"
-10="GetProcA"
+1="PELoadTls"
+2="return"
+3="tls"
+4="tlsallloc"
+5="PEEntry"
+6="LDR_MODULE"
+7="IMAGE_SECTION_HEADER"
+8="memcpy"
+9="popad"
+10="AscToUni"

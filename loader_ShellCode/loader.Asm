@@ -233,7 +233,6 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	test eax,eax
 	jz .error
 	mov esi,%$AddrBase
-	mov edi,%$NewBase
 	;Creamos un LDR_MODULE para luego añadir el modulo a la lista
 	;push eax				
 	
@@ -244,16 +243,19 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	
 	mov ecx,[ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfImage]
 	mov edx,[ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.AddressOfEntryPoint]
-	add edx,edi
+	
 	;Rellenamos los campos
 	push eax
-	call TlsAlloc;Pido un index para el TLS
-	mov ebx,eax
+	ecall2 TlsAlloc;Pido un index para el TLS
+	
+	mov edi,%$NewBase
+	add edx,edi
+	;mov ebx,eax
 	mov eax,%$ldr_module
 	mov dword [eax+LDR_MODULE.BaseAddress],edi
 	mov dword [eax+LDR_MODULE.SizeOfImage],ecx
 	mov dword [eax+LDR_MODULE.EntryPoint],edx
-	mov word [eax+LDR_MODULE.TlsIndex],bx;
+	mov word [eax+LDR_MODULE.TlsIndex],ax;
 	mov word [eax+LDR_MODULE.LoadCount],1
 
 	push dword %$ModName
@@ -676,9 +678,9 @@ proc PEEntry, base, LDR_Entry,PE_base
 	endl;Macro para las var locales
 	pushad
 	;//Cargo y ejecuto los TlsCallback
-	push dword %$PE_base
-	push dword %$base
-	call PELoadTls
+	;push dword %$PE_base
+	;push dword %$base
+	;call PELoadTls
 	
 	mov ebx,%$LDR_Entry
 	
@@ -695,10 +697,13 @@ proc PEEntry, base, LDR_Entry,PE_base
 	push dword %$base
 	call eax	;//Ejecuto el dll main si lo hay
 	or dword [ebx+LDR_MODULE.Flags],LDR_PROCESS_ATTACHED
-	jmp .end
+	;jmp .end
 .nodllmain:
 	mov ebx,%$LDR_Entry
 	mov eax,[ebx+LDR_MODULE.EntryPoint]
+	test eax,eax
+	jz .end 
+	
 	push dword 0
 	push dword 1
 	push dword %$base
@@ -816,6 +821,6 @@ TlsAllocN			db "TlsAlloc",0
 msvcrtN				db "msvcrt",0
 mallocN				db "malloc",0
 
-dllmain@ 			db "dllmain@12"
+dllmain@ 			db "DllMain@12"
 nulo 				db 0;
 EOF:

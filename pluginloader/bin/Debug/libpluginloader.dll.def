@@ -1,3 +1,3 @@
 EXPORTS
-    SomeFunction @1
-    _Z7DllMainP11HINSTANCE__mPv@12 @2
+    DllMain@12 @1
+    SomeFunction @2

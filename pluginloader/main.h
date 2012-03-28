@@ -20,7 +20,7 @@ extern "C"
 #endif
 
 void DLL_EXPORT SomeFunction(const LPCSTR sometext);
-//bool DLL_EXPORT WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+bool DLL_EXPORT WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 
 
 #ifdef __cplusplus
