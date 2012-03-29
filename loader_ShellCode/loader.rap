@@ -48,12 +48,12 @@ Group=Added files,Assembly,Resources,Misc,Modules
 4=2
 [Collapse]
 3=
-1=,,,
+1=,
 2=
 4=
 [Size]
 3=0,0,0,0,5486
-1=0,0,0,0,6931
+1=0,0,0,0,15511
 2=0,0,0,0,60
 4=0,0,0,0,391
 [VersionControl]
@@ -66,7 +66,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=28
+MilestoneOnDateDate=29
 MilestoneOnDateTimeYear=2011
 MilestoneOnDateTimeMonth=12
 MilestoneOnDateTimeDate=10
@@ -112,13 +112,13 @@ ProductVer4Range=0
 [BreakPoint]
 0=
 [Find]
-1="PELoadTls"
-2="return"
-3="tls"
-4="tlsallloc"
-5="PEEntry"
-6="LDR_MODULE"
-7="IMAGE_SECTION_HEADER"
-8="memcpy"
-9="popad"
-10="AscToUni"
+1="PEEntry"
+2="PELoadTls"
+3="TlsSetValue"
+4="TlsAllocN"
+5="TlsSetValueN"
+6="ecall2 malloc"
+7="malloc"
+8="return"
+9="tls"
+10="tlsallloc"

@@ -96,6 +96,14 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	mov ebx,TlsAlloc
 	mov [ebx+esi+1],eax	
 	
+	push TlsSetValueN
+	add [esp],esi
+	push dword %$kernel32
+	ecall2 GetProcAddress
+	
+	mov ebx,TlsSetValue
+	mov [ebx+esi+1],eax	
+	
 	push msvcrtN
 	add [esp],esi
 	ecall2 LoadLibraryA
@@ -380,6 +388,12 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	test ecx,ecx
 	jnz .SectLoad
 	;Secciones cargadas
+	;Cojo la nueva direccion de PE
+	push dword %$NewBase
+	call PEGetNT_HEADER
+	mov %$PE,eax
+	
+	
 	;Añado a la lista el modulo
 	push dword %$ldr_module
 	call AddLdrModules
@@ -551,6 +565,7 @@ proc PELoadTls,AddrBase,PE_base
 	
 	localdd Index
 	endl
+	pushad
 	push 0
 	push IMAGE_DIRECTORY_ENTRY_TLS
 	push dword %$PE_base
@@ -569,12 +584,13 @@ proc PELoadTls,AddrBase,PE_base
 	
 		mov edx,[ebx+TLS_DIRECTORY.RawDataStartVA]
 		mov %$TlsDataPlantillaAddr,edx
-		mov ecx,edx
-		sub ecx,[ebx+TLS_DIRECTORY.RawDataEndVA];//Calculo el tamaño de los datos
+		mov ecx,[ebx+TLS_DIRECTORY.RawDataEndVA];//Calculo el tamaño de los datos
+		sub ecx,edx
 		mov %$TlsDataPlantillaAddrSize,ecx
 	
 		push ecx
-		call malloc;//Pido memoria para guardarlo
+		ecall2 malloc;//Pido memoria para guardarlo
+		add esp,4
 		mov esi,eax;//Buffer donde se copiara
 	
 		push ecx
@@ -597,7 +613,7 @@ proc PELoadTls,AddrBase,PE_base
 			push 0
 			push 1
 			push dword %$AddrBase
-			call [edx]
+			ecall2 [edx]
 	
 			add edx,4
 		jmp .tlsNext
@@ -678,11 +694,24 @@ proc PEEntry, base, LDR_Entry,PE_base
 	endl;Macro para las var locales
 	pushad
 	;//Cargo y ejecuto los TlsCallback
-	;push dword %$PE_base
-	;push dword %$base
-	;call PELoadTls
+	push dword %$PE_base
+	push dword %$base
+	call PELoadTls
 	
 	mov ebx,%$LDR_Entry
+	
+	mov ebx,%$LDR_Entry
+	mov eax,[ebx+LDR_MODULE.EntryPoint]
+	test eax,eax
+	jz .NoMain 
+	or dword [ebx+LDR_MODULE.Flags],LDR_PROCESS_ATTACHED
+	
+	push dword 0
+	push dword 1
+	push dword %$base
+	call eax	;//Ejecuto el main si no hay un dll main
+	jmp PEEntry_end
+.NoMain:
 	
 	PUSH_RELOC_1:
 	;//Busco el dll main para llamarlo
@@ -691,24 +720,14 @@ proc PEEntry, base, LDR_Entry,PE_base
 	ecall2 GetProcAddress
 	and dword [ebx+LDR_MODULE.Flags],~LDR_LOAD_IN_PROGRESS;//Quito el flag de carga en proceso
 	test eax,eax
-	jz .nodllmain
+	jz PEEntry_end
 	push dword 0
 	push dword 1
 	push dword %$base
 	call eax	;//Ejecuto el dll main si lo hay
 	or dword [ebx+LDR_MODULE.Flags],LDR_PROCESS_ATTACHED
-	;jmp .end
-.nodllmain:
-	mov ebx,%$LDR_Entry
-	mov eax,[ebx+LDR_MODULE.EntryPoint]
-	test eax,eax
-	jz .end 
-	
-	push dword 0
-	push dword 1
-	push dword %$base
-	call eax	;//Ejecuto el main si no hay un dll main
-.end:
+PEEntry_end:
+
 	popad
 endp
 
@@ -817,6 +836,7 @@ VirtualAllocN		db "VirtualAlloc",0
 VirtualProtectN		db "VirtualProtect",0
 ExitProcessN		db "ExitProcess",0
 TlsAllocN			db "TlsAlloc",0
+TlsSetValueN		db "TlsSetValue",0
 
 msvcrtN				db "msvcrt",0
 mallocN				db "malloc",0
