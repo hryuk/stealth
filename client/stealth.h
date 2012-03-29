@@ -10,7 +10,6 @@
 #include "server.h"
 #include "connectionmanager.h"
 #include "messagemanager.h"
-#include "iteminfo.h"
 #include "grouptreewidget.h"
 
 class ConnectionManager;

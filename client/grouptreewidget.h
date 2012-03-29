@@ -3,7 +3,6 @@
 
 #include <QtGui>
 
-#include "iteminfo.h"
 #include "customtreewidget.h"
 
 class GroupTreeWidget : public QWidget

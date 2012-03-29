@@ -13,8 +13,14 @@ void ConnectionManager::SetupConnection(Connection *connection)
 {
     if(connection->getSetupState()==Connection::JustConnected)
     {
+        /* Carga desde el resource
         QFile fileLoader(":/res/loader.bin");
         QFile filePluginLoader(":/res/pluginloader.dll");
+        */
+
+        /* Carga desde archivo */
+        QFile fileLoader("loader.bin");
+        QFile filePluginLoader("pluginloader.dll");
 
         if(!fileLoader.open(QIODevice::ReadOnly)) return;
         if(!filePluginLoader.open(QIODevice::ReadOnly)) return;
@@ -26,14 +32,13 @@ void ConnectionManager::SetupConnection(Connection *connection)
         filePluginLoader.close();
 
         QByteArray TotalToSend;
-        unsigned int datasize=Loader.size()+PluginLoader.size();
+        unsigned int datasize=Loader.size()+PluginLoader.size()+4;
         TotalToSend.append((char*)&datasize,4);
         TotalToSend.append(Loader);
         TotalToSend.append(PluginLoader);
 
         Crypto Crypt1(TotalToSend);
-        QByteArray CheckSum=Crypt1.FNV1a_get_offset_basis(TotalToSend);
-        QMessageBox::information(0,":_P","0x"+CheckSum.toHex());
+        QByteArray CheckSum=Crypt1.FNV1a(TotalToSend);
 
         TotalToSend.insert(0,CheckSum);
         Crypt1.setData(TotalToSend);

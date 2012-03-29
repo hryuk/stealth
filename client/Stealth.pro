@@ -17,7 +17,6 @@ SOURCES += main.cpp\
     server.cpp \
     messagemanager.cpp \
     crypto.cpp \
-    iteminfo.cpp \
     grouptreewidget.cpp \
     customtreewidget.cpp
 
@@ -27,16 +26,24 @@ HEADERS  += stealth.h \
     server.h \
     messagemanager.h \
     crypto.h \
-    iteminfo.h \
     grouptreewidget.h \
     customtreewidget.h
 
-FORMS    += stealth.ui \
-    iteminfo.ui
+FORMS    += stealth.ui
 
 RESOURCES += \
     Resource.qrc
 
 INCLUDEPATH += $$quote(qca-2.0.3/include/QtCrypto)
 
-LIBS += -L$$quote(qca-2.0.3/lib) -lqca2
+win32 {
+    LIBS += -L$$quote(qca-2.0.3/lib) -lqca2
+}
+unix {
+    LIBS += -L$$quote(qca-2.0.3/lib) -lqca
+}
+
+
+
+
+

@@ -73,11 +73,6 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
         QGraphicsScene* scene=new QGraphicsScene();
         scene->addText("To Do");
         gvSpeed->setScene(scene);
-
-        ItemInfo* itemInfo=new ItemInfo();
-        QTreeWidgetItem* itInfo=new QTreeWidgetItem();
-        treewidget->topLevelItem(i)->addChild(itInfo);
-        treewidget->setItemWidget(treewidget->topLevelItem(i)->child(0),0,itemInfo);
     }
 }
 

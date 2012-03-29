@@ -31,14 +31,14 @@ QByteArray Crypto::sha1(QString data)
     return sha1(data.toAscii());
 }
 
-QByteArray Crypto::FNV1a_get_offset_basis(QByteArray data)
+QByteArray Crypto::FNV1a(QByteArray data)
 {
-    quint32 FNV_prime=0x1EF30EB;
     quint32 r=0;
+
     for(uint i=0;i<(uint)data.size();i++)
     {
-        r=(r*FNV_prime);
-        r^=data.at(i);
+        r>>=1;
+        r^=(data.at(i)<<7);
     }
 
     return QByteArray((char*)&r,4);
