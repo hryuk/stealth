@@ -42,7 +42,7 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
     nl->setMargin(0);
     nl->setSpacing(4);
     iconLabel=new QLabel();
-    iconLabel->setPixmap(QPixmap(":/res/img/bullet_arrow_left.png"));
+    iconLabel->setPixmap(QPixmap(":/res/img/bullet_arrow_down.png"));
     iconLabel->setScaledContents(true);
     iconLabel->setFixedSize(24,24);
     nl->addWidget(iconLabel);

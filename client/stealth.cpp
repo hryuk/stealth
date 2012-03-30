@@ -1,6 +1,8 @@
 #include "stealth.h"
 #include "ui_stealth.h"
 
+#include "crypto.h"
+
 Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
                                     ui(new Ui::Stealth)
 {

@@ -35,11 +35,12 @@ QByteArray Crypto::FNV1a(QByteArray data)
 {
     quint32 r=0;
 
-    for(uint i=0;i<(uint)data.size();i++)
+    foreach(char c,data)
     {
-        r>>=1;
-        r^=(data.at(i)<<7);
+        *(char*)&r^=c;
+        r*=0x1EF30EB;
     }
+
 
     return QByteArray((char*)&r,4);
 }
