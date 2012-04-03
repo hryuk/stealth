@@ -1,10 +1,10 @@
 	global main
 	[BITS 32]
-
+			
 	%include "loader.inc"
 	%include "kernel32.inc"
-	
-	
+			
+			
 	section code USE32
 	;quitamos la macro import de estas funciones
 	%undef LoadLibraryA
@@ -16,48 +16,48 @@
 	;//los cambios en los registros que hacen muchas apis.Tambien esta el macro ecall2 que es igual	//
 	;//que el anterior, pero no las declara como externas											//
 	;/////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-nop
-nop
+			
+			
+	nop
+	nop
 proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
-		localdd kernel32
-		;localdd msvcrt
-		localdd VirtualProtect_
-		localdd OldProtect
-	endl
-	
+	localdd kernel32
+	;localdd msvcrt
+	localdd VirtualProtect_
+	localdd OldProtect
+endl
+			
 	xor eax,eax
 	inc eax
 	pushad
-
+			
 	call GetDeltaOffset
 	mov esi,eax
 	;//**********************************
 	;* ESI contiene el deltaOffset		*
 	;***********************************//
-	
+			
 	;//Coloco en su sitio estas funciones que son imprescindibles
 	mov eax,%$LoadLibrary_
 	mov ebx,LoadLibraryA
 	mov [ebx+esi+1],eax
-	
+			
 	mov eax,%$GetProcAddress_
 	mov ebx,GetProcAddress
 	mov [ebx+esi+1],eax
-	
+			
 	;//Consigo la direccion de kernel32
 	push kernel32N
 	add [esp],esi
 	ecall2 LoadLibraryA
 	mov dword %$kernel32,eax
-	
+			
 	push VirtualProtectN
 	add [esp],esi
 	push dword %$kernel32
 	ecall2 GetProcAddress
 	mov %$VirtualProtect_,eax
-	
+			
 	;//Cambio la proteccion
 	lea ebx,%$OldProtect
 	push ebx
@@ -70,50 +70,50 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	mov ebx,VirtualProtect
 	mov eax,%$VirtualProtect_
 	mov [ebx+esi+1],eax
-	
+			
 	;//Busco las direcciones de las funciones que posteriormente usare
 	push VirtualAllocN
 	add [esp],esi
 	push dword %$kernel32
 	ecall2 GetProcAddress
-	
+			
 	mov ebx,VirtualAlloc
 	mov [ebx+esi+1],eax	
-	
+			
 	push ExitProcessN
 	add [esp],esi
 	push dword %$kernel32
 	ecall2 GetProcAddress
-	
+			
 	mov ebx,ExitProcess
 	mov [ebx+esi+1],eax	
-	
+			
 	push TlsAllocN
 	add [esp],esi
 	push dword %$kernel32
 	ecall2 GetProcAddress
-	
+			
 	mov ebx,TlsAlloc
 	mov [ebx+esi+1],eax	
-	
+			
 	push TlsSetValueN
 	add [esp],esi
 	push dword %$kernel32
 	ecall2 GetProcAddress
-	
+			
 	mov ebx,TlsSetValue
 	mov [ebx+esi+1],eax	
-	
+			
 	push msvcrtN
 	add [esp],esi
 	ecall2 LoadLibraryA
 	;mov dword %$msvcrt,eax
-	
+			
 	push mallocN
 	add [esp],esi
 	push eax
 	ecall2 GetProcAddress
-	
+			
 	mov ebx,malloc
 	mov [ebx+esi+1],eax	
 	;Ahora toca relocalizar el codigo estatico que pueda quedar
@@ -123,8 +123,8 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	;PUSH_RELOC_1
 	mov eax,PUSH_RELOC_1
 	add [eax+esi+1],esi
-	
-	
+			
+			
 	mov eax,EOF
 	add eax,esi
 	;//Cargo el plugin loader
@@ -132,22 +132,30 @@ proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
 	add [esp],esi
 	push eax
 	call LoadLibraryFromMemoy
+	test eax,eax
+	jz .ExitError
+	mov ebx, eax
 	;//Aqui se devuelve la direccion base del modulo cargado
-	
-	
+			
+			
 	;//Se deveria de buscar aqui la funcion de entrada
-	
+			
 	;//Se ejecuta la funcion principal del programa
+			
+	;Descargamos el modulo de la memoria
+	push ebx
+	call FreeLibraryFromMemoy
 	
+	.ExitError:
 	;//Salimos del programa
 	push 0
 	call ExitProcess
-	
+			
 	popad
 	leave
 	ret
 endp
-
+			
 	int3
 	int3
 	int3
@@ -156,52 +164,52 @@ endp
 	int3
 	int3
 	int3
-
+			
 proc GetDeltaOffset
 	localbuf relleno,4
-	endl
-.delta:
+endl
+			.delta:
 	fldz
 	db 0xD9,0x74,0xE4,0xF4	;FSTENV SS:[ESP-0C]
 	pop eax					;Aqui esta eip
 	sub eax,.delta
 endp
-
+			
 proc memcpy, PDestino,POrigen,size
-	endl
+endl
 	pushad
-	
+			
 	mov esi,%$POrigen
 	mov edi,%$PDestino
 	mov ecx,%$size
 	rep movsb
-	
+			
 	return %$PDestino
 endp
 proc lstrlenA,AsciiStr
-	endl
+endl
 	pushad 
 	xor ecx,ecx
 	mov eax,ecx
 	dec ecx
-	
+			
 	mov edi,%$AsciiStr
 	repne scasb
 	inc ecx
 	not ecx
-	
+			
 	return ecx
 endp
 proc AscToUni, AsciiStr,BuffToCopy
-	endl
+endl
 	pushad
-	
+			
 	mov esi,%$AsciiStr
 	mov edi,%$BuffToCopy
 	xor eax,eax;Pomgo a cero
-	
-	.nextChar:;//Para convertir a unicode, ensancho los caracteres con un 0 de relleno para que quede asi: 0xXX 0x00 0xXX 0x00
-	
+			
+.nextChar:	;//Para convertir a unicode, ensancho los caracteres con un 0 de relleno para que quede asi: 0xXX 0x00 0xXX 0x00
+			
 	;movzx ax,byte [esi+ecx]
 	;mov [edi+ecx*2],ax
 	lodsb	;//mov al,[edi]; edi++
@@ -209,10 +217,10 @@ proc AscToUni, AsciiStr,BuffToCopy
 	;inc ecx
 	test eax,eax
 	jnz .nextChar
-	
+			
 	popad
 endp
-
+			
 proc LoadLibraryFromMemoy, AddrBase, ModName
 	LOCALDD PE
 	LOCALDD SectionsHead
@@ -220,8 +228,9 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	LOCALDD NewBase
 	LOCALDD OldProtect
 	LOCALDB RelocFlag
-	endl
-
+endl
+	pushad
+	
 	push dword %$AddrBase
 	call PEGetNT_HEADER
 	mov %$PE,eax
@@ -230,7 +239,7 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	call PEGetSectionHeader
 	mov %$SectionsHead,eax
 	mov ebx,%$PE
-
+			
 	;Reservo memoria para Cargar el ejecutable alli
 	push dword 0x40     ;PAGE_EXECUTE_READWRITE
 	push dword 0x2000   ;MEM_RESERVE
@@ -243,19 +252,19 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	mov esi,%$AddrBase
 	;Creamos un LDR_MODULE para luego añadir el modulo a la lista
 	;push eax				
-	
+			
 	push sizeof(LDR_MODULE)
 	ecall2 malloc
 	add esp,4
 	mov %$ldr_module,eax
-	
+			
 	mov ecx,[ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfImage]
 	mov edx,[ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.AddressOfEntryPoint]
-	
+			
 	;Rellenamos los campos
 	push eax
 	ecall2 TlsAlloc;Pido un index para el TLS
-	
+			
 	mov edi,%$NewBase
 	add edx,edi
 	;mov ebx,eax
@@ -265,28 +274,28 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	mov dword [eax+LDR_MODULE.EntryPoint],edx
 	mov word [eax+LDR_MODULE.TlsIndex],ax;
 	mov word [eax+LDR_MODULE.LoadCount],1
-
+			
 	push dword %$ModName
 	ecall2 lstrlenA
 	mov ecx,eax
 	inc ecx
 	shl ecx,1
-
+			
 	push ecx
 	ecall2 malloc
 	add esp,4
 	mov ebx,eax
-
+			
 	;push ecx
 	push ebx
 	push  dword %$ModName
 	call AscToUni
-	
-	
+			
+			
 	;pop eax
 	mov eax,%$ldr_module
-	
-	
+			
+			
 	mov word [eax+LDR_MODULE.FullDllName+UNICODE_STRING.Length],cx
 	mov word [eax+LDR_MODULE.FullDllName+UNICODE_STRING.MaximumLength],cx
 	mov dword [eax+LDR_MODULE.FullDllName+UNICODE_STRING.Buffer],ebx
@@ -300,16 +309,16 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	mov ecx,[ebx+IMAGE_NT_HEADERS.FileHeader+IMAGE_FILE_HEADER.TimeDateStamp]
 	mov dword [eax+LDR_MODULE.TimeDateStamp],0
 	mov dword [eax+LDR_MODULE.Flags],LDR_WINE_INTERNAL | LDR_ENTRY_PROCESSED | LDR_LOAD_IN_PROGRESS
-
-
+			
+			
 	mov eax,%$NewBase
 	cmp [ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.ImageBase],eax
 	jne .reloc
 .RelocContinue:
 	;mov edi,eax
-
+			
 	mov ecx, [ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfHeaders]
-
+			
 	push dword 0x40     ;PAGE_EXECUTE_READWRITE
 	push dword 0x1000   ;MEM_COMMIT
 	push ecx
@@ -318,7 +327,7 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	test eax,eax
 	jz .error
 	;Copio la cabecera del modulo ejecutable
-
+			
 	push ecx
 	push esi
 	push eax
@@ -331,21 +340,21 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	push ecx
 	push eax
 	ecall2 VirtualProtect
-
+			
 	xor ecx,ecx
 	mov cx,[ebx+IMAGE_NT_HEADERS.FileHeader+IMAGE_FILE_HEADER.NumberOfSections]
-
+			
 	;Obtengo la primera cabecera de seccion
 	push ebx
 	push esi
 	call PEGetSectionHeader
 	mov edx,eax
 	;Cargamos las secciones
-.SectLoad:
+			.SectLoad:
 	dec ecx
 	mov eax,[edx+IMAGE_SECTION_HEADER.VirtualAddress]
 	add eax,%$NewBase
-
+			
 	mov ebx,[edx+IMAGE_SECTION_HEADER.PointerToRawData]
 	add ebx,esi
 	push dword 0x40     ;PAGE_EXECUTE_READWRITE
@@ -353,12 +362,12 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	push dword [edx+IMAGE_SECTION_HEADER.VirtualSize]
 	push eax
 	ecall2 VirtualAlloc
-
+			
 	push dword [edx+IMAGE_SECTION_HEADER.SizeOfRawData]
 	push ebx
 	push eax
 	call memcpy
-
+			
 	;Leemos las caracteristicas de la seccion para asignarlas
 	test dword [edx+IMAGE_SECTION_HEADER.Characteristics],IMAGE_SCN_MEM_EXECUTE
 	jnz .SECTION_CODE
@@ -377,7 +386,7 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 .SECTION_RDATA:
 	mov dword %$OldProtect,0x02;PAGE_READONLY
 .SECTION_PROTECT_END:
-
+			
 	lea ebx,%$OldProtect
 	push ebx
 	push dword [ebx]
@@ -392,8 +401,8 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	push dword %$NewBase
 	call PEGetNT_HEADER
 	mov %$PE,eax
-	
-	
+			
+			
 	;Añado a la lista el modulo
 	push dword %$ldr_module
 	call AddLdrModules
@@ -410,8 +419,8 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	push dword %$PE
 	push dword %$NewBase
 	call PELoadIAT
-	
-	
+			
+			
 	;//Aqui se empieza a ejecutar el modulo
 	push dword %$PE
 	push dword %$ldr_module
@@ -419,7 +428,7 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 	call PEEntry
 	;or dword [ecx+LDR_MODULE.Flags],LDR_PROCESS_ATTACHED
 	and dword [ecx+LDR_MODULE.Flags], ~LDR_LOAD_IN_PROGRESS
-
+			
 	jmp .end
 .reloc:
 	test word [ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.DllCharacteristics],IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE
@@ -432,16 +441,37 @@ proc LoadLibraryFromMemoy, AddrBase, ModName
 .end:
 	mov eax,%$NewBase
 .end_error:
-
-
+			
+	return eax
 endp
-
+			
 proc FreeLibraryFromMemoy, AddrBase
+endl
+	pushad
+	
+	;Busco el modulo en la lista de modulos cargados
+	push dword %$AddrBase
+	call GetLdrModule
+	test eax,eax;Si no esta, devuelve Zero
+	jz .error
+	mov ebx,eax
+	
+	;Eliminamos el nodo de la lista
+	push ebx
+	call DelLdrModule
+	
+	
+	jmp .NoError
+	.error:
+	xor eax,eax
+	.NoError:
+	
+	return eax
 endp
 proc PEGetNT_HEADER,AddrBase
 	push edx
 	push edi
-
+			
 	mov edx,%$AddrBase
 	cmp word [edx+IMAGE_DOS_HEADER.e_magic],`MZ`;Compruebo la firma de MZ
 	jne .error_NoDOS_head
@@ -455,11 +485,11 @@ proc PEGetNT_HEADER,AddrBase
 .error_NoDOS_head:
 	xor eax,eax
 .end:
-
+			
 	pop edi
 	pop edx
 endp
-
+			
 proc PEGetSectionHeader,AddrBase,PE_base
 	mov eax,%$PE_base
 	movzx eax,word[eax+IMAGE_NT_HEADERS.FileHeader+IMAGE_FILE_HEADER.SizeOfOptionalHeader]
@@ -471,24 +501,24 @@ proc PEGetDirectoryEntry,AddrBase,PE_base, Table,SizeTable_out
 	mov eax,%$PE_base
 	mov ebx,%$Table
 	shl ebx,3
-	
+			
 	mov eax,[eax+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.DataDirectory+IMAGE_DATA_DIRECTORY.VirtualAddress+ebx]
 	test eax,eax
 	jz .IsEmpy	
-		add eax,%$AddrBase
-		mov esi,%$SizeTable_out
-		test esi,esi
-		jz .NotSizeOut
-			mov edx,[eax+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.DataDirectory+IMAGE_DATA_DIRECTORY.size+ebx]
-			mov dword [esi],edx
-		.NotSizeOut:
-	.IsEmpy:
+	add eax,%$AddrBase
+	mov esi,%$SizeTable_out
+	test esi,esi
+	jz .NotSizeOut
+	mov edx,[eax+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.DataDirectory+IMAGE_DATA_DIRECTORY.size+ebx]
+	mov dword [esi],edx
+.NotSizeOut:
+.IsEmpy:
 	pop ebx
 endp
 proc PEBaseReloc,AddrBase,PE_base
 	localdd TableSize
 	localdd Delta
-	endl
+endl
 	lea eax,%$TableSize
 	push eax
 	push IMAGE_DIRECTORY_ENTRY_BASERELOC
@@ -497,74 +527,74 @@ proc PEBaseReloc,AddrBase,PE_base
 	call PEGetDirectoryEntry
 	test eax,eax
 	jz .NotFound
-		mov esi,%$AddrBase
-		mov eax,%$PE_base
-		;//Obtengo el delta del nuevo modulo
-		sub esi,[eax+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.ImageBase]
-		mov %$Delta,esi
-		;mov ecx,%$TableSize
-		.NextBR:
-			;//Cargo el bloke de reubicacion
-			mov edx,[eax+IMAGE_BASE_RELOCATION.BR_SizeOfBlock]
-			mov ecx,edx
-			mov ebx,[eax+IMAGE_BASE_RELOCATION.BR_VirtualAddress]
-			add ebx,%$AddrBase
-			;//Le añado el tamaño de IMAGE_BASE_RELOCATION para encontrar el array de 
-			add eax,sizeof(IMAGE_BASE_RELOCATION)
-			sub ecx,sizeof(IMAGE_BASE_RELOCATION)
-			.NextEntry:
-			sub ecx,2
+	mov esi,%$AddrBase
+	mov eax,%$PE_base
+	;//Obtengo el delta del nuevo modulo
+	sub esi,[eax+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.ImageBase]
+	mov %$Delta,esi
+	;mov ecx,%$TableSize
+.NextBR:
+	;//Cargo el bloke de reubicacion
+	mov edx,[eax+IMAGE_BASE_RELOCATION.BR_SizeOfBlock]
+	mov ecx,edx
+	mov ebx,[eax+IMAGE_BASE_RELOCATION.BR_VirtualAddress]
+	add ebx,%$AddrBase
+	;//Le añado el tamaño de IMAGE_BASE_RELOCATION para encontrar el array de 
+	add eax,sizeof(IMAGE_BASE_RELOCATION)
+	sub ecx,sizeof(IMAGE_BASE_RELOCATION)
+.NextEntry:
+	sub ecx,2
 			
-			mov di,[eax+ecx];//IMAGE_RELOCATION_DATA
-			shr di,12;//IMAGE_RELOCATION_DATA.RelocType
-			test di,di;//type == IMAGE_REL_BASED_ABSOLUTE
-			jnz .NotAbsolute
-				jmp .Contibue
-			.NotAbsolute:
-			cmp di,IMAGE_REL_BASED_HIGH
-			jnz .NotHigh
-				movzx edi,word [eax+ecx]
-				and di,0x0fff
-				jmp .Contibue
-				;//Relocaliza solo la parte alta
-				shr esi,16
-				add [edi+ebx+2],si
-				mov esi,%$Delta
-			.NotHigh:
-			cmp di,IMAGE_REL_BASED_LOW
-			jnz .NotLow
-				movzx edi,word [eax+ecx]
-				and di,0x0fff
-				jmp .Contibue
-				;//Relocaliza solo la parte baja
-				add [edi+ebx],si
-			.NotLow:
-			cmp di,IMAGE_REL_BASED_HIGHLOW
-			jnz .NotHighLow
-				movzx edi,word [eax+ecx]
-				and di,0x0fff
-				jmp .Contibue
-				;//Relocalizacion de 32b
-				add [edi+ebx],esi
-			.NotHighLow:
-			.Contibue:
+	mov di,[eax+ecx];//IMAGE_RELOCATION_DATA
+	shr di,12;//IMAGE_RELOCATION_DATA.RelocType
+	test di,di;//type == IMAGE_REL_BASED_ABSOLUTE
+	jnz .NotAbsolute
+	jmp .Contibue
+.NotAbsolute:
+	cmp di,IMAGE_REL_BASED_HIGH
+	jnz .NotHigh
+	movzx edi,word [eax+ecx]
+	and di,0x0fff
+	jmp .Contibue
+	;//Relocaliza solo la parte alta
+	shr esi,16
+	add [edi+ebx+2],si
+	mov esi,%$Delta
+.NotHigh:
+	cmp di,IMAGE_REL_BASED_LOW
+	jnz .NotLow
+	movzx edi,word [eax+ecx]
+	and di,0x0fff
+	jmp .Contibue
+	;//Relocaliza solo la parte baja
+	add [edi+ebx],si
+.NotLow:
+	cmp di,IMAGE_REL_BASED_HIGHLOW
+	jnz .NotHighLow
+	movzx edi,word [eax+ecx]
+	and di,0x0fff
+	jmp .Contibue
+	;//Relocalizacion de 32b
+	add [edi+ebx],esi
+.NotHighLow:
+.Contibue:
 			
-			;//add eax,2;//Añado el tamaño de IMAGE_RELOCATION_DATA que es de 2 bytes
-			test ecx,ecx
-			jnz .NextEntry
-			add eax,edx
-			sub eax,sizeof(IMAGE_BASE_RELOCATION)
+	;//add eax,2;//Añado el tamaño de IMAGE_RELOCATION_DATA que es de 2 bytes
+	test ecx,ecx
+	jnz .NextEntry
+	add eax,edx
+	sub eax,sizeof(IMAGE_BASE_RELOCATION)
 			
-		sub %$TableSize,edx
-		jnz .NextBR
-	.NotFound:
+	sub %$TableSize,edx
+	jnz .NextBR
+			.NotFound:
 endp
 proc PELoadTls,AddrBase,PE_base
 	localdd TlsDataPlantillaAddr
 	localdd TlsDataPlantillaAddrSize
-	
+			
 	localdd Index
-	endl
+endl
 	pushad
 	push 0
 	push IMAGE_DIRECTORY_ENTRY_TLS
@@ -573,60 +603,60 @@ proc PELoadTls,AddrBase,PE_base
 	call PEGetDirectoryEntry
 	test eax,eax
 	jz .NotFound
-	
-		mov ebx,eax
-	
-		;//Index para el tls
-		ecall2 TlsAlloc
-		mov %$Index, eax
-		mov edx,[ebx+TLS_DIRECTORY.AddressOfIndex];//Cojo la direccion de la variable que contendra el index
-		mov [edx],eax;//Le asigno un index
-	
-		mov edx,[ebx+TLS_DIRECTORY.RawDataStartVA]
-		mov %$TlsDataPlantillaAddr,edx
-		mov ecx,[ebx+TLS_DIRECTORY.RawDataEndVA];//Calculo el tamaño de los datos
-		sub ecx,edx
-		mov %$TlsDataPlantillaAddrSize,ecx
-	
-		push ecx
-		ecall2 malloc;//Pido memoria para guardarlo
-		add esp,4
-		mov esi,eax;//Buffer donde se copiara
-	
-		push ecx
-		push edx
-		push esi
-		call memcpy;//Copio la plantilla al buffert
-	
-		push esi
-		push dword %$Index
-		ecall2 TlsSetValue;//Guardo el buffert en el tls
-	
-		;//Llamo a los TlsCallback
-	
-		mov edx,[ebx+TLS_DIRECTORY.AddressOfCallbacks]
-	
-		.tlsNext:
-		cmp dword [edx],0;//Bucle que recorrera el array hasta encontrarse con el puntero que vale 0
-		je .tlsEnd
-	
-			push 0
-			push 1
-			push dword %$AddrBase
-			ecall2 [edx]
-	
-			add edx,4
-		jmp .tlsNext
-		.tlsEnd:
-	
-	.NotFound:
+			
+	mov ebx,eax
+			
+	;//Index para el tls
+	ecall2 TlsAlloc
+	mov %$Index, eax
+	mov edx,[ebx+TLS_DIRECTORY.AddressOfIndex];//Cojo la direccion de la variable que contendra el index
+	mov [edx],eax;//Le asigno un index
+			
+	mov edx,[ebx+TLS_DIRECTORY.RawDataStartVA]
+	mov %$TlsDataPlantillaAddr,edx
+	mov ecx,[ebx+TLS_DIRECTORY.RawDataEndVA];//Calculo el tamaño de los datos
+	sub ecx,edx
+	mov %$TlsDataPlantillaAddrSize,ecx
+			
+	push ecx
+	ecall2 malloc;//Pido memoria para guardarlo
+	add esp,4
+	mov esi,eax;//Buffer donde se copiara
+			
+	push ecx
+	push edx
+	push esi
+	call memcpy;//Copio la plantilla al buffert
+			
+	push esi
+	push dword %$Index
+	ecall2 TlsSetValue;//Guardo el buffert en el tls
+			
+	;//Llamo a los TlsCallback
+			
+	mov edx,[ebx+TLS_DIRECTORY.AddressOfCallbacks]
+			
+			.tlsNext:
+	cmp dword [edx],0;//Bucle que recorrera el array hasta encontrarse con el puntero que vale 0
+	je .tlsEnd
+			
+	push 0
+	push 1
+	push dword %$AddrBase
+	ecall2 [edx]
+			
+	add edx,4
+	jmp .tlsNext
+			.tlsEnd:
+			
+			.NotFound:
 	popad
 endp
-
+			
 proc PELoadIAT,AddrBase,PE_base
-		localdd IAT
-		localdd OldProtect
-	endl
+	localdd IAT
+	localdd OldProtect
+endl
 	pushad
 	push 0
 	push IMAGE_DIRECTORY_ENTRY_IMPORT
@@ -635,7 +665,7 @@ proc PELoadIAT,AddrBase,PE_base
 	call PEGetDirectoryEntry
 	mov dword %$IAT,eax
 	mov ebx,eax
-
+			
 .nextImportModule:
 	mov eax,[ebx+IMAGE_IMPORT_DESCRIPTOR.Name1]
 	test eax,eax
@@ -647,7 +677,7 @@ proc PELoadIAT,AddrBase,PE_base
 	mov edx,eax
 	mov esi,[ebx+IMAGE_IMPORT_DESCRIPTOR.FirstThunk]
 	add esi,dword %$AddrBase
-
+			
 	lea eax,%$OldProtect
 	push eax
 	push 4
@@ -657,12 +687,12 @@ proc PELoadIAT,AddrBase,PE_base
 	push eax
 	ecall2 VirtualProtect
 	;//Cambio la proteccion para poder escrivir en el FirstThunk las direcciones de las funcciones
-
+			
 	xor ecx,ecx
 .nextImportFunc:
 	test dword[esi+IMAGE_THUNK_DATA.AddressOfData+ecx],-1
 	jz .EndImportFunc
-
+			
 	mov eax,[esi+IMAGE_THUNK_DATA.AddressOfData+ecx]
 	add eax,%$AddrBase
 	lea eax,[eax+IMAGE_IMPORT_BY_NAME.Name1]
@@ -671,7 +701,7 @@ proc PELoadIAT,AddrBase,PE_base
 	ecall2 GetProcAddress
 	;//Busco la direccion de la funcion importada y la guardo en el THUNK_DATA
 	mov [esi+IMAGE_THUNK_DATA.AddressOfData+ecx],eax
-
+			
 	add ecx,4
 	jmp .nextImportFunc
 .EndImportFunc:
@@ -689,31 +719,31 @@ proc PELoadIAT,AddrBase,PE_base
 .endLoad:
 	popad
 endp
-
+			
 proc PEEntry, base, LDR_Entry,PE_base
-	endl;Macro para las var locales
+endl;Macro para las var locales
 	pushad
 	;//Cargo y ejecuto los TlsCallback
 	push dword %$PE_base
 	push dword %$base
 	call PELoadTls
-	
+			
 	mov ebx,%$LDR_Entry
-	
+			
 	mov ebx,%$LDR_Entry
 	mov eax,[ebx+LDR_MODULE.EntryPoint]
 	test eax,eax
 	jz .NoMain 
 	or dword [ebx+LDR_MODULE.Flags],LDR_PROCESS_ATTACHED
-	
+			
 	push dword 0
 	push dword 1
 	push dword %$base
 	call eax	;//Ejecuto el main si no hay un dll main
 	jmp PEEntry_end
-.NoMain:
-	
-	PUSH_RELOC_1:
+			.NoMain:
+			
+PUSH_RELOC_1:
 	;//Busco el dll main para llamarlo
 	push dllmain@
 	push dword %$base
@@ -727,44 +757,43 @@ proc PEEntry, base, LDR_Entry,PE_base
 	call eax	;//Ejecuto el dll main si lo hay
 	or dword [ebx+LDR_MODULE.Flags],LDR_PROCESS_ATTACHED
 PEEntry_end:
-
 	popad
 endp
-
+			
 proc AddLdrModules,module;PLDR_MODULE
-	localdd ldr
-	endl
+	;//localdd ldr
+endl
 	pushad
 	mov esi,%$module
-	mov eax,[fs:0x30]
-	mov eax,[eax+0x0c]
-	mov %$ldr,eax
-	lea eax,[eax+PEB_LDR_DATA.InLoadOrderModuleList]
+	mov eax,[fs:0x30];Saco la direccion del PEB
+	mov eax,[eax+0x0c];Saco el puntero a PEB_LDR_DATA
+	;//mov %$ldr,eax
+	lea eax,[eax+PEB_LDR_DATA.InLoadOrderModuleList];Saco la direccion del ultimo nodo cargado
 	;mov dword [esi+LDR_MODULE.Flags],0
 	;or dword [esi+LDR_MODULE.Flags],LDR_LOAD_IN_PROGRESS
-
+			
 	;añadimos el modulo a InLoadOrderModuleList, lo ponemos el ultimo, porque a sido el ultimo en cargar
 	mov ebx,[eax+LIST_ENTRY.Blink]
 	mov [eax+LIST_ENTRY.Blink],esi
 	mov [ebx+LIST_ENTRY.Flink],esi
 	mov [esi+LIST_ENTRY.Blink],ebx
 	mov [esi+LIST_ENTRY.Flink],eax
-
+			
 	lea edi,[esi+LDR_MODULE.InInitializationOrderModuleList]
 	lea edx,[eax+LDR_MODULE.InInitializationOrderModuleList]
-
+			
 	mov ebx,[edx+LIST_ENTRY.Blink]
 	mov [edx+LIST_ENTRY.Blink],edi
 	mov [ebx+LIST_ENTRY.Flink],edi
 	mov [edi+LIST_ENTRY.Blink],ebx
 	mov [edi+LIST_ENTRY.Flink],edx
-
+			
 	mov ecx, [esi+LDR_MODULE.BaseAddress]
 	lea esi,[esi+LDR_MODULE.InMemoryOrderModuleList]
 	lea edi,[eax+LDR_MODULE.InMemoryOrderModuleList]
 	mov ebx,[edi+LIST_ENTRY.Blink]
 	;//Aqui voy buscando el lugar apropiado en InMemoryOrderModuleList para insertar
-.SearchMemoryOrder:
+			.SearchMemoryOrder:
 	cmp [ebx+LDR_MODULE.BaseAddress-LDR_MODULE.InMemoryOrderModuleList],ecx
 	ja .NoFind
 	mov ecx,[ebx+LIST_ENTRY.Flink]
@@ -772,29 +801,81 @@ proc AddLdrModules,module;PLDR_MODULE
 	mov [ecx+LIST_ENTRY.Blink],esi
 	mov [esi+LIST_ENTRY.Flink],ecx
 	mov [esi+LIST_ENTRY.Blink],ebx
-
+			
 	jmp .end
-.NoFind:
-
+			.NoFind:
+			
 	mov ebx,[ebx+LIST_ENTRY.Blink]
 	cmp ebx,eax
 	je .end
 	jmp .SearchMemoryOrder
-.end:
-
+			.end:
+			
 PUSH_RELOC_0:
 	;Hacemos una llamada a GetProcAddress para que se haga a esa nueva lista de modulos
 	;Lo ago por haver visto que la primera llamada a GPA despues de añadir una entrada a veces falla
 	push nulo
 	push dword [esi+LDR_MODULE.BaseAddress-LDR_MODULE.InMemoryOrderModuleList]
 	ecall2 GetProcAddress
-
-
+			
+			
 	popad
 endp
-proc DelLdrModules,module_node
+proc GetLdrModule,module_base
+endl
+	pushad
+	mov esi,%$module_base
+	mov eax,[fs:0x30];Saco la direccion del PEB
+	mov eax,[eax+0x0c];Saco el puntero a PEB_LDR_DATA
+	
+	lea ebx,[eax+PEB_LDR_DATA.InLoadOrderModuleList]
+	mov ecx,ebx
+	
+	.NexNode:
+	cmp esi,[ebx+LDR_MODULE.BaseAddress];Comprovamos si coincide la direccion base con la del modulo que buscamos
+	je .ModuleFount
+	;Pasamos al siguiente modulo
+	mov ebx,[ebx+LDR_MODULE.InLoadOrderModuleList+LIST_ENTRY.Blink]
+	;Comprovamos que no pasamos ya por este nodo
+	cmp ebx,ecx
+	jnz .NexNode
+	;//Si se recorren todos los nodos de la lista y no se encuentra, se debuelve ZERO
+	xor ebx,ebx
+.ModuleFount:
+			
+	return ebx
+endl
+proc DelLdrModule,module_node;PLDR_MODULE
+endl
+	pushad
+	mov esi,%$module_node
+		
+	;//Desbinculo de la lista por orden de carga
+	mov ecx,[esi+LDR_MODULE.InLoadOrderModuleList+LIST_ENTRY.Flink]
+	mov edx,[esi+LDR_MODULE.InLoadOrderModuleList+LIST_ENTRY.Blink]
+	
+	mov [ecx+LDR_MODULE.InLoadOrderModuleList+LIST_ENTRY.Blink],edx
+	mov [edx+LDR_MODULE.InLoadOrderModuleList+LIST_ENTRY.Flink],ecx
+	
+	
+	;//Desbinculo de la lista por orden de direccion base
+	mov ecx,[esi+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Flink]
+	mov edx,[esi+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Blink]
+	
+	mov [ecx+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Blink],edx
+	mov [edx+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Flink],ecx
+			
+	
+	;//Desbinculo de la lista por orden de inicilizacion
+	mov ecx,[esi+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Flink]
+	mov edx,[esi+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Blink]
+	
+	mov [ecx+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Blink],edx
+	mov [edx+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Flink],ecx
+			
+	popad
 endp
-;//Tabla de salto a funciones externas
+	;//Tabla de salto a funciones externas
 TlsAlloc:
 	db 0x68;push 0xffffffff
 	dd -1
@@ -830,17 +911,17 @@ malloc:
 	nop
 	nop
 	nop
-PluginLoaderName	db "PluginLoader",0
-kernel32N			db "kernel32",0
-VirtualAllocN		db "VirtualAlloc",0
-VirtualProtectN		db "VirtualProtect",0
-ExitProcessN		db "ExitProcess",0
-TlsAllocN			db "TlsAlloc",0
-TlsSetValueN		db "TlsSetValue",0
-
-msvcrtN				db "msvcrt",0
-mallocN				db "malloc",0
-
-dllmain@ 			db "DllMain@12"
-nulo 				db 0;
+	PluginLoaderName	db "PluginLoader",0
+	kernel32N			db "kernel32",0
+	VirtualAllocN		db "VirtualAlloc",0
+	VirtualProtectN		db "VirtualProtect",0
+	ExitProcessN		db "ExitProcess",0
+	TlsAllocN			db "TlsAlloc",0
+	TlsSetValueN		db "TlsSetValue",0
+			
+	msvcrtN				db "msvcrt",0
+	mallocN				db "malloc",0
+			
+	dllmain@ 			db "DllMain@12"
+	nulo 				db 0;
 EOF:

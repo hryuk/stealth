@@ -48,12 +48,12 @@ Group=Added files,Assembly,Resources,Misc,Modules
 4=2
 [Collapse]
 3=
-1=,
+1=,,,
 2=
 4=
 [Size]
 3=0,0,0,0,5486
-1=0,0,0,0,15511
+1=0,0,0,0,16026
 2=0,0,0,0,60
 4=0,0,0,0,391
 [VersionControl]
@@ -66,7 +66,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=29
+MilestoneOnDateDate=30
 MilestoneOnDateTimeYear=2011
 MilestoneOnDateTimeMonth=12
 MilestoneOnDateTimeDate=10
@@ -112,13 +112,13 @@ ProductVer4Range=0
 [BreakPoint]
 0=
 [Find]
-1="PEEntry"
-2="PELoadTls"
-3="TlsSetValue"
-4="TlsAllocN"
-5="TlsSetValueN"
-6="ecall2 malloc"
-7="malloc"
-8="return"
-9="tls"
-10="tlsallloc"
+1="GetLdrModule"
+2="%$ldr,"
+3=",%$ldr"
+4="%$ldr"
+5="%$ldr "
+6="PEB_LDR_DATA"
+7="return"
+8="AddLdrModules"
+9="pop"
+10="PEEntry"
