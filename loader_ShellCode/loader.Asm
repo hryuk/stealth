@@ -488,47 +488,15 @@ endl
 	push ebx
 	call DelLdrModule
 	
-	;//Liveramos las secciones de memoria
 	
-	mov edx,dword %$PE
-	push edx
-	push dword %$AddrBase
-	call PEGetSectionHeader
-	mov esi,eax
-	mov edi,dword %$AddrBase
 	
-	;Recupero el numero de secciones
-	movzx ecx, word [edx+IMAGE_NT_HEADERS.FileHeader+IMAGE_FILE_HEADER.NumberOfSections]
-	
-	;Bucle para liverar las secciones
-	.next:
-	
-	push 0x4000			;MEM_DECOMMIT
-	push dword [esi+IMAGE_SECTION_HEADER.VirtualSize]
-	push dword [esi+IMAGE_SECTION_HEADER.VirtualAddress]
-	add [esp],edi
-	ecall2 VirtualFree
-	add esi,sizeof(IMAGE_SECTION_HEADER);Muevo el puntero hasta la siguiente seccion
-	dec ecx								
-	jnz .next							;Si quedan secciones salto
-	
-	;Recupero el tamaño de toda el modulo
-	mov ecx,dword [edx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfImage]
-	
-	;//Livero las cabeceras
-	push 0x4000			;MEM_DECOMMIT
-	push dword [edx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfHeaders]
-	add  dword [esp],sizeof(IMAGE_NT_HEADERS)
+	;//Livero la memoria reservada para el modulo
+	push 0x8000				;MEM_RELEASE
+	push 0					;[edx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfImage]
 	push dword %$AddrBase
 	ecall2 VirtualFree
 	
-	;//Livero la memoria reservada
-	push 0x10000			;MEM_FREE
-	push ecx				;[edx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfImage]
-	push dword %$AddrBase
-	ecall2 VirtualFree
-	
-	
+	mov al,1
 	jmp .NoError
 	.error:
 	xor eax,eax
