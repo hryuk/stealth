@@ -112,13 +112,13 @@ ProductVer4Range=0
 [BreakPoint]
 0=
 [Find]
-1="GetLdrModule"
-2="%$ldr,"
-3=",%$ldr"
-4="%$ldr"
-5="%$ldr "
-6="PEB_LDR_DATA"
-7="return"
-8="AddLdrModules"
-9="pop"
-10="PEEntry"
+1="malloc"
+2="push"
+3="OptionalHeader"
+4="PEEntry"
+5="Tls"
+6="TlsCa"
+7="FreeLibraryFromMemoy"
+8="Free"
+9="VirtualFree"
+10="GetLdrModule"

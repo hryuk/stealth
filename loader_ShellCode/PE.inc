@@ -111,7 +111,7 @@ ends
 STRUC IMAGE_NT_HEADERS
 	.Signature		RESD 1
 	.FileHeader		RESB sizeof(IMAGE_FILE_HEADER);
-	.OptionalHeader	RESD 1
+	.OptionalHeader	RESB sizeof(IMAGE_OPTIONAL_HEADER);
 ends
 
 

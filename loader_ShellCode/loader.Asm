@@ -79,6 +79,14 @@ endl
 			
 	mov ebx,VirtualAlloc
 	mov [ebx+esi+1],eax	
+	
+	push VirtualFreeN
+	add [esp],esi
+	push dword %$kernel32
+	ecall2 GetProcAddress
+			
+	mov ebx,VirtualFree
+	mov [ebx+esi+1],eax	
 			
 	push ExitProcessN
 	add [esp],esi
@@ -115,6 +123,14 @@ endl
 	ecall2 GetProcAddress
 			
 	mov ebx,malloc
+	mov [ebx+esi+1],eax	
+	
+	push freeN
+	add [esp],esi
+	push eax
+	ecall2 GetProcAddress
+			
+	mov ebx,free
 	mov [ebx+esi+1],eax	
 	;Ahora toca relocalizar el codigo estatico que pueda quedar
 	;PUSH_RELOC_0
@@ -262,7 +278,7 @@ endl
 	mov edx,[ebx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.AddressOfEntryPoint]
 			
 	;Rellenamos los campos
-	push eax
+	;push eax
 	ecall2 TlsAlloc;Pido un index para el TLS
 			
 	mov edi,%$NewBase
@@ -422,6 +438,7 @@ endl
 			
 			
 	;//Aqui se empieza a ejecutar el modulo
+	push 1
 	push dword %$PE
 	push dword %$ldr_module
 	push dword %$NewBase
@@ -446,6 +463,7 @@ endl
 endp
 			
 proc FreeLibraryFromMemoy, AddrBase
+	localdd PE
 endl
 	pushad
 	
@@ -456,9 +474,59 @@ endl
 	jz .error
 	mov ebx,eax
 	
+	push dword %$AddrBase
+	call PEGetNT_HEADER
+	mov dword %$PE,eax
+	;//Notificamos que se va a producir la descarga del modulo
+	push 0
+	push eax
+	push ebx
+	push dword %$AddrBase
+	call PEEntry
+	
 	;Eliminamos el nodo de la lista
 	push ebx
 	call DelLdrModule
+	
+	;//Liveramos las secciones de memoria
+	
+	mov edx,dword %$PE
+	push edx
+	push dword %$AddrBase
+	call PEGetSectionHeader
+	mov esi,eax
+	mov edi,dword %$AddrBase
+	
+	;Recupero el numero de secciones
+	movzx ecx, word [edx+IMAGE_NT_HEADERS.FileHeader+IMAGE_FILE_HEADER.NumberOfSections]
+	
+	;Bucle para liverar las secciones
+	.next:
+	
+	push 0x4000			;MEM_DECOMMIT
+	push dword [esi+IMAGE_SECTION_HEADER.VirtualSize]
+	push dword [esi+IMAGE_SECTION_HEADER.VirtualAddress]
+	add [esp],edi
+	ecall2 VirtualFree
+	add esi,sizeof(IMAGE_SECTION_HEADER);Muevo el puntero hasta la siguiente seccion
+	dec ecx								
+	jnz .next							;Si quedan secciones salto
+	
+	;Recupero el tamaño de toda el modulo
+	mov ecx,dword [edx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfImage]
+	
+	;//Livero las cabeceras
+	push 0x4000			;MEM_DECOMMIT
+	push dword [edx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfHeaders]
+	add  dword [esp],sizeof(IMAGE_NT_HEADERS)
+	push dword %$AddrBase
+	ecall2 VirtualFree
+	
+	;//Livero la memoria reservada
+	push 0x10000			;MEM_FREE
+	push ecx				;[edx+IMAGE_NT_HEADERS.OptionalHeader+IMAGE_OPTIONAL_HEADER.SizeOfImage]
+	push dword %$AddrBase
+	ecall2 VirtualFree
 	
 	
 	jmp .NoError
@@ -491,10 +559,11 @@ proc PEGetNT_HEADER,AddrBase
 endp
 			
 proc PEGetSectionHeader,AddrBase,PE_base
+endl
 	mov eax,%$PE_base
 	movzx eax,word[eax+IMAGE_NT_HEADERS.FileHeader+IMAGE_FILE_HEADER.SizeOfOptionalHeader]
 	add eax,%$PE_base
-	add eax,IMAGE_FILE_HEADER_size+IMAGE_NT_HEADERS.FileHeader
+	add eax,IMAGE_NT_HEADERS.OptionalHeader
 endp
 proc PEGetDirectoryEntry,AddrBase,PE_base, Table,SizeTable_out
 	push ebx
@@ -589,7 +658,7 @@ endl
 	jnz .NextBR
 			.NotFound:
 endp
-proc PELoadTls,AddrBase,PE_base
+proc PELoadTls,AddrBase,PE_base,Load_Notify;Valor boleano que indica si se notifica la carga o la descarga
 	localdd TlsDataPlantillaAddr
 	localdd TlsDataPlantillaAddrSize
 			
@@ -641,15 +710,15 @@ endl
 	je .tlsEnd
 			
 	push 0
-	push 1
+	push dword %$Load_Notify
 	push dword %$AddrBase
 	ecall2 [edx]
 			
 	add edx,4
 	jmp .tlsNext
-			.tlsEnd:
+.tlsEnd:
 			
-			.NotFound:
+.NotFound:
 	popad
 endp
 			
@@ -720,10 +789,13 @@ endl
 	popad
 endp
 			
-proc PEEntry, base, LDR_Entry,PE_base
+proc PEEntry, base, LDR_Entry,PE_base,ATTACHED_Notiffy;Si vale 1, se realiza la carga y si vale 0 la descarga
 endl;Macro para las var locales
 	pushad
+	
+	and dword %$ATTACHED_Notiffy,1
 	;//Cargo y ejecuto los TlsCallback
+	push dword %$ATTACHED_Notiffy
 	push dword %$PE_base
 	push dword %$base
 	call PELoadTls
@@ -733,15 +805,22 @@ endl;Macro para las var locales
 	mov ebx,%$LDR_Entry
 	mov eax,[ebx+LDR_MODULE.EntryPoint]
 	test eax,eax
-	jz .NoMain 
+	jz .NoMain
+	;Segun proceda pongo o quito la el flag de LDR_PROCESS_ATTACHED
+	test dword %$ATTACHED_Notiffy,1
+	jz .detach
 	or dword [ebx+LDR_MODULE.Flags],LDR_PROCESS_ATTACHED
+	jmp .attached
+	.detach:
+	and dword [ebx+LDR_MODULE.Flags],~LDR_PROCESS_ATTACHED
+	.attached:
 			
 	push dword 0
-	push dword 1
+	push dword %$ATTACHED_Notiffy
 	push dword %$base
 	call eax	;//Ejecuto el main si no hay un dll main
 	jmp PEEntry_end
-			.NoMain:
+.NoMain:
 			
 PUSH_RELOC_1:
 	;//Busco el dll main para llamarlo
@@ -752,10 +831,17 @@ PUSH_RELOC_1:
 	test eax,eax
 	jz PEEntry_end
 	push dword 0
-	push dword 1
+	push dword %$ATTACHED_Notiffy
 	push dword %$base
 	call eax	;//Ejecuto el dll main si lo hay
+	;Segun proceda pongo o quito la el flag de LDR_PROCESS_ATTACHED
+	test dword %$ATTACHED_Notiffy,1
+	jz .detach
 	or dword [ebx+LDR_MODULE.Flags],LDR_PROCESS_ATTACHED
+	jmp .attached
+	.detach:
+	and dword [ebx+LDR_MODULE.Flags],~LDR_PROCESS_ATTACHED
+	.attached:
 PEEntry_end:
 	popad
 endp
@@ -844,7 +930,7 @@ endl
 .ModuleFount:
 			
 	return ebx
-endl
+endp
 proc DelLdrModule,module_node;PLDR_MODULE
 endl
 	pushad
@@ -862,20 +948,23 @@ endl
 	mov ecx,[esi+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Flink]
 	mov edx,[esi+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Blink]
 	
-	mov [ecx+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Blink],edx
-	mov [edx+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Flink],ecx
+	;//mov [ecx+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Blink],edx
+	;//mov [edx+LDR_MODULE.InMemoryOrderModuleList+LIST_ENTRY.Flink],ecx
 			
 	
 	;//Desbinculo de la lista por orden de inicilizacion
 	mov ecx,[esi+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Flink]
 	mov edx,[esi+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Blink]
 	
-	mov [ecx+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Blink],edx
-	mov [edx+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Flink],ecx
+	;//mov [ecx+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Blink],edx
+	;//mov [edx+LDR_MODULE.InInitializationOrderModuleList+LIST_ENTRY.Flink],ecx
 			
 	popad
 endp
+int3
+int3
 	;//Tabla de salto a funciones externas
+FuncTable:
 TlsAlloc:
 	db 0x68;push 0xffffffff
 	dd -1
@@ -889,6 +978,10 @@ ExitProcess:
 	dd -1
 	ret
 VirtualAlloc:
+	db 0x68;push 0xffffffff
+	dd -1
+	ret
+VirtualFree:
 	db 0x68;push 0xffffffff
 	dd -1
 	ret
@@ -908,12 +1001,18 @@ malloc:
 	db 0x68;push 0xffffffff
 	dd -1
 	ret
+free:
+	db 0x68;push 0xffffffff
+	dd -1
+	ret
+EendOfFuncTable:
 	nop
 	nop
 	nop
 	PluginLoaderName	db "PluginLoader",0
 	kernel32N			db "kernel32",0
 	VirtualAllocN		db "VirtualAlloc",0
+	VirtualFreeN		db "VirtualFree",0
 	VirtualProtectN		db "VirtualProtect",0
 	ExitProcessN		db "ExitProcess",0
 	TlsAllocN			db "TlsAlloc",0
@@ -921,6 +1020,7 @@ malloc:
 			
 	msvcrtN				db "msvcrt",0
 	mallocN				db "malloc",0
+	freeN				db "free",0
 			
 	dllmain@ 			db "DllMain@12"
 	nulo 				db 0;
