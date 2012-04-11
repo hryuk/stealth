@@ -40,10 +40,55 @@
 				</Linker>
 			</Target>
 		</Build>
+		<Linker>
+			<Add library="Arklib" />
+			<Add library="ntdll" />
+			<Add directory="..\ArkLib" />
+		</Linker>
+		<Unit filename="..\ArkLib\src\ArbolBinario.h" />
+		<Unit filename="..\ArkLib\src\Binary_heap.h" />
+		<Unit filename="..\ArkLib\src\CCrypt.h" />
+		<Unit filename="..\ArkLib\src\CThread.h" />
+		<Unit filename="..\ArkLib\src\Certificado.h" />
+		<Unit filename="..\ArkLib\src\CryptProv.h" />
+		<Unit filename="..\ArkLib\src\Crypto32.h" />
+		<Unit filename="..\ArkLib\src\Hash.h" />
+		<Unit filename="..\ArkLib\src\LoadDLL.h" />
+		<Unit filename="..\ArkLib\src\MString.h" />
+		<Unit filename="..\ArkLib\src\Network.h" />
+		<Unit filename="..\ArkLib\src\Network\HTTP_Client.h" />
+		<Unit filename="..\ArkLib\src\Network\NetClient.h" />
+		<Unit filename="..\ArkLib\src\Network\NetDaemon.h" />
+		<Unit filename="..\ArkLib\src\Network\Network_CInterface.h" />
+		<Unit filename="..\ArkLib\src\Network\Network_SInterface.h" />
+		<Unit filename="..\ArkLib\src\Network\SSL_TLS.h" />
+		<Unit filename="..\ArkLib\src\Network\STUNd.h" />
+		<Unit filename="..\ArkLib\src\Network\TCP.h" />
+		<Unit filename="..\ArkLib\src\Network\TLSd.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\Auth.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\ContactNode.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\IQ.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\Pressence.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\Roster.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\ServDisco.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\XCadenas.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\XMPP_Client.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\XMPP_Parser.h" />
+		<Unit filename="..\ArkLib\src\Network\xmpp\stream.h" />
+		<Unit filename="..\ArkLib\src\Process.h" />
+		<Unit filename="..\ArkLib\src\RegEx.h" />
+		<Unit filename="..\ArkLib\src\XML.h" />
+		<Unit filename="..\ArkLib\src\XMPP.h" />
+		<Unit filename="..\ArkLib\src\datatypes.h" />
+		<Unit filename="..\ArkLib\src\hook.h" />
+		<Unit filename="..\ArkLib\src\wstring.h" />
 		<Unit filename="Plugin.h" />
+		<Unit filename="PluginLoader.cpp" />
 		<Unit filename="PluginLoader.h" />
 		<Unit filename="main.cpp" />
 		<Unit filename="main.h" />
+		<Unit filename="rpp.cpp" />
+		<Unit filename="rpp.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

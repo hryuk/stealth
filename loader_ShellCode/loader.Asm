@@ -20,11 +20,12 @@
 			
 	nop
 	nop
-proc main,LoadLibrary_,GetProcAddress_,hConexion,hashUserPass
+proc main,LoadLibrary_,GetProcAddress_,hConexion,hKey
 	localdd kernel32
 	;localdd msvcrt
 	localdd VirtualProtect_
 	localdd OldProtect
+	localbuf FuncTable,sizeof(LoaderFunTable)
 endl
 			
 	xor eax,eax
@@ -36,26 +37,18 @@ endl
 	;//**********************************
 	;* ESI contiene el deltaOffset		*
 	;***********************************//
-			
-	;//Coloco en su sitio estas funciones que son imprescindibles
-	mov eax,%$LoadLibrary_
-	mov ebx,LoadLibraryA
-	mov [ebx+esi+1],eax
-			
-	mov eax,%$GetProcAddress_
-	mov ebx,GetProcAddress
-	mov [ebx+esi+1],eax
-			
+	
+	
 	;//Consigo la direccion de kernel32
 	push kernel32N
 	add [esp],esi
-	ecall2 LoadLibraryA
+	ecall2 %$LoadLibrary_
 	mov dword %$kernel32,eax
 			
 	push VirtualProtectN
 	add [esp],esi
 	push dword %$kernel32
-	ecall2 GetProcAddress
+	ecall2 %$GetProcAddress_
 	mov %$VirtualProtect_,eax
 			
 	;//Cambio la proteccion
@@ -70,6 +63,30 @@ endl
 	mov ebx,VirtualProtect
 	mov eax,%$VirtualProtect_
 	mov [ebx+esi+1],eax
+	
+	
+			
+	;//Preparo la FuncTable para inicializarla
+	lea ecx,%$FuncTable
+	;//Coloco en su sitio estas funciones que son imprescindibles
+	mov eax,%$LoadLibrary_
+	mov ebx,LoadLibraryA
+	mov [ebx+esi+1],eax
+	lea eax,[ebx+esi+1]
+	mov [ecx+LoaderFunTable.LoadLibraryA],eax
+			
+	mov eax,%$GetProcAddress_
+	mov ebx,GetProcAddress
+	mov [ebx+esi+1],eax
+	lea eax,[ebx+esi+1]
+	mov [ecx+LoaderFunTable.GetProcAddress],eax
+	
+	;//Punteros a las funciones de carga de modulos en memoria
+	lea eax,[LoadLibraryFromMemoy+esi]
+	mov [ecx+LoaderFunTable.GetProcAddress],eax
+	lea eax,[FreeLibraryFromMemoy+esi]
+	mov [ecx+LoaderFunTable.GetProcAddress],eax
+			
 			
 	;//Busco las direcciones de las funciones que posteriormente usare
 	push VirtualAllocN
@@ -154,9 +171,18 @@ endl
 	;//Aqui se devuelve la direccion base del modulo cargado
 			
 			
-	;//Se deveria de buscar aqui la funcion de entrada
+	;//Se buscar aqui la funcion de entrada
+	push PluginLoaderEntry
+	add [esp],esi
+	push eax
+	ecall2 GetProcAddress
 			
 	;//Se ejecuta la funcion principal del programa
+	push ecx	; ecx = %$FuncTable
+	push dword %$hKey
+	push dword %$hConexion
+	ecall2 eax
+	;int DLL_EXPORT WINAPI InitPluginLoader(long hConexion,long hKey,LoaderFunTable& lFunc);
 			
 	;Descargamos el modulo de la memoria
 	push ebx
@@ -487,8 +513,6 @@ endl
 	;Eliminamos el nodo de la lista
 	push ebx
 	call DelLdrModule
-	
-	
 	
 	;//Livero la memoria reservada para el modulo
 	push 0x8000				;MEM_RELEASE
@@ -977,7 +1001,7 @@ EendOfFuncTable:
 	nop
 	nop
 	nop
-	PluginLoaderName	db "PluginLoader",0
+	PluginLoaderName	db "PluginLoader.dll",0
 	kernel32N			db "kernel32",0
 	VirtualAllocN		db "VirtualAlloc",0
 	VirtualFreeN		db "VirtualFree",0
@@ -990,6 +1014,7 @@ EendOfFuncTable:
 	mallocN				db "malloc",0
 	freeN				db "free",0
 			
-	dllmain@ 			db "DllMain@12"
+	dllmain@ 			db "DllMain@12",0
+	PluginLoaderEntry	db "InitPluginLoader@12",
 	nulo 				db 0;
 EOF:

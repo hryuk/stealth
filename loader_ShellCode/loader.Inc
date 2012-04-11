@@ -13,9 +13,16 @@ struc LIST_ENTRY
 ends
 
 struc UNICODE_STRING
-     .Length		resw 1;
-     .MaximumLength	resw 1;
-     .Buffer		resd 1;
+	.Length			resw 1;
+	.MaximumLength	resw 1;
+	.Buffer			resd 1;
+ends
+
+struc LoaderFunTable
+   	.LoadLibraryFromMemoy	resd 1;
+   	.FreeLibraryFromMemoy	resd 1;
+   	.LoadLibraryA			resd 1;
+   	.GetProcAddress			resd 1;
 ends
 
 %define PAGE_EXECUTE_READWRITE 0x40
