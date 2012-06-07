@@ -8,15 +8,26 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
 
+    QDir dir=QDir::currentPath();
+    QFile file;
+    if(!file.exists(dir.filePath("ssleay32.dll"))) qFatal("Cannot find the \"ssleay32.dll\" file");
+    if(!file.exists(dir.filePath("qca2.dll"))) qFatal("Cannot find the \"qca2.dll\" file");
+    if(!file.exists(dir.filePath("libeay32.dll"))) qFatal("Cannot find the \"libeay32.dll\" file");
+
+    if(!dir.cd("crypto")) qFatal("Cannot find the \"/crypto\" directory");
+    else if(!file.exists("qca-ossl2.dll")) qFatal("Cannot find the \"/crypto/qca-ossl2.dll\" file");
+
     server=new Server();
     mngMessage=new MessageManager();
     mngConnection=new ConnectionManager(this,mngMessage);
+
 
     //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
     QObject::connect(server,SIGNAL(newConnection(Connection*)),mngConnection,SLOT(SetupConnection(Connection*)));
 
     QApplication::setStyle(QStyleFactory::create("Plastique"));
 
+    /* Puebla el TreeWidget, solo para testear */
     for(int i=0;i<3;i++)
     {   
         GroupTreeWidget* ctw;
@@ -33,7 +44,9 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
         connect(this,SIGNAL(destroyed()),ctw,SLOT(deleteLater()));
         connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
         lstGroupWidgets.append(ctw);
-    }
+    }    
+    /* /TEST */
+
 }
 
 Stealth::~Stealth()

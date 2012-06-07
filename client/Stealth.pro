@@ -4,10 +4,12 @@
 #
 #-------------------------------------------------
 
-QT += core gui network
+QT+=core gui network
 
-TARGET = Stealth
-TEMPLATE = app
+TARGET=Stealth
+TEMPLATE=app
+
+QMAKE_CXXFLAGS+=-std=gnu++0x
 
 
 SOURCES += main.cpp\
@@ -29,7 +31,7 @@ HEADERS  += stealth.h \
     grouptreewidget.h \
     customtreewidget.h
 
-FORMS    += stealth.ui
+FORMS+= stealth.ui
 
 RESOURCES += \
     Resource.qrc

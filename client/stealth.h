@@ -6,6 +6,8 @@
 #include <QMouseEvent>
 #include <QGraphicsView>
 #include <QTreeWidget>
+#include <QFile>
+#include <QDir>
 
 #include "server.h"
 #include "connectionmanager.h"

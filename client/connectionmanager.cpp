@@ -40,8 +40,6 @@ void ConnectionManager::SetupConnection(Connection *connection)
         Crypto Crypt1(TotalToSend);
         QByteArray CheckSum=Crypt1.FNV1a(TotalToSend);
 
-        //QMessageBox::information(0,":P","0x"+CheckSum.toHex());
-
         TotalToSend.insert(0,CheckSum);
         Crypt1.setData(TotalToSend);
         QByteArray sha1=Crypt1.sha1(QString("karcrack:1234"));
@@ -54,9 +52,9 @@ void ConnectionManager::SetupConnection(Connection *connection)
         connection->write(TotalToSend);
         connection->setIV(iv);
 
-        connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
         connection->setState(Connection::Ready);
         connection->setSetupState(Connection::Finished);
+        connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
     }
 }
 
