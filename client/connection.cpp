@@ -2,13 +2,8 @@
 
 Connection::Connection()
 {
-    this->state=Connecting;
+    this->state=JustConnected;
     this->IV=QByteArray(16,0);
-}
-
-Connection::SetupState Connection::getSetupState()
-{
-    return this->setupState;
 }
 
 Connection::State Connection::getState()
@@ -19,11 +14,6 @@ Connection::State Connection::getState()
 void Connection::setState(State state)
 {
     this->state=state;
-}
-
-void Connection::setSetupState(SetupState setupState)
-{
-    this->setupState=setupState;
 }
 
 void Connection::setIV(QByteArray IV)

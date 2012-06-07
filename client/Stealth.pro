@@ -9,9 +9,6 @@ QT+=core gui network
 TARGET=Stealth
 TEMPLATE=app
 
-QMAKE_CXXFLAGS+=-std=gnu++0x
-
-
 SOURCES += main.cpp\
         stealth.cpp \
     connectionmanager.cpp \

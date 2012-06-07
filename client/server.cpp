@@ -10,8 +10,7 @@ Server::Server()
 void Server::incomingConnection(int socketDescriptor)
 {
     Connection* connection=new Connection();
-    connection->setState(Connection::Connecting);
-    connection->setSetupState(Connection::JustConnected);
+    connection->setState(Connection::JustConnected);
     connection->setSocketDescriptor(socketDescriptor);
 
     emit newConnection(connection);

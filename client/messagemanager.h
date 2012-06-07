@@ -4,6 +4,7 @@
 #include "connection.h"
 
 #include <QObject>
+#include <QDataStream>
 
 class MessageManager : public QObject
 {
@@ -13,6 +14,7 @@ public:
 
 public slots:
     void readMessage();
+    void dispatchMessage();
 };
 
 #endif // MESSAGEMANAGER_H

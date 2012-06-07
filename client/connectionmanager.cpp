@@ -11,8 +11,10 @@ ConnectionManager::ConnectionManager(Stealth* stealth,MessageManager* mngMessage
 
 void ConnectionManager::SetupConnection(Connection *connection)
 {
-    if(connection->getSetupState()==Connection::JustConnected)
+    if(connection->getState()==Connection::JustConnected)
     {
+        connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
+
         /* Carga desde el resource
         QFile fileLoader(":/res/loader.bin");
         QFile filePluginLoader(":/res/pluginloader.dll");
@@ -52,9 +54,7 @@ void ConnectionManager::SetupConnection(Connection *connection)
         connection->write(TotalToSend);
         connection->setIV(iv);
 
-        connection->setState(Connection::Ready);
-        connection->setSetupState(Connection::Finished);
-        connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
+        connection->setState(Connection::Handshake);
     }
 }
 
