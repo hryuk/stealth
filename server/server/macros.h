@@ -10,7 +10,7 @@
 **            +Un shellcode libre de bytes nulos
 **            +Direcciones relativas que permitan la reubicación del código
 **            +Un gestor de errores
-**            +Melt
+**            +Métodos anti debugging
 **            +Mutex
 *###############################################################################*/
 
@@ -20,9 +20,20 @@
 #include "preprocessor/cat.hpp"
 
 /*###############################################################################
+** Anti debugging:
+**    Si se define la compilación ANTI_DEBUG el código generado tendrá diversas
+**    técnicas para complicar su análisis.
+**    NOTA:{
+**        Se añade código, como consecuencia aumenta el tamaño
+**    }
+*###############################################################################*/
+#define ANTI_DEBUG
+//#undef ANTI_DEBUG
+
+/*###############################################################################
 ** Mutex:
 **    Si se define la compilación MUTEX el código generado no se ejecutará dos
-**    veces
+**    veces de forma simultánea.
 **    NOTA:{
 **        Se añade código, como consecuencia aumenta el tamaño
 **    }

