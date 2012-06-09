@@ -8,16 +8,16 @@ void mMsgOut(QtMsgType type, const char *msg)
     switch (type)
     {
         case QtDebugMsg:
-            fprintf(hFile, "Debug: %s\n", msg);
+            fprintf(hFile, "Debug: %s\n",msg);
             break;
         case QtWarningMsg:
-            fprintf(hFile, "Warning: %s\n", msg);
+            fprintf(hFile, "Warning: %s\n",msg);
             break;
         case QtCriticalMsg:
-            fprintf(hFile, "Critical: %s\n", msg);
+            fprintf(hFile, "Critical: %s\n",msg);
             break;
         case QtFatalMsg:
-            fprintf(hFile, "Fatal: %s\n", msg);
+            fprintf(hFile, "Fatal: %s\n",msg);
             fclose(hFile);
             abort();
     }

@@ -11,24 +11,38 @@ void MessageManager::readMessage()
     if(!connection) return;
     if(connection->getState()==Connection::JustConnected) return;
 
-    if(connection->getState()==Connection::Handshake)
+    if(connection->getState()==Connection::WaitingForGreeting)
     {
         QDataStream in(connection);
-        in.setVersion(QDataStream::Qt_4_7);
+        in.setVersion(QDataStream::Qt_4_8);
 
-        if(connection->bytesAvailable()<sizeof(Connection::RPEP_HEADER)) return;
+        if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
 
-        Connection::RPEP_HEADER Header;
-        if(in.readRawData((char*)&Header,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
+        if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
 
-        //TODO
+        if(!connection->NextBlockHeader.OperationType.bOperation || connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::ServerHandshake) return;
+        if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=sizeof(Connection::RPEP_SERVER_HANDSHAKE)) return;
+
+        connection->setState(Connection::ReadingGreeting);
     }
 
-    connection->setState(Connection::Reading);
+    if(connection->getState()==Connection::ReadingGreeting)
+    {
+        QDataStream in(connection);
+        in.setVersion(QDataStream::Qt_4_8);
 
-    //TODO
+        if(connection->bytesAvailable()<connection->NextBlockHeader.Size.Bytes) return;
 
-    connection->setState(Connection::Ready);
+        connection->Data.resize(connection->NextBlockHeader.Size.Bytes);
+        if(in.readRawData(connection->Data.data(),connection->NextBlockHeader.Size.Bytes)!=connection->NextBlockHeader.Size.Bytes)
+        {
+            connection->setState(Connection::WaitingForGreeting);
+            return;
+        }
+
+        emit receivedHandshake(connection);
+        return;
+    }
 }
 
 void MessageManager::dispatchMessage()

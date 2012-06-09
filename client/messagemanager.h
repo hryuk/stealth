@@ -12,9 +12,15 @@ class MessageManager : public QObject
 public:
     explicit MessageManager(QObject* parent=0);
 
+private:
+
 public slots:
     void readMessage();
     void dispatchMessage();
+
+signals:
+    void receivedHandshake(Connection*);
+
 };
 
 #endif // MESSAGEMANAGER_H

@@ -10,6 +10,7 @@
 #include "crypto.h"
 
 class Stealth;
+class MessageManager;
 
 class ConnectionManager : public QObject
 {
@@ -23,11 +24,12 @@ private:
     Stealth* stealth;
 
 public slots:
-    void SetupConnection(Connection*);
+    void setupConnection(Connection*);
     void addConnection(Connection*);
+    void processHandshake(Connection*);
 
 signals:
-    void ConnectionEstablished(Connection*);
+    void connectionEstablished(Connection*);
 
 };
 

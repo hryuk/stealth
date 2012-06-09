@@ -15,6 +15,7 @@
 #include "grouptreewidget.h"
 
 class ConnectionManager;
+class MessageManager;
 
 namespace Ui {
     class Stealth;

@@ -8,149 +8,159 @@ class Connection : public QTcpSocket
     Q_OBJECT
 
 public:
-    enum State {JustConnected,Handshake,Ready,Sending,Reading};
+    enum State {JustConnected,WaitingForGreeting,ReadingGreeting,Ready,Sending,Receiving};
 
     typedef struct _RPEP_HEADER
+    {
+        /* Codigo de operación */
+        typedef enum _Operation
         {
-            /* Codigo de operación */
-            typedef enum _Operation
+            /*  Operaciones sobre la negociacion */
+            ClientHandshake = 1,
+            ServerHandshake,
+            SetBlockSize,
+            SetCompressionAlgm,
+            SetSecondaryPort,
+            PingRequest,
+            PingResponse,
+            Error,
+
+            /* Operaciones gestion de plugins */
+            LoadPlugin,
+            CancelPluginLoad,
+            InitPlugin,
+            StopPlugin,
+            UnloadPlugin,
+            EnumLoadedPlugins,
+
+            /* Gestion del servidor  */
+            UpdateLoader,
+            UpdateServer,
+            StopServer,
+
+            /*  Reservado */
+            Reserved=0x3FFF
+        } Operation;
+
+        /* Tipo de operación */
+        struct _OperationType
+        {
+            /* Operación interna / Operación plugin */
+            unsigned short bOperation:1;
+            union
             {
-                /*  Operaciones sobre la negociacion */
-                ClientHandshake = 1,
-                ServerHandshake,
-                SetPacketSize,
-                SetCompressionAlgm,
-                SetSecondaryPort,
-                PingRequest,
-                PingResponse,
-                Error,
+                ushort Operation:15;
+                ushort PluginID:15;
+            };
+        } OperationType;
 
-                /* Operaciones gestion de plugins */
-                LoadPlugin,
-                CancelPluginLoad,
-                InitPlugin,
-                StopPlugin,
-                UnloadPlugin,
-                EnumLoadedPlugins,
 
-                /* Gestion del servidor  */
-                UpdateLoader,
-                UpdateServer,
-                StopServer,
-
-                /*  Reservado */
-                Reserved=0x3FFF
-            } Operation;
-
-            /* Tamaño de los datos  */
-            struct _Size
+        /* Tamaño de los datos  */
+        struct _Size
+        {
+            /* Incida si el tamaño se transmite en bytes o en número de bloques */
+            ulong bBlocks:1;
+            union
             {
-                /* Incida si el tamaño se transmite en bytes o en número de paquetes*/
-                ulong bPaquets:1;
-                union
-                {
-                    ulong Paquets:31;
-                    ulong Bytes:31;
-                };
-            } Size;
+                ulong Blocks:31;
+                ulong Bytes:31;
+            };
+        } Size;
 
-            /* Tipo de operación */
-            struct _OperationType
-            {
-                /* Operación interna / Operación plugin */
-                unsigned short bOperation:1;
-                union
-                {
-                    ushort Operation:15;
-                    ushort PluginID:15;
-                };
-            } OperationType;
+        /* Indica el numero de parte si hay mas de una; si se
+           usa tamaño por bloques, este campo es obligatorio */
+        ulong BlockIndex;
 
-            /* Indica el numero de parte si hay mas de una; si se
-               usa tamaño por paquetes, este campo es obligatorio */
-            ulong PacketIndex;
+        /* Datos */
+        char Data[];
+    } RPEP_HEADER;
 
-            /* Datos */
-            char Data[0];
-        } RPEP_HEADER;
-
-        /* Mensaje negociación cliente  */
-        typedef struct _RPEP_CLIENT_HANDSHAKE
+    /* Mensaje negociación cliente  */
+    typedef struct _RPEP_CLIENT_HANDSHAKE
+    {
+        struct
         {
-            struct
-            {
-                char Low;
-                char High;
-            } Version;
+            char Low;
+            char High;
+        } Version;
 
-            ushort MaxPaquetSize;
-            ulong CompressionALGM;
-            ulong PortCount;
-            ushort Port[0];
-        } RPEP_CLIENT_HANDSHAKE;
+        ushort MaxBlockSize;
+        ulong CompressionALGM;
+        ulong PortCount;
+        ushort Port[];
+    } RPEP_CLIENT_HANDSHAKE;
 
-        /* Mensaje negociación servidor  */
-        typedef struct _RPEP_SERVER_HANDSHAKE
+    /* Mensaje negociación servidor  */
+    typedef struct _RPEP_SERVER_HANDSHAKE
+    {
+        struct
         {
-            struct
-            {
-                char Low;
-                char High;
-            } Version;
+            char Low;
+            char High;
+        } Version;
 
-            ushort MaxPaquetSize;
-            ulong SupportedCompressionAlgmCount;
-            ulong SupportedCompressionAlgm[0];
-        } RPEP_SERVER_HANDSHAKE;
+        ushort MaxBlockSize;
+        ulong SupportedCompressionAlgmCount;
+        ulong SupportedCompressionAlgm[];
+    } RPEP_SERVER_HANDSHAKE;
 
-        /* Mensaje de error*/
-        typedef struct _RPEP_ERROR
-        {
-            ushort Level;
-            ushort Code;
-            ulong SourceID;
-            ulong ExtendSize;
-            char Extend[0];
-        } RPEP_ERROR;
+    /* Mensaje de error*/
+    typedef struct _RPEP_ERROR
+    {
+        ushort Level;
+        ushort Code;
+        ulong SourceID;
+        ulong ExtendSize;
+        char Extend[];
+    } RPEP_ERROR;
 
-        /* Mensaje Cargar Plugin*/
-        typedef struct _RPEP_LOAD_PLUGIN
-        {
-            ulong PluginID;
-            bool ExternalDonwload;
-            char PluginName[0];
-            char PluginModule[0];
-        } RPEP_LOAD_PLUGIN;
+    /* Mensaje Cargar Plugin*/
+    typedef struct _RPEP_LOAD_PLUGIN
+    {
+        ulong PluginID;
+        bool ExternalDonwload;
+        char PluginName[];
+        char PluginModule[];
+    } RPEP_LOAD_PLUGIN;
 
-        /* Mensaje descargar plugin */
-        typedef struct _RPEP_UNLOAD_PLUGIN
-        {
-            ulong PluginID;
-            char PluginName[0];
-        } RPEP_UNLOAD_PLUGIN;
+    /* Mensaje descargar plugin */
+    typedef struct _RPEP_UNLOAD_PLUGIN
+    {
+        ulong PluginID;
+        char PluginName[];
+    } RPEP_UNLOAD_PLUGIN;
 
-        /*  Mensaje fijar tamaño paquetes */
-        typedef struct _RPEP_SET_PACKAGE_SIZE
-        {
-            ulong Value;
-        } RPEP_SET_PACKAGE_SIZE;
+    /*  Mensaje fijar tamaño bloques */
+    typedef struct _RPEP_SET_BLOCK_SIZE
+    {
+        ulong Value;
+    } RPEP_SET_BLOCK_SIZE;
 
-        /*  Mensaje fijar algoritmo de compresión */
-        typedef struct _RPEP_SET_COMPRESSION_ALGORITHM
-        {
-            ulong Value;
-        } RPEP_SET_COMPRESSION_ALGORITHM;
+    /*  Mensaje fijar algoritmo de compresión */
+    typedef struct _RPEP_SET_COMPRESSION_ALGORITHM
+    {
+        ulong Value;
+    } RPEP_SET_COMPRESSION_ALGORITHM;
 
     Connection();
-    State getState();
     void setState(State state);
     void setIV(QByteArray IV);
+    void setBlockSize(ulong BlockSize);
+    State getState();
     QByteArray getIV();
+    ulong getBlockSize();
+
+    Connection::RPEP_HEADER NextBlockHeader;
+    Connection::RPEP_SERVER_HANDSHAKE HandShake;
+    QByteArray Data;
 
 private:
     State state;
     QByteArray IV;
+    ulong BlockSize;
 
+public slots:
+    int send(RPEP_HEADER::_OperationType* operation,char* data,int size);
 };
 
 #endif // CONNECTION_H

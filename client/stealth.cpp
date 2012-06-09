@@ -8,6 +8,8 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
 
+    qDebug()<<tr("Comprobando DLL's");
+
     QDir dir=QDir::currentPath();
     QFile file;
     if(!file.exists(dir.filePath("ssleay32.dll"))) qFatal("Cannot find the \"ssleay32.dll\" file");
@@ -17,13 +19,17 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     if(!dir.cd("crypto")) qFatal("Cannot find the \"/crypto\" directory");
     else if(!file.exists(dir.filePath("qca-ossl2.dll"))) qFatal("Cannot find the \"/crypto/qca-ossl2.dll\" file");
 
+    qDebug()<<tr("DLL correctas");
+
     server=new Server();
     mngMessage=new MessageManager();
     mngConnection=new ConnectionManager(this,mngMessage);
 
-
     //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
-    connect(server,SIGNAL(newConnection(Connection*)),mngConnection,SLOT(SetupConnection(Connection*)));
+    connect(server,SIGNAL(newConnection(Connection*)),mngConnection,SLOT(setupConnection(Connection*)));
+
+    qDebug()<<tr("Servidor iniciado");
+
 
     QApplication::setStyle(QStyleFactory::create("Plastique"));
 

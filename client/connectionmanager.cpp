@@ -5,11 +5,11 @@ ConnectionManager::ConnectionManager(Stealth* stealth,MessageManager* mngMessage
     this->mngMessage=mngMessage;
     this->stealth=stealth;
 
-    connect(this,SIGNAL(ConnectionEstablished(Connection*)),this,SLOT(addConnection(Connection*)));
-    connect(this,SIGNAL(ConnectionEstablished(Connection*)),this->stealth,SLOT(addConnection(Connection*)));
+    connect(this,SIGNAL(connectionEstablished(Connection*)),this,SLOT(addConnection(Connection*)));
+    connect(mngMessage,SIGNAL(receivedHandshake(Connection*)),this,SLOT(processHandshake(Connection*)));
 }
 
-void ConnectionManager::SetupConnection(Connection *connection)
+void ConnectionManager::setupConnection(Connection *connection)
 {
     if(connection->getState()==Connection::JustConnected)
     {
@@ -44,6 +44,7 @@ void ConnectionManager::SetupConnection(Connection *connection)
 
         TotalToSend.insert(0,CheckSum);
         Crypt1.setData(TotalToSend);
+        //FIXME: Cambiar por password cliente
         QByteArray sha1=Crypt1.sha1(QString("karcrack:1234"));
         QByteArray iv=Crypt1.AES(sha1);
 
@@ -54,8 +55,42 @@ void ConnectionManager::SetupConnection(Connection *connection)
         connection->write(TotalToSend);
         connection->setIV(iv);
 
-        connection->setState(Connection::Handshake);
+        connection->setState(Connection::WaitingForGreeting);
     }
+}
+
+void ConnectionManager::processHandshake(Connection* connection)
+{
+    //FIXME: Reestablecer a WaitingForGreeting?
+    if(connection->getState()!=Connection::ReadingGreeting) return;
+    if(connection->Data.size()!=connection->NextBlockHeader.Size.Bytes) return;
+
+    //Guardamos el HandShake
+    connection->HandShake=*(Connection::RPEP_SERVER_HANDSHAKE*)connection->Data.data();
+
+    Connection::RPEP_CLIENT_HANDSHAKE* ClientHandShake;
+
+    //FIXME: Definir númro de puertos correcto
+#define NUM_PORTS 1
+
+    ClientHandShake=(Connection::RPEP_CLIENT_HANDSHAKE*)malloc(
+                sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS
+                );
+
+    ClientHandShake->CompressionALGM=connection->HandShake.SupportedCompressionAlgm[0];
+    ClientHandShake->MaxBlockSize=connection->HandShake.MaxBlockSize;
+    ClientHandShake->Port[0]=2000;
+    ClientHandShake->PortCount=NUM_PORTS;
+    ClientHandShake->Version.High=1;
+    ClientHandShake->Version.Low=0;
+
+
+    Connection::RPEP_HEADER::_OperationType* Operation=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType*));
+
+    connection->send(Operation,(char*)ClientHandShake,sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS);
+
+    free(ClientHandShake);
+    free(Operation);
 }
 
 void ConnectionManager::addConnection(Connection* connection)
