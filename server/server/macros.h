@@ -11,7 +11,6 @@
 **            +Direcciones relativas que permitan la reubicación del código
 **            +Un gestor de errores
 **            +Métodos anti debugging
-**            +Mutex
 *###############################################################################*/
 
 #include "preprocessor/seq/for_each_i.hpp"
@@ -28,18 +27,7 @@
 **    }
 *###############################################################################*/
 #define ANTI_DEBUG
-#undef ANTI_DEBUG
-
-/*###############################################################################
-** Mutex:
-**    Si se define la compilación MUTEX el código generado no se ejecutará dos
-**    veces de forma simultánea.
-**    NOTA:{
-**        Se añade código, como consecuencia aumenta el tamaño
-**    }
-*###############################################################################*/
-#define MUTEX
-#undef MUTEX
+//#undef ANTI_DEBUG
 
 /*###############################################################################
 ** Error_Check:
@@ -52,21 +40,19 @@
 #define ERR_CHECK
 #undef ERR_CHECK
 
-#ifdef ERR_CHECK
-    /*###############################################################################
-    ** Control de errores:
-    **    Constantes utilizadas en el control de errores.
-    **    Solamente las excepciones críticas serán controladas, y
-    **    se devolverá la constante de error correspondiente como
-    **    'Exit Code' en ExitProcess()@kernel32
-    *###############################################################################*/
-    #define ERR_NO  0x0     //No ha habido ningun error. El server ha finalizado correctamente.
-    #define ERR_FNC 0x1     //Ha habido un error en la funcion LoadFunctions(). Probablemente alguna función no se ha encontrado.
-    #define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexión.
-    #define ERR_MEM 0x3     //Ha habido un error al reservar memoria.
-    #define ERR_SUM 0x4     //Ha habido un error en la suma de comprobación.
-    #define ERR_MTX 0x5     //El server ya está en ejecución.
-#endif
+/*###############################################################################
+** Control de errores:
+**    Constantes utilizadas en el control de errores.
+**    Solamente las excepciones críticas serán controladas, y
+**    se devolverá la constante de error correspondiente como
+**    'Exit Code' en ExitProcess()@kernel32
+*###############################################################################*/
+#define ERR_NO  0x0     //No ha habido ningun error. El server ha finalizado correctamente.
+#define ERR_FNC 0x1     //Ha habido un error en la funcion LoadFunctions(). Probablemente alguna función no se ha encontrado.
+#define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexión.
+#define ERR_MEM 0x3     //Ha habido un error al reservar memoria.
+#define ERR_SUM 0x4     //Ha habido un error en la suma de comprobación.
+#define ERR_MTX 0x5     //El server ya está en ejecución.
 
 /*###############################################################################
 ** Shellcode:
@@ -82,8 +68,23 @@
 *###############################################################################*/
 #define SC_DELTA
 #define SC_NULL
-#undef SC_NULL
+//#undef SC_NULL
 #undef SC_DELTA
+
+#pragma message("[i] COMPILANDO CON LAS SIGUIENTES FLAGS ACTIVADAS:")
+
+#ifdef ANTI_DEBUG
+    #pragma message("\t\tANTI_DEBUG")
+#endif
+#ifdef ERR_CHECK
+    #pragma message("\t\tERR_CHECK")
+#endif
+#ifdef SC_DELTA
+    #pragma message("\t\tSC_DELTA")
+#endif
+#ifdef SC_NULL
+    #pragma message("\t\tSC_NULL")
+#endif
 
 /*###############################################################################
 ** HASH_AND_EMIT:
@@ -154,10 +155,10 @@
     #define pushc(addr)\
         __asm{push ((addr)-K)}\
         __asm{add DWORD PTR[esp], K}
-#else
+#else //SC_NULL
     #define pushc(addr)\
         __asm{push (addr)}
-#endif
+#endif //SC_NULL
 
 #ifdef SC_DELTA
     #define DELTA __asm{add DWORD PTR[esp], edi}
@@ -170,11 +171,11 @@
         #define movr(r, addr)\
             __asm{lea (r), [edi+((addr)-(K))]}\
             __asm{add (r), (K)}
-    #else
+    #else //SC_NULL
         #define movr(r, addr)\
             __asm{lea (r), [edi+(addr)]}
-    #endif
-#else
+    #endif //SC_NULL
+#else //SC_DELTA
     #define DELTA ;
     /*###############################################################################
     ** movr:
@@ -185,11 +186,11 @@
         #define movr(r, addr)\
             __asm{mov (r), ((addr)-(K))}\
             __asm{add (r), (K)}
-    #else
+    #else //SC_NULL
         #define movr(r, addr)\
             __asm{mov (r), (addr)}
-    #endif
-#endif
+    #endif //SC_NULL
+#endif //SC_DELTA
 
 /*###############################################################################
 ** pushr:
