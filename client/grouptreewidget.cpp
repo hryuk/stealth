@@ -15,6 +15,7 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
     frame=new QFrame();
     frame->setFrameShape(QFrame::StyledPanel);
     frame->setLayout(frameLayout);
+    /* frame->setStyleSheet("QFrame{border-radius: 10px; border: 1px solid grey; padding: 8 8px;}");*/
     mainLayout->addWidget(frame);
 
     QPushButton* btnExpand=new QPushButton();
@@ -74,6 +75,8 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
         scene->addText("To Do");
         gvSpeed->setScene(scene);
     }
+
+    this->setStyleSheet("QTreeWidget{border-radius: 10px; border: 1px solid grey; padding: 8 8px;}");
 }
 
 GroupTreeWidget::~GroupTreeWidget()

@@ -10,6 +10,9 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 
     qDebug()<<tr("Comprobando DLL's");
 
+
+    #ifdef Q_WS_WIN
+    /* Comprobamos que las dlls que la necesitamos estan en su sitio */
     QDir dir=QDir::currentPath();
     QFile file;
     if(!file.exists(dir.filePath("ssleay32.dll"))) qFatal("Cannot find the \"ssleay32.dll\" file");
@@ -20,6 +23,8 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     else if(!file.exists(dir.filePath("qca-ossl2.dll"))) qFatal("Cannot find the \"/crypto/qca-ossl2.dll\" file");
 
     qDebug()<<tr("DLL correctas");
+    #endif
+
 
     server=new Server();
     mngMessage=new MessageManager();
@@ -34,7 +39,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     QApplication::setStyle(QStyleFactory::create("Plastique"));
 
     /* Puebla el TreeWidget, solo para testear */
-    for(int i=0;i<3;i++)
+    for(int i=0;i<1/*3*/;i++)
     {   
         GroupTreeWidget* ctw;
         if(i==0)
@@ -46,7 +51,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
         {
             ctw=new GroupTreeWidget(false);
         }
-        ui->MainLayout->addWidget(ctw);
+        ui->verticalLayout_2->addWidget(ctw);
         connect(this,SIGNAL(destroyed()),ctw,SLOT(deleteLater()));
         connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
         lstGroupWidgets.append(ctw);
