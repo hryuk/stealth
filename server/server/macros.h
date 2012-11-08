@@ -10,24 +10,11 @@
 **            +Un shellcode libre de bytes nulos
 **            +Direcciones relativas que permitan la reubicación del código
 **            +Un gestor de errores
-**            +Métodos anti debugging
 *###############################################################################*/
 
-#include "preprocessor/seq/for_each_i.hpp"
-#include "preprocessor/seq/fold_left.hpp"
-#include "preprocessor/seq/size.hpp"
+#include "preprocessor/for_each_i.hpp"
+#include "preprocessor/fold_left.hpp"
 #include "preprocessor/cat.hpp"
-
-/*###############################################################################
-** Anti debugging:
-**    Si se define la compilación ANTI_DEBUG el código generado tendrá diversas
-**    técnicas para complicar su análisis.
-**    NOTA:{
-**        Se añade código, como consecuencia aumenta el tamaño
-**    }
-*###############################################################################*/
-#define ANTI_DEBUG
-//#undef ANTI_DEBUG
 
 /*###############################################################################
 ** Error_Check:
@@ -68,14 +55,11 @@
 *###############################################################################*/
 #define SC_DELTA
 #define SC_NULL
-//#undef SC_NULL
+#undef SC_NULL
 #undef SC_DELTA
 
 #pragma message("[i] COMPILANDO CON LAS SIGUIENTES FLAGS ACTIVADAS:")
 
-#ifdef ANTI_DEBUG
-    #pragma message("\t\tANTI_DEBUG")
-#endif
 #ifdef ERR_CHECK
     #pragma message("\t\tERR_CHECK")
 #endif
@@ -108,12 +92,8 @@
 #define EMIT_BYTE_ARRAY(SEQ) BOOST_PP_SEQ_FOR_EACH_I(EMIT_BYTE_, 0, SEQ)
 #define EMIT_BYTE_(r, d, i, e) __asm _emit ((e)&0xFF)
 #define EMIT_BYTE(d) EMIT_BYTE_(0, 0, 0, d)
-#define EMIT_WORD(d)\
-    EMIT_BYTE(((d) >> 0))\
-    EMIT_BYTE(((d) >> 8))
-#define EMIT_DWORD(d)\
-    EMIT_WORD(((d) >> 0))\
-    EMIT_WORD(((d) >> 16))
+#define EMIT_WORD(d) EMIT_BYTE(((d) >> 0)) EMIT_BYTE(((d) >> 8))
+#define EMIT_DWORD(d)EMIT_WORD(((d) >> 0)) EMIT_WORD(((d) >> 16))
 
 /*###############################################################################
 ** API_DEFINE:
@@ -125,8 +105,7 @@
     HASH_AND_EMIT(SEQ)
 /*###############################################################################
 ** VAR_DEFINE:
-**    Macro que genera el offset de una variable en el stack de APIs y calcula su
-**    hash.
+**    Macro que genera el offset de una variable en el stack de APIs.
 *###############################################################################*/
 #define VAR_DEFINE(name)\
     enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)};

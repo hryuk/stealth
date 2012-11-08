@@ -14,7 +14,7 @@
 # ifndef BOOST_PREPROCESSOR_CAT_HPP
 # define BOOST_PREPROCESSOR_CAT_HPP
 #
-# include "preprocessor/config/config.hpp"
+# include "preprocessor/config.hpp"
 #
 # /* BOOST_PP_CAT */
 #
