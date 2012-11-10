@@ -1,0 +1,81 @@
+# depslib dependency file v1.0
+1333805678 source:e:\projectasm\stealth\pluginloader\main.cpp
+	"main.h"
+	"PluginLoader.h"
+
+1333730530 e:\projectasm\stealth\pluginloader\main.h
+	<windows.h>
+
+1333924016 source:e:\projectasm\stealth\pluginloader\rpp.cpp
+	"rpp.h"
+	"../ArkLib/src/Network/TCP.h"
+
+1333923866 e:\projectasm\stealth\pluginloader\rpp.h
+	"../ArkLib/src/datatypes.h"
+	"../ArkLib/src/Network/NetClient.h"
+	"../ArkLib/src/CCrypt.h"
+
+1333805818 source:e:\projectasm\stealth\pluginloader\pluginloader.cpp
+	"PluginLoader.h"
+	<stdio.h>
+
+1333805772 e:\projectasm\stealth\pluginloader\pluginloader.h
+	"main.h"
+	"../ArkLib/src/datatypes.h"
+	"../ArkLib/src/CCrypt.h"
+
+1333736252 e:\projectasm\stealth\arklib\src\datatypes.h
+	<Windows.h>
+	<stdio.h>
+	<string.h>
+	<iostream>
+	<stdexcept>
+	<string.h>
+	<stdio.h>
+	<stdlib.h>
+	<Windows.h>
+	"ArbolBinario.h"
+
+1318841040 e:\projectasm\stealth\arklib\src\arbolbinario.h
+	"datatypes.h"
+	<stdio.h>
+
+1333821974 e:\projectasm\stealth\arklib\src\network\netclient.h
+	"Network_SInterface.h"
+	"Network_CInterface.h"
+
+1333883592 e:\projectasm\stealth\arklib\src\network\network_sinterface.h
+	"..\CThread.h"
+	"..\datatypes.h"
+
+1333736280 e:\projectasm\stealth\arklib\src\cthread.h
+	"datatypes.h"
+
+1333534842 e:\projectasm\stealth\arklib\src\network\network_cinterface.h
+	"..\datatypes.h"
+
+1333736262 e:\projectasm\stealth\arklib\src\ccrypt.h
+	"CryptProv.h"
+
+1331929972 e:\projectasm\stealth\arklib\src\cryptprov.h
+	"datatypes.h"
+	<Wincrypt.h>
+	"Crypto32.h"
+
+1329696802 e:\projectasm\stealth\arklib\src\crypto32.h
+	<Windows.h>
+	<Wincrypt.h>
+	"LoadDLL.h"
+
+1328927740 e:\projectasm\stealth\arklib\src\loaddll.h
+
+1333880572 e:\projectasm\stealth\arklib\src\network\tcp.h
+	"Network_SInterface.h"
+	"..\Network.h"
+
+1333887760 e:\projectasm\stealth\arklib\src\network.h
+	"datatypes.h"
+	"LoadDLL.h"
+	<WinSock.h>
+	<Windns.h>
+
