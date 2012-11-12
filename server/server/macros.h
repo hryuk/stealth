@@ -7,7 +7,7 @@
 **        *Función encargada de generar los identificadores que situan las
 **            direcciones en el 'stack de direcciones'
 **        *Compilación condicionada encargada de generar:
-**            +Un shellcode libre de bytes nulos
+**            +Una shellcode libre de bytes nulos
 **            +Direcciones relativas que permitan la reubicación del código
 **            +Un gestor de errores
 *###############################################################################*/
@@ -36,7 +36,7 @@
 *###############################################################################*/
 #define ERR_NO  0x0     //No ha habido ningun error. El server ha finalizado correctamente.
 #define ERR_FNC 0x1     //Ha habido un error en la funcion LoadFunctions(). Probablemente alguna función no se ha encontrado.
-#define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexión.
+//#define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexión.
 #define ERR_MEM 0x3     //Ha habido un error al reservar memoria.
 #define ERR_SUM 0x4     //Ha habido un error en la suma de comprobación.
 #define ERR_MTX 0x5     //El server ya está en ejecución.
