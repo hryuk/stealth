@@ -3,6 +3,8 @@
 
 #include <QTcpSocket>
 
+#include "crypto.h"
+
 class Connection : public QTcpSocket
 {
     Q_OBJECT
@@ -145,8 +147,10 @@ public:
     Connection();
     void setState(State state);
     void setIV(QByteArray IV);
+    void setKey(QByteArray Key);
     void setBlockSize(ulong BlockSize);
     State getState();
+    QByteArray getKey();
     QByteArray getIV();
     ulong getBlockSize();
 
@@ -157,6 +161,7 @@ public:
 private:
     State state;
     QByteArray IV;
+    QByteArray Key;
     ulong BlockSize;
 
 public slots:

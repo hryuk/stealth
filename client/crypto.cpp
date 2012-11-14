@@ -1,12 +1,5 @@
 #include "crypto.h"
 
-//Constructor, copia los datos a un nuevo QByteArray
-//para hacer sobre el las operaciones criptograficas
-Crypto::Crypto(QByteArray data)
-{
-    this->data.append(data);
-}
-
 /*###########################################################
 *    Hash SHA1
 *    Utilizando QCryptographicHash
@@ -17,13 +10,6 @@ QByteArray Crypto::sha1(QByteArray data)
     QByteArray hash=QCryptographicHash::hash(data,QCryptographicHash::Sha1);
 
     return hash;
-}
-
-QByteArray Crypto::sha1()
-{
-    if(data.isEmpty()) return 0;
-
-    return sha1(data);
 }
 
 QByteArray Crypto::sha1(QString data)
@@ -49,32 +35,24 @@ QByteArray Crypto::FNV1a(QByteArray data)
 *    Encriptacion AES
 ###########################################################*/
 
-QByteArray Crypto::AES(QByteArray bakey)
+QByteArray Crypto::AES_IV(QByteArray key)
 {
     QCA::Initializer init;
-
-    unsigned int keylen=16;
     QCA::InitializationVector iv(16);
-    QCA::SecureArray password=QCA::hexToArray(bakey.toHex());
-
-    QCA::SymmetricKey key=QCA::PBKDF2("sha1").makeKey(password,0,keylen,1);
-    QCA::Cipher cipher(QString("aes128"),QCA::Cipher::CBC,QCA::Cipher::PKCS7,QCA::Encode,key,iv);
-
-    QCA::SecureArray u=cipher.process(this->data);
-
-    this->data.clear();
-    this->data.append(u.toByteArray());
 
     return iv.toByteArray();
 }
 
-QByteArray Crypto::getData()
+QByteArray Crypto::AES(QByteArray IV, QByteArray strKey, QByteArray data)
 {
-    return this->data;
-}
+    unsigned int keylen=16;
 
-void Crypto::setData(QByteArray data)
-{
-    this->data.clear();
-    this->data.append(data);
+    QCA::SecureArray password=QCA::hexToArray(strKey.toHex());
+
+    QCA::SymmetricKey key=QCA::PBKDF2("sha1").makeKey(password,0,keylen,1);
+    QCA::Cipher cipher(QString("aes128"),QCA::Cipher::CBC,QCA::Cipher::PKCS7,QCA::Encode,key,IV);
+
+    QCA::SecureArray u=cipher.process(data);
+
+    return u.toByteArray();
 }

@@ -33,27 +33,20 @@ void ConnectionManager::setupConnection(Connection *connection)
         fileLoader.close();
         filePluginLoader.close();
 
-        QByteArray TotalToSend;
-        unsigned int datasize=Loader.size()+PluginLoader.size()+4;
-        TotalToSend.append((char*)&datasize,4);
-        TotalToSend.append(Loader);
-        TotalToSend.append(PluginLoader);
+        quint32 loaderSize=Loader.size();
+        Loader.insert(0,(char*)&loaderSize,4);
+        QByteArray checkSum=Crypto::FNV1a(Loader);
+        Loader.insert(0,checkSum);
+        QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),Loader);
 
-        Crypto Crypt1(TotalToSend);
-        QByteArray CheckSum=Crypt1.FNV1a(TotalToSend);
+        connection->write(connection->getIV()+crypted);
 
-        TotalToSend.insert(0,CheckSum);
-        Crypt1.setData(TotalToSend);
-        //FIXME: Cambiar por password cliente
-        QByteArray sha1=Crypt1.sha1(QString("karcrack:1234"));
-        QByteArray iv=Crypt1.AES(sha1);
-
-        TotalToSend.clear();
-        TotalToSend.append(iv);
-        TotalToSend.append(Crypt1.getData());
-
-        connection->write(TotalToSend);
-        connection->setIV(iv);
+        quint32 pluginmanagerSize=PluginLoader.size();
+        PluginLoader.insert(0,(char*)&pluginmanagerSize,4);
+        checkSum=Crypto::FNV1a(PluginLoader);
+        PluginLoader.insert(0,checkSum);
+        crypted=Crypto::AES(connection->getIV(),connection->getKey(),PluginLoader);
+        connection->write(crypted);
 
         connection->setState(Connection::WaitingForGreeting);
     }

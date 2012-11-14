@@ -5,7 +5,11 @@ Connection::Connection()
     this->state=JustConnected;
     this->NextBlockHeader.Size.Bytes=0;
     this->NextBlockHeader.Size.Blocks=0;
-    this->IV=QByteArray(16,0);
+    //FIXME: Cambiar por contraseña de conexión
+    this->Key=QString("karcrack:1234").toAscii();
+
+    QByteArray sha1=Crypto::sha1(Key);
+    this->IV=Crypto::AES_IV(sha1);
 }
 
 Connection::State Connection::getState()
@@ -27,6 +31,11 @@ void Connection::setIV(QByteArray IV)
 QByteArray Connection::getIV()
 {
     return this->IV;
+}
+
+QByteArray Connection::getKey()
+{
+    return this->Key;
 }
 
 void Connection::setBlockSize(ulong PacketSize)

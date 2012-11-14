@@ -11,21 +11,12 @@
 class Crypto
 {
 public:
-    Crypto(QByteArray data);
+    static QByteArray sha1(QByteArray data);
+    static QByteArray sha1(QString data);
 
-    QByteArray getData();
-
-    QByteArray sha1();
-    QByteArray sha1(QByteArray data);
-    QByteArray sha1(QString data);
-
-    QByteArray AES(QByteArray key);
-    QByteArray FNV1a(QByteArray data);
-
-    void setData(QByteArray data);
-
-private:
-    QByteArray data;
+    static QByteArray AES_IV(QByteArray key);
+    static QByteArray AES(QByteArray IV, QByteArray key, QByteArray data );
+    static QByteArray FNV1a(QByteArray data);
 };
 
 #endif // CRYPTO_H
