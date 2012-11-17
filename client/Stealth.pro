@@ -17,7 +17,8 @@ SOURCES += main.cpp\
     connection/messagemanager.cpp \
     connection/datastream/crypto.cpp \
     gui/grouptreewidget.cpp \
-    gui/customtreewidget.cpp
+    gui/customtreewidget.cpp \
+    plugins/pluginmanager.cpp
 
 HEADERS  += gui/stealth.h \
     connection/connectionmanager.h \
@@ -26,7 +27,9 @@ HEADERS  += gui/stealth.h \
     connection/messagemanager.h \
     connection/datastream/crypto.h \
     gui/grouptreewidget.h \
-    gui/customtreewidget.h
+    gui/customtreewidget.h \
+    plugins/pluginmanager.h \
+    plugins/plugininterface.h
 
 FORMS+= stealth.ui
 
@@ -37,6 +40,7 @@ INCLUDEPATH += $$quote(qca-2.0.3/include/QtCrypto)
 INCLUDEPATH += $$quote(connection)
 INCLUDEPATH += $$quote(connection/datastream)
 INCLUDEPATH += $$quote(gui)
+INCLUDEPATH += $$quote(plugins)
 
 win32 {
     LIBS += -L$$quote(qca-2.0.3/lib) -lqca2
