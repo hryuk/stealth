@@ -11,11 +11,15 @@
 class Crypto
 {
 public:
+    /** Hash SHA1**/
     static QByteArray sha1(QByteArray data);
     static QByteArray sha1(QString data);
 
-    static QByteArray AES_IV(QByteArray key);
-    static QByteArray AES(QByteArray IV, QByteArray key, QByteArray data );
+    /** Ecriptación AES128 **/
+    static QCA::InitializationVector AES_IV();
+    static QByteArray AES(QCA::InitializationVector IV, QString key, QByteArray data );
+
+    /** Hash FNV1a **/
     static QByteArray FNV1a(QByteArray data);
 };
 

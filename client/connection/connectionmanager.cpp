@@ -39,7 +39,7 @@ void ConnectionManager::setupConnection(Connection *connection)
         Loader.insert(0,checkSum);
         QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),Loader);
 
-        connection->write(connection->getIV()+crypted);
+        connection->write(connection->getIV().toByteArray()+crypted);
 
         quint32 pluginmanagerSize=PluginLoader.size();
         PluginLoader.insert(0,(char*)&pluginmanagerSize,4);

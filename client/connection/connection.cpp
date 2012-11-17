@@ -6,10 +6,8 @@ Connection::Connection()
     this->NextBlockHeader.Size.Bytes=0;
     this->NextBlockHeader.Size.Blocks=0;
     //FIXME: Cambiar por contraseña de conexión
-    this->Key=QString("karcrack:1234").toAscii();
-
-    QByteArray sha1=Crypto::sha1(Key);
-    this->IV=Crypto::AES_IV(sha1);
+    this->Key=QString("karcrack:1234");
+    this->IV=Crypto::AES_IV();
 }
 
 Connection::State Connection::getState()
@@ -22,18 +20,17 @@ void Connection::setState(State state)
     this->state=state;
 }
 
-void Connection::setIV(QByteArray IV)
+void Connection::setIV(QCA::InitializationVector IV)
 {
-    this->IV.clear();
-    this->IV.append(IV);
+    this->IV=IV;
 }
 
-QByteArray Connection::getIV()
+QCA::InitializationVector Connection::getIV()
 {
     return this->IV;
 }
 
-QByteArray Connection::getKey()
+QString Connection::getKey()
 {
     return this->Key;
 }
@@ -63,7 +60,7 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation, char *data, int si
             Header->BlockIndex++;
             memcpy(Header->Data,&data[Header->BlockIndex*HandShake.MaxBlockSize],HandShake.MaxBlockSize);
 
-            if(write((char*)Header,sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)!=sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)
+            if(write((char*)Header,sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)
             {
                 qWarning()<<tr("No se pudieron enviar los datos #1");
                 return 0;
@@ -74,7 +71,7 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation, char *data, int si
     Header->BlockIndex++;
     memcpy(Header->Data,&data[Header->BlockIndex*HandShake.MaxBlockSize],size%HandShake.MaxBlockSize);
 
-    if(write((char*)Header,sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)!=sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)
+    if(write((char*)Header,sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)
     {
         qWarning()<<tr("No se pudieron enviar los datos #1");
         return 0;

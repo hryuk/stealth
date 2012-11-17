@@ -1,9 +1,5 @@
 #include "crypto.h"
 
-/*###########################################################
-*    Hash SHA1
-*    Utilizando QCryptographicHash
-#############################################################*/
 QByteArray Crypto::sha1(QByteArray data)
 {
     if(data.isEmpty()) return 0;
@@ -31,26 +27,25 @@ QByteArray Crypto::FNV1a(QByteArray data)
     return QByteArray((char*)&r,4);
 }
 
-/*###########################################################
-*    Encriptacion AES
-###########################################################*/
 
-QByteArray Crypto::AES_IV(QByteArray key)
+QCA::InitializationVector Crypto::AES_IV()
 {
     QCA::Initializer init;
     QCA::InitializationVector iv(16);
 
-    return iv.toByteArray();
+    return iv;
 }
 
-QByteArray Crypto::AES(QByteArray IV, QByteArray strKey, QByteArray data)
+QByteArray Crypto::AES(QCA::InitializationVector IV, QString strKey, QByteArray data)
 {
+    QCA::Initializer init;
+
     unsigned int keylen=16;
 
-    QCA::SecureArray password=QCA::hexToArray(strKey.toHex());
+    QCA::SecureArray password=QCA::hexToArray(Crypto::sha1(strKey).toHex());
 
     QCA::SymmetricKey key=QCA::PBKDF2("sha1").makeKey(password,0,keylen,1);
-    QCA::Cipher cipher(QString("aes128"),QCA::Cipher::CBC,QCA::Cipher::PKCS7,QCA::Encode,key,IV);
+    QCA::Cipher cipher("aes128",QCA::Cipher::CBC,QCA::Cipher::PKCS7,QCA::Encode,key,IV);
 
     QCA::SecureArray u=cipher.process(data);
 

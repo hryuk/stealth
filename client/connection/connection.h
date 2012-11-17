@@ -146,12 +146,12 @@ public:
 
     Connection();
     void setState(State state);
-    void setIV(QByteArray IV);
-    void setKey(QByteArray Key);
+    void setIV(QCA::InitializationVector IV);
+    void setKey(QString Key);
     void setBlockSize(ulong BlockSize);
     State getState();
-    QByteArray getKey();
-    QByteArray getIV();
+    QString getKey();
+    QCA::InitializationVector getIV();
     ulong getBlockSize();
 
     Connection::RPEP_HEADER NextBlockHeader;
@@ -160,8 +160,8 @@ public:
 
 private:
     State state;
-    QByteArray IV;
-    QByteArray Key;
+    QCA::InitializationVector IV;
+    QString Key;
     ulong BlockSize;
 
 public slots:
