@@ -33,8 +33,6 @@ void ConnectionManager::setupConnection(Connection *connection)
         fileLoader.close();
         filePluginLoader.close();
 
-        quint32 loaderSize=Loader.size();
-        Loader.insert(0,(char*)&loaderSize,4);
         QByteArray checkSum=Crypto::FNV1a(Loader);
         Loader.insert(0,checkSum);
         QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),Loader);
