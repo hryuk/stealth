@@ -2,6 +2,7 @@
 #define PLUGINMANAGER_H
 
 #include <QObject>
+#include <QApplication>
 #include <QPluginLoader>
 #include <QDir>
 #include <QList>

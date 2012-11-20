@@ -8,9 +8,6 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
 
-    qDebug()<<tr("Comprobando DLL's");
-
-
     #ifdef Q_WS_WIN
     /* Comprobamos que las dlls que la necesitamos estan en su sitio */
     QDir dir=QDir::currentPath();

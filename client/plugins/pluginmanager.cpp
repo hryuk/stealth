@@ -18,7 +18,7 @@ pluginmanager::pluginmanager(QObject *parent) :
             PluginInterface* stealthPlugin=qobject_cast<PluginInterface*>(plugin);
             if(stealthPlugin)
             {
-                plugins<<stealthPlugin;
+               // plugins<<stealthPlugin;
             }
             else
             {
