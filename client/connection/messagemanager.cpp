@@ -11,6 +11,22 @@ void MessageManager::readMessage()
     if(!connection) return;
     if(connection->getState()==Connection::JustConnected) return;
 
+    //FIXME: Si sie recibe otra cosa distinta de 0x01, el cliente se queda
+    // esperando infinitamente, hay que limpiar el buffer de entrada del socket
+    if(connection->getState()==Connection::WaitingForLoader)
+    {
+        if(connection->bytesAvailable()<1) return; //WTF
+
+        char ok;
+        connection->read(&ok,1);
+
+        if(ok==1)
+        {
+            emit receivedLoaderOk(connection);
+        }
+        return;
+    }
+
     if(connection->getState()==Connection::WaitingForGreeting)
     {
         QDataStream in(connection);

