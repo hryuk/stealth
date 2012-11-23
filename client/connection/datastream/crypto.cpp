@@ -1,5 +1,7 @@
 #include "crypto.h"
 
+#include <QMessageBox>
+
 QByteArray Crypto::sha1(QByteArray data)
 {
     if(data.isEmpty()) return 0;
@@ -27,16 +29,15 @@ QByteArray Crypto::FNV1a(QByteArray data)
     return QByteArray((char*)&r,4);
 }
 
-
-QCA::InitializationVector Crypto::AES_IV()
+QByteArray Crypto::AES_IV()
 {
     QCA::Initializer init;
     QCA::InitializationVector iv(16);
 
-    return iv;
+    return iv.toByteArray();
 }
 
-QByteArray Crypto::AES(QCA::InitializationVector IV, QString strKey, QByteArray data)
+QByteArray Crypto::AES(QByteArray IV, QString strKey, QByteArray data)
 {
     QCA::Initializer init;
 

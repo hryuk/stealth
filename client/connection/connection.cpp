@@ -7,7 +7,7 @@ Connection::Connection()
     this->NextBlockHeader.Size.Blocks=0;
     //FIXME: Cambiar por contraseña de conexión
     this->Key=QString("karcrack:1234");
-    this->IV=Crypto::AES_IV();
+    this->IV.append(Crypto::AES_IV());
 }
 
 Connection::State Connection::getState()
@@ -20,12 +20,12 @@ void Connection::setState(State state)
     this->state=state;
 }
 
-void Connection::setIV(QCA::InitializationVector IV)
+void Connection::setIV(QByteArray IV)
 {
     this->IV=IV;
 }
 
-QCA::InitializationVector Connection::getIV()
+QByteArray Connection::getIV()
 {
     return this->IV;
 }
