@@ -47,12 +47,11 @@ void ConnectionManager::sendPluginManager(Connection *connection)
     QByteArray PluginLoader=filePluginLoader.readAll();
     filePluginLoader.close();
 
-
-    quint32 pluginmanagerSize=PluginLoader.size();
-    PluginLoader.insert(0,(char*)&pluginmanagerSize,4);
     QByteArray checkSum=Crypto::FNV1a(PluginLoader);
     PluginLoader.insert(0,checkSum);
     QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),PluginLoader);
+    quint32 pluginManagerSize=PluginLoader.size();
+    crypted.insert(0,(char*)&pluginManagerSize,4);
     connection->write(crypted);
 
     connection->setState(Connection::WaitingForGreeting);
