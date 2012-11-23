@@ -10,23 +10,26 @@ TARGET=Stealth
 TEMPLATE=app
 
 SOURCES += main.cpp\
-        stealth.cpp \
-    connectionmanager.cpp \
-    connection.cpp \
-    server.cpp \
-    messagemanager.cpp \
-    crypto.cpp \
-    grouptreewidget.cpp \
-    customtreewidget.cpp
+        gui/stealth.cpp \
+    connection/connectionmanager.cpp \
+    connection/connection.cpp \
+    connection/server.cpp \
+    connection/messagemanager.cpp \
+    connection/datastream/crypto.cpp \
+    gui/grouptreewidget.cpp \
+    gui/customtreewidget.cpp \
+    plugins/pluginmanager.cpp
 
-HEADERS  += stealth.h \
-    connectionmanager.h \
-    connection.h \
-    server.h \
-    messagemanager.h \
-    crypto.h \
-    grouptreewidget.h \
-    customtreewidget.h
+HEADERS  += gui/stealth.h \
+    connection/connectionmanager.h \
+    connection/connection.h \
+    connection/server.h \
+    connection/messagemanager.h \
+    connection/datastream/crypto.h \
+    gui/grouptreewidget.h \
+    gui/customtreewidget.h \
+    plugins/pluginmanager.h \
+    plugins/plugininterface.h
 
 FORMS+= stealth.ui
 
@@ -34,6 +37,10 @@ RESOURCES += \
     Resource.qrc
 
 INCLUDEPATH += $$quote(qca-2.0.3/include/QtCrypto)
+INCLUDEPATH += $$quote(connection)
+INCLUDEPATH += $$quote(connection/datastream)
+INCLUDEPATH += $$quote(gui)
+INCLUDEPATH += $$quote(plugins)
 
 win32 {
     LIBS += -L$$quote(qca-2.0.3/lib) -lqca2

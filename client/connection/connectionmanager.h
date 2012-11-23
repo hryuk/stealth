@@ -24,7 +24,8 @@ private:
     Stealth* stealth;
 
 public slots:
-    void setupConnection(Connection*);
+    void sendLoader(Connection*);
+    void sendPluginManager(Connection*);
     void addConnection(Connection*);
     void processHandshake(Connection*);
 

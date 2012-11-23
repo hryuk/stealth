@@ -3,16 +3,18 @@
 
 #include <QTcpSocket>
 
+#include "crypto.h"
+
 class Connection : public QTcpSocket
 {
     Q_OBJECT
 
 public:
-    enum State {JustConnected,WaitingForGreeting,ReadingGreeting,Ready,Sending,Receiving};
+    enum State {JustConnected,WaitingForLoader,WaitingForGreeting,ReadingGreeting,Ready,Sending,Receiving};
 
     typedef struct _RPEP_HEADER
     {
-        /* Codigo de operaci髇 */
+        /* Codigo de operaci贸n */
         typedef enum _Operation
         {
             /*  Operaciones sobre la negociacion */
@@ -42,10 +44,10 @@ public:
             Reserved=0x3FFF
         } Operation;
 
-        /* Tipo de operaci髇 */
+        /* Tipo de operaci贸n */
         struct _OperationType
         {
-            /* Operaci髇 interna / Operaci髇 plugin */
+            /* Operaci贸n interna / Operaci贸n plugin */
             unsigned short bOperation:1;
             union
             {
@@ -55,10 +57,10 @@ public:
         } OperationType;
 
 
-        /* Tama駉 de los datos  */
+        /* Tama帽o de los datos  */
         struct _Size
         {
-            /* Incida si el tama駉 se transmite en bytes o en n鷐ero de bloques */
+            /* Incida si el tama帽o se transmite en bytes o en n煤mero de bloques */
             ulong bBlocks:1;
             union
             {
@@ -68,14 +70,14 @@ public:
         } Size;
 
         /* Indica el numero de parte si hay mas de una; si se
-           usa tama駉 por bloques, este campo es obligatorio */
+           usa tama帽o por bloques, este campo es obligatorio */
         ulong BlockIndex;
 
         /* Datos */
         char Data[];
     } RPEP_HEADER;
 
-    /* Mensaje negociaci髇 cliente  */
+    /* Mensaje negociaci贸n cliente  */
     typedef struct _RPEP_CLIENT_HANDSHAKE
     {
         struct
@@ -90,7 +92,7 @@ public:
         ushort Port[];
     } RPEP_CLIENT_HANDSHAKE;
 
-    /* Mensaje negociaci髇 servidor  */
+    /* Mensaje negociaci贸n servidor  */
     typedef struct _RPEP_SERVER_HANDSHAKE
     {
         struct
@@ -130,13 +132,13 @@ public:
         char PluginName[];
     } RPEP_UNLOAD_PLUGIN;
 
-    /*  Mensaje fijar tama駉 bloques */
+    /*  Mensaje fijar tama帽o bloques */
     typedef struct _RPEP_SET_BLOCK_SIZE
     {
         ulong Value;
     } RPEP_SET_BLOCK_SIZE;
 
-    /*  Mensaje fijar algoritmo de compresi髇 */
+    /*  Mensaje fijar algoritmo de compresi贸n */
     typedef struct _RPEP_SET_COMPRESSION_ALGORITHM
     {
         ulong Value;
@@ -145,8 +147,10 @@ public:
     Connection();
     void setState(State state);
     void setIV(QByteArray IV);
+    void setKey(QString Key);
     void setBlockSize(ulong BlockSize);
     State getState();
+    QString getKey();
     QByteArray getIV();
     ulong getBlockSize();
 
@@ -157,6 +161,7 @@ public:
 private:
     State state;
     QByteArray IV;
+    QString Key;
     ulong BlockSize;
 
 public slots:

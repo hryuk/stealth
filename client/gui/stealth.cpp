@@ -8,9 +8,6 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
 
-    qDebug()<<tr("Comprobando DLL's");
-
-
     #ifdef Q_WS_WIN
     /* Comprobamos que las dlls que la necesitamos estan en su sitio */
     QDir dir=QDir::currentPath();
@@ -30,8 +27,8 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     mngMessage=new MessageManager();
     mngConnection=new ConnectionManager(this,mngMessage);
 
-    //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
-    connect(server,SIGNAL(newConnection(Connection*)),mngConnection,SLOT(setupConnection(Connection*)));
+    //Cuando el server reciba una nueva conexiÃ³n, el manager se encargarÃ¡ de inicializarla
+    connect(server,SIGNAL(newConnection(Connection*)),mngConnection,SLOT(sendLoader(Connection*)));
 
     qDebug()<<tr("Servidor iniciado");
 

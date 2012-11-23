@@ -1,7 +1,13 @@
 #ifndef GROUPTREEWIDGET_H
 #define GROUPTREEWIDGET_H
 
-#include <QtGui>
+#include <QTreeWidget>
+#include <QLabel>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QHeaderView>
+#include <QGraphicsView>
+#include <QGraphicsScene>
 
 #include "customtreewidget.h"
 

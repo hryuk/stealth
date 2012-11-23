@@ -20,7 +20,7 @@ public slots:
 
 signals:
     void receivedHandshake(Connection*);
-
+    void receivedLoaderOk(Connection*);
 };
 
 #endif // MESSAGEMANAGER_H
