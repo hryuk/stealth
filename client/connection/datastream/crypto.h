@@ -15,7 +15,7 @@ public:
     static QByteArray sha1(QByteArray data);
     static QByteArray sha1(QString data);
 
-    /** Ecriptación AES128 **/
+    /** EcriptaciÃ³n AES128 **/
     static QByteArray AES_IV();
     static QByteArray AES(QByteArray IV, QString key, QByteArray data );
 

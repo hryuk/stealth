@@ -46,7 +46,7 @@ QByteArray Crypto::AES(QByteArray IV, QString strKey, QByteArray data)
     QCA::SecureArray password=QCA::hexToArray(Crypto::sha1(strKey).toHex());
 
     QCA::SymmetricKey key=QCA::PBKDF2("sha1").makeKey(password,0,keylen,1);
-    QCA::Cipher cipher("aes128",QCA::Cipher::CBC,QCA::Cipher::PKCS7,QCA::Encode,key,IV);
+    QCA::Cipher cipher("aes128",QCA::Cipher::CBC,QCA::Cipher::NoPadding,QCA::Encode,key,IV);
 
     QCA::SecureArray u=cipher.process(data);
 
