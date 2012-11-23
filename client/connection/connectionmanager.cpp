@@ -22,9 +22,7 @@ void ConnectionManager::sendLoader(Connection *connection)
         QByteArray Loader=fileLoader.readAll();
         fileLoader.close();
 
-        /* Añadimos padding CBC */
-        /* FIXME: Hacer que no tenga que calcularse el padding fuera de Crypto::AES() */
-
+        /* Añadimos padding PKCS7 */
         char pad=16-((Loader.size()+4)%16);
         for(int i=0;i<pad;i++)
         {
@@ -34,7 +32,7 @@ void ConnectionManager::sendLoader(Connection *connection)
         QByteArray checkSum=Crypto::FNV1a(Loader);
         Loader.insert(0,checkSum);
 
-        QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),Loader);
+        QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),Loader,false);
 
         connection->write(connection->getIV()+crypted);
 
