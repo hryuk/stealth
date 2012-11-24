@@ -13,55 +13,106 @@
   <property name="windowTitle">
    <string>Stealth</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <widget class="QWidget" name="centralWidget">
    <layout class="QGridLayout" name="gridLayout_2">
     <item row="2" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout_4">
+      <property name="spacing">
+       <number>0</number>
+      </property>
       <item>
        <layout class="QVBoxLayout" name="MainLayout">
         <property name="spacing">
          <number>15</number>
         </property>
         <property name="topMargin">
-         <number>22</number>
+         <number>0</number>
         </property>
         <item>
          <widget class="QPushButton" name="pushButton_5">
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
           <property name="styleSheet">
            <string notr="true">padding: 15 15px</string>
           </property>
           <property name="text">
            <string>Lista</string>
           </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="checked">
+           <bool>true</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_7">
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
           <property name="styleSheet">
            <string notr="true">padding: 15 15px</string>
           </property>
           <property name="text">
            <string>Plugins</string>
           </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_4">
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
           <property name="styleSheet">
            <string notr="true">padding: 15 15px</string>
           </property>
           <property name="text">
            <string>Config</string>
           </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
+          </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="pushButton_6">
+          <property name="focusPolicy">
+           <enum>Qt::NoFocus</enum>
+          </property>
           <property name="styleSheet">
            <string notr="true">padding: 15 15px;</string>
           </property>
           <property name="text">
            <string>Server</string>
+          </property>
+          <property name="checkable">
+           <bool>true</bool>
+          </property>
+          <property name="autoDefault">
+           <bool>false</bool>
+          </property>
+          <property name="default">
+           <bool>false</bool>
+          </property>
+          <property name="flat">
+           <bool>false</bool>
           </property>
          </widget>
         </item>
@@ -85,57 +136,31 @@
       </item>
      </layout>
     </item>
-    <item row="0" column="0">
+    <item row="1" column="0">
      <layout class="QHBoxLayout" name="horizontalLayout">
       <property name="sizeConstraint">
        <enum>QLayout::SetMinimumSize</enum>
       </property>
       <item>
-       <widget class="QLabel" name="label">
-        <property name="sizePolicy">
-         <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
-          <horstretch>0</horstretch>
-          <verstretch>0</verstretch>
-         </sizepolicy>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-        <property name="minimumSize">
+        <property name="sizeHint" stdset="0">
          <size>
-          <width>100</width>
-          <height>0</height>
+          <width>40</width>
+          <height>20</height>
          </size>
         </property>
-        <property name="maximumSize">
-         <size>
-          <width>16777215</width>
-          <height>70</height>
-         </size>
-        </property>
-        <property name="styleSheet">
-         <string notr="true">
-QLabel{
-
-border:1px solid grey;
-border-radius:10px;
-
-}</string>
-        </property>
-        <property name="text">
-         <string>Status</string>
-        </property>
-       </widget>
+       </spacer>
       </item>
       <item>
        <widget class="QPushButton" name="pushButton">
-        <property name="styleSheet">
-         <string notr="true">border: 2px solid black;
-border-radius: 10px;
-padding: 8 8px;
-background:white;
-selection-background-color:darkgray;
-</string>
+        <property name="focusPolicy">
+         <enum>Qt::NoFocus</enum>
         </property>
         <property name="text">
-         <string>O</string>
+         <string>Configuración</string>
         </property>
        </widget>
       </item>
@@ -143,7 +168,6 @@ selection-background-color:darkgray;
     </item>
    </layout>
   </widget>
-  <widget class="QStatusBar" name="statusBar"/>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
  <resources/>

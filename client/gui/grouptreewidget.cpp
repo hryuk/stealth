@@ -17,13 +17,15 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
     frame->setLayout(frameLayout);
     /* frame->setStyleSheet("QFrame{border-radius: 10px; border: 1px solid grey; padding: 8 8px;}");*/
     mainLayout->addWidget(frame);
-
+/*
     QPushButton* btnExpand=new QPushButton();
     btnExpand->setFlat(true);
     frameLayout->addWidget(btnExpand);
     connect(btnExpand,SIGNAL(clicked()),SLOT(on_btnExpand_clicked()));
-
+*/
     treewidget=new CustomTreeWidget();
+    treewidget->setFocusPolicy(Qt::NoFocus);
+    treewidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     treewidget->setRootIsDecorated(false);
     treewidget->setHeaderHidden(true);
     treewidget->setColumnCount(2);
@@ -38,7 +40,7 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
     if(!expanded) treewidget->hide();
     frameLayout->addWidget(treewidget);
 
-
+/*
     QHBoxLayout* nl=new QHBoxLayout();
     nl->setMargin(0);
     nl->setSpacing(4);
@@ -58,13 +60,15 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
     nl->addWidget(numItemsLabel);
     nl->addSpacerItem(new QSpacerItem(4,1,QSizePolicy::Fixed,QSizePolicy::Fixed));
     btnExpand->setLayout(nl);
-
+*/
     this->setLayout(mainLayout);
     for(int i=0;i<3;i++)
     {
         QTreeWidgetItem* item=new QTreeWidgetItem();
         item->setIcon(0,QIcon(":/res/img/the-dark-knight-the-joker-02.png"));
         QGraphicsView* gvSpeed=new QGraphicsView();
+        gvSpeed->setFocusPolicy(Qt::NoFocus);
+        gvSpeed->setStyleSheet("border: 1px solid grey");
         gvSpeed->setFixedHeight(50);
         gvSpeed->setFixedWidth(200);
         treewidget->addTopLevelItem(item);
@@ -75,8 +79,6 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
         scene->addText("To Do");
         gvSpeed->setScene(scene);
     }
-
-    this->setStyleSheet("QTreeWidget{border-radius: 10px; border: 1px solid grey; padding: 8 8px;}");
 }
 
 GroupTreeWidget::~GroupTreeWidget()
