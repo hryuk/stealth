@@ -8,7 +8,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
 
-    #ifdef Q_WS_WIN
+#ifdef Q_WS_WIN
     /* Comprobamos que las dlls que la necesitamos estan en su sitio */
     QDir dir=QDir::currentPath();
     QFile file;
@@ -20,7 +20,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     else if(!file.exists(dir.filePath("qca-ossl2.dll"))) qFatal("Cannot find the \"/crypto/qca-ossl2.dll\" file");
 
     qDebug()<<tr("DLL correctas");
-    #endif
+#endif
 
 
     server=new Server();
@@ -48,7 +48,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
         {
             ctw=new GroupTreeWidget(false);
         }
-        ui->verticalLayout_2->addWidget(ctw);
+        ui->centralFrameLayout->addWidget(ctw);
         connect(this,SIGNAL(destroyed()),ctw,SLOT(deleteLater()));
         connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
         lstGroupWidgets.append(ctw);

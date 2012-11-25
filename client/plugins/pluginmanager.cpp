@@ -5,7 +5,6 @@ pluginmanager::pluginmanager(QObject *parent) :
 {
     /* Cargamos todos los plugins */
 
-
     QDir pluginsDir=QDir(qApp->applicationDirPath());
     pluginsDir.cd("plugins");
 
@@ -18,13 +17,13 @@ pluginmanager::pluginmanager(QObject *parent) :
             PluginInterface* stealthPlugin=qobject_cast<PluginInterface*>(plugin);
             if(stealthPlugin)
             {
-               // plugins<<stealthPlugin;
+                plugins<<stealthPlugin;
             }
             else
             {
                 /** ERROR **/
             }
         }
-        else /** ERROR **/ ;
+        else { /** ERROR **/ };
     }
 }

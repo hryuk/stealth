@@ -15,7 +15,7 @@ class pluginmanager : public QObject
 public:
     explicit pluginmanager(QObject *parent = 0);
 
-    QList<PluginInterface> plugins;
+    QList<PluginInterface*> plugins;
     
 signals:
     
