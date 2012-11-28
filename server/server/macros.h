@@ -34,7 +34,7 @@
 **    se devolverá la constante de error correspondiente como
 **    'Exit Code' en ExitProcess()@kernel32
 *###############################################################################*/
-#define ERR_NO  0x0     //No ha habido ningun error. El server ha finalizado correctamente.
+#define ERR_NO  0x0     //No ha habido ningún error. El server ha finalizado correctamente.
 #define ERR_FNC 0x1     //Ha habido un error en la funcion LoadFunctions(). Probablemente alguna función no se ha encontrado.
 //#define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexión.
 #define ERR_MEM 0x3     //Ha habido un error al reservar memoria.
@@ -73,7 +73,7 @@
 /*###############################################################################
 ** HASH_AND_EMIT:
 **    Macro que recibe una secuencia de bytes y genera el hash correspondiente.
-**    El algoritmo que generá el hash es el siguiente:
+**    El algoritmo que genera el hash es el siguiente:
 **      def hash(s):
 **          r = 0
 **          for x in s:
@@ -143,7 +143,7 @@
     #define DELTA __asm{add DWORD PTR[esp], edi}
     /*###############################################################################
     ** movr:
-    **    Macro que hace un mov con una direccion estatica y la repara
+    **    Macro que hace un mov con una dirección estática y la repara
     **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
     *###############################################################################*/
     #ifdef SC_NULL
@@ -158,7 +158,7 @@
     #define DELTA ;
     /*###############################################################################
     ** movr:
-    **    Macro que hace un mov con una direccion estatica y la repara
+    **    Macro que hace un mov con una dirección estática y la repara
     **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
     *###############################################################################*/
     #ifdef SC_NULL
@@ -173,7 +173,7 @@
 
 /*###############################################################################
 ** pushr:
-**    Macro que pushea en el stack una dirección estatica y la repara
+**    Macro que pushea en el stack una dirección estática y la repara
 **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
 *###############################################################################*/
 #define pushr(addr)\

