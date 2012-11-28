@@ -6,6 +6,7 @@
 #include <QMouseEvent>
 #include <QGraphicsView>
 #include <QTreeWidget>
+#include <QFontDatabase>
 #include <QFile>
 #include <QDir>
 

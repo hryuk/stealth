@@ -55,6 +55,13 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     }    
     /* /TEST */
 
+
+    QFontDatabase::addApplicationFont(":/res/font/Cantarell-Bold.ttf");
+    QFontDatabase::addApplicationFont(":/res/font/Cantarell-BoldOblique.ttf");
+    QFontDatabase::addApplicationFont(":/res/font/Cantarell-Oblique.ttf");
+    QFontDatabase::addApplicationFont(":/res/font/Cantarell-Regular.ttf");
+
+    QApplication::setFont(QFont("Cantarell"));
 }
 
 Stealth::~Stealth()

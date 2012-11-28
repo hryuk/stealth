@@ -44,6 +44,8 @@
 }
 
 QPushButton {
+
+text-align: left;
 color: #ddd;
 border: 0px solid #555;
 padding: 5px;
@@ -59,6 +61,14 @@ color:  #000;
 background: qradialgradient(cx: 0.4, cy: -0.1,
 fx: 0.4, fy: -0.1,
 radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
+}
+
+QPushButton:pressed
+{
+color:  #000;
+background: qradialgradient(cx: 0.4, cy: -0.1,
+fx: 0.4, fy: -0.1,
+radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
 }</string>
       </property>
       <property name="frameShape">
@@ -82,7 +92,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
          <item>
           <widget class="QPushButton" name="pushButton_3">
            <property name="sizePolicy">
-            <sizepolicy hsizetype="Minimum" vsizetype="Fixed">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
              <verstretch>0</verstretch>
             </sizepolicy>
@@ -106,16 +116,83 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
            <property name="text">
             <string>CONEXIONES</string>
            </property>
+           <property name="icon">
+            <iconset resource="Resource.qrc">
+             <normaloff>:/res/img/connection_2.png</normaloff>:/res/img/connection_2.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
            <property name="checkable">
             <bool>true</bool>
            </property>
            <property name="checked">
             <bool>true</bool>
            </property>
+           <property name="autoExclusive">
+            <bool>true</bool>
+           </property>
+          </widget>
+         </item>
+         <item>
+          <widget class="QPushButton" name="pushButton_5">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>90</width>
+             <height>50</height>
+            </size>
+           </property>
+           <property name="font">
+            <font>
+             <pointsize>9</pointsize>
+             <weight>50</weight>
+             <bold>false</bold>
+            </font>
+           </property>
+           <property name="focusPolicy">
+            <enum>Qt::NoFocus</enum>
+           </property>
+           <property name="text">
+            <string>CONFIGURACIÓN</string>
+           </property>
+           <property name="icon">
+            <iconset resource="Resource.qrc">
+             <normaloff>:/res/img/settings_1.png</normaloff>:/res/img/settings_1.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
+           <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="autoExclusive">
+            <bool>true</bool>
+           </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="pushButton_4">
+           <property name="enabled">
+            <bool>true</bool>
+           </property>
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="minimumSize">
             <size>
              <width>90</width>
@@ -135,39 +212,32 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
            <property name="text">
             <string>PLUGINS</string>
            </property>
-           <property name="checkable">
-            <bool>true</bool>
+           <property name="icon">
+            <iconset resource="Resource.qrc">
+             <normaloff>:/res/img/plugin.png</normaloff>:/res/img/plugin.png</iconset>
            </property>
-          </widget>
-         </item>
-         <item>
-          <widget class="QPushButton" name="pushButton_5">
-           <property name="minimumSize">
+           <property name="iconSize">
             <size>
-             <width>90</width>
-             <height>50</height>
+             <width>32</width>
+             <height>32</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>9</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::NoFocus</enum>
-           </property>
-           <property name="text">
-            <string>CONFIGURACIÓN</string>
-           </property>
            <property name="checkable">
+            <bool>false</bool>
+           </property>
+           <property name="autoExclusive">
             <bool>true</bool>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QPushButton" name="pushButton_2">
+           <property name="sizePolicy">
+            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
+             <horstretch>0</horstretch>
+             <verstretch>0</verstretch>
+            </sizepolicy>
+           </property>
            <property name="minimumSize">
             <size>
              <width>90</width>
@@ -187,7 +257,20 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
            <property name="text">
             <string>SERVIDOR</string>
            </property>
+           <property name="icon">
+            <iconset resource="Resource.qrc">
+             <normaloff>:/res/img/server.png</normaloff>:/res/img/server.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
+           </property>
            <property name="checkable">
+            <bool>false</bool>
+           </property>
+           <property name="autoExclusive">
             <bool>true</bool>
            </property>
           </widget>
@@ -303,6 +386,16 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
          <property name="text">
           <string>OPCIONES</string>
          </property>
+         <property name="icon">
+          <iconset resource="Resource.qrc">
+           <normaloff>:/res/img/settings_2.png</normaloff>:/res/img/settings_2.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>24</height>
+          </size>
+         </property>
         </widget>
        </item>
       </layout>
@@ -312,6 +405,8 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
   </widget>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
- <resources/>
+ <resources>
+  <include location="Resource.qrc"/>
+ </resources>
  <connections/>
 </ui>
