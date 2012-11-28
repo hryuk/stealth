@@ -398,6 +398,7 @@ endl
 	push ebx
 	add dword [esp],sizeof(Playload)-sizeof(DWORD)
 	ecall2 malloc
+	add esp,4;Quito el parametro del stack
 	mov %$pPlayload,eax
 	;//relleno los campos de Playload
 	mov [eax+Playload.sizeEncripData],ebx
