@@ -3,7 +3,7 @@
 
 ItemInfo::ItemInfo(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ItemInfo)
+    ui(new Ui::iteminfo)
 {
     ui->setupUi(this);
 }

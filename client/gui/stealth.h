@@ -14,6 +14,7 @@
 #include "connectionmanager.h"
 #include "messagemanager.h"
 #include "grouptreewidget.h"
+#include "pluginmanager.h"
 #include "pluginwindow.h"
 
 class ConnectionManager;
@@ -35,9 +36,9 @@ public:
 private:
     Ui::Stealth *ui;
     Server* server;
-    ConnectionManager* mngConnection;
-    MessageManager* mngMessage;
-    QList<GroupTreeWidget*> lstGroupWidgets;
+    ConnectionManager* connectionManager;
+    MessageManager* messageManager;
+    PluginManager* pluginManager;
     GroupTreeWidget* treewidget;
 
 public slots:

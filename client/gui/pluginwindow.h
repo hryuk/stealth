@@ -2,6 +2,8 @@
 #define PLUGINWINDOW_H
 
 #include <QMainWindow>
+#include "connection.h"
+#include "pluginmanager.h"
 
 namespace Ui {
 class PluginWindow;
@@ -12,7 +14,7 @@ class PluginWindow : public QMainWindow
     Q_OBJECT
     
 public:
-    explicit PluginWindow(QWidget *parent = 0);
+    explicit PluginWindow(Connection* connection,QList<PluginInterface*> plugins,QWidget *parent = 0);
     ~PluginWindow();
     
 private:

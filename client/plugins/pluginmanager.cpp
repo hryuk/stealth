@@ -1,6 +1,8 @@
 #include "pluginmanager.h"
 
-pluginmanager::pluginmanager(QObject *parent) :
+#include <QMessageBox>
+
+PluginManager::PluginManager(QObject *parent) :
     QObject(parent)
 {
     /* Cargamos todos los plugins */

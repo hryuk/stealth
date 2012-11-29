@@ -9,11 +9,11 @@
 
 #include "plugininterface.h"
 
-class pluginmanager : public QObject
+class PluginManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit pluginmanager(QObject *parent = 0);
+    explicit PluginManager(QObject *parent = 0);
 
     QList<PluginInterface*> plugins;
     

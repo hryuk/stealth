@@ -4,7 +4,7 @@
 #include <QWidget>
 
 namespace Ui {
-class ItemInfo;
+class iteminfo;
 }
 
 class ItemInfo : public QWidget
@@ -16,7 +16,7 @@ public:
     ~ItemInfo();
     
 private:
-    Ui::ItemInfo *ui;
+    Ui::iteminfo *ui;
 };
 
 #endif // ITEMINFO_H

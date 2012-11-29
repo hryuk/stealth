@@ -135,28 +135,6 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
       </layout>
      </widget>
     </item>
-    <item row="1" column="1">
-     <widget class="QFrame" name="centralFrame">
-      <property name="sizePolicy">
-       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-        <horstretch>0</horstretch>
-        <verstretch>0</verstretch>
-       </sizepolicy>
-      </property>
-      <property name="styleSheet">
-       <string notr="true">#centralFrame {
-border: none;
-background: white;
-}</string>
-      </property>
-      <property name="frameShape">
-       <enum>QFrame::StyledPanel</enum>
-      </property>
-      <property name="frameShadow">
-       <enum>QFrame::Raised</enum>
-      </property>
-     </widget>
-    </item>
     <item row="1" column="0">
      <widget class="QScrollArea" name="scrollArea">
       <property name="sizePolicy">
@@ -166,7 +144,7 @@ background: white;
        </sizepolicy>
       </property>
       <property name="styleSheet">
-       <string notr="true">#scrollAreaWidgetContents_2
+       <string notr="true">#scrollAreaWidget
 {
 	background-color:#626262;
 }
@@ -206,12 +184,12 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
       <property name="widgetResizable">
        <bool>true</bool>
       </property>
-      <widget class="QWidget" name="scrollAreaWidgetContents_2">
+      <widget class="QWidget" name="scrollAreaWidget">
        <property name="geometry">
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>108</width>
+         <width>101</width>
          <height>534</height>
         </rect>
        </property>
@@ -221,48 +199,30 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
          <verstretch>0</verstretch>
         </sizepolicy>
        </property>
-       <layout class="QVBoxLayout" name="verticalLayout">
-        <property name="margin">
-         <number>0</number>
-        </property>
-        <item>
-         <widget class="QPushButton" name="pushButton_3">
-          <property name="sizePolicy">
-           <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-            <horstretch>0</horstretch>
-            <verstretch>0</verstretch>
-           </sizepolicy>
-          </property>
-          <property name="text">
-           <string>PushButton</string>
-          </property>
-          <property name="icon">
-           <iconset resource="../Resource.qrc">
-            <normaloff>:/res/img/plugin.png</normaloff>:/res/img/plugin.png</iconset>
-          </property>
-          <property name="iconSize">
-           <size>
-            <width>32</width>
-            <height>32</height>
-           </size>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <spacer name="verticalSpacer">
-          <property name="orientation">
-           <enum>Qt::Vertical</enum>
-          </property>
-          <property name="sizeHint" stdset="0">
-           <size>
-            <width>20</width>
-            <height>40</height>
-           </size>
-          </property>
-         </spacer>
-        </item>
-       </layout>
       </widget>
+     </widget>
+    </item>
+    <item row="1" column="1">
+     <widget class="QFrame" name="centralFrame">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="styleSheet">
+       <string notr="true">#centralFrame {
+border: none;
+background: white;
+}</string>
+      </property>
+      <property name="frameShape">
+       <enum>QFrame::StyledPanel</enum>
+      </property>
+      <property name="frameShadow">
+       <enum>QFrame::Raised</enum>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_4"/>
      </widget>
     </item>
    </layout>
