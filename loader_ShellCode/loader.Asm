@@ -138,7 +138,7 @@ endl
 	mov edx,eax		;//EDX = Playload
 	
 	;Desencripto
-	push edx
+	push edx	;//Datos
 	push dword %$hKey
 	call decrypt
 	
@@ -285,12 +285,12 @@ endl
     push dword [eax+Playload.sizeEncripData] ;//Variable temporal para guardar el tamaño de los datos a leer
 
     push esp                       ;//v
-    lea eax,[eax+Playload.data]       ;//v
+    lea eax,[eax+Playload.checksum]    ;//Puntero al principio de los datos
     push eax
     push edx                       ;//v
     push edx                       ;//v
     push edx                       ;//v
-    push dword %$hKey              ;//v
+    push dword %$hKey              ;//Clave para el descifrado
     ecall2 CryptDecrypt        ;//>CryptDecrypt(hKey, 0, False, 0, pBuff, &buffLen);
     pop ecx
 	
@@ -410,9 +410,9 @@ endl
 	;//Leo los datos disponibles de la red
 	push dword MSG_WAITALL
 	push dword ebx
-	;//pongo la direccion de Playload.data para que rellene los datos
+	;//pongo la direccion de Playload.checksum para que rellene el checksum y los datos
 	push dword eax
-	add dword [esp],Playload.data
+	add dword [esp],Playload.checksum;//copio a partir del checksum
 	push dword %$hConexion
 	ecall2 recv
 	cmp eax,-1;//Compruevo los errores
