@@ -4,8 +4,7 @@
 
 RPEP::RPEP(SOCKET hConexion,HCRYPTKEY hKey){
     Port = NULL;
-    CompresAlg = NULL;
-    PortCount = CompresAlgCount = ver = MaxPaquetSize = 0;
+    CompresAlg = PortCount = ver = MaxPaquetSize = 0;
     runing = true;
     this->ver = 0;
     this->hKey = hKey;
@@ -18,13 +17,18 @@ ulong RPEP::clientLoop(){
     return 0;
 };
 ulong RPEP::serverLoop(){
-    DArray buff;
+    DArray readBuff,writeBuff;
 
-    MakeServerHello(buff);
-    conexion.write(buff);
+    MakeServerHello(writeBuff);
+    encript(writeBuff);
+    conexion.write(writeBuff);
+    writeBuff.Vaciar();
     do{
-        buff.Vaciar();
-        conexion.read(buff);
+        conexion.read(readBuff);
+        decript(readBuff);
+        if(procesPkg(readBuff,writeBuff)){
+            readBuff.Vaciar();
+        }
     }while(runing);
 
     return 0;
@@ -69,6 +73,8 @@ uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, cons
 
 uint RPEP::MakeServerHello(DArray& outBuff){
     //Buffert en pila para el hello
+    static ulong* CompresAlg = {};
+    ulong CompresAlgCount = 0;
     uint buffSize = sizeof(RPEP_SERVER_HANDSHAKE)+CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm);
     char buff[buffSize];
     register RPEP_SERVER_HANDSHAKE* sHello = (RPEP_SERVER_HANDSHAKE*)buff;
@@ -90,9 +96,20 @@ uint RPEP::MakeError(DArray& outBuff,uint code){
 }
 
 bool RPEP::procesPkg(DArray& in,DArray& out){
+    bool result = true;
+    RPEP_HEADER* header = (RPEP_HEADER*)in.data;
+    while(result && in.size){
+        if(header->Size.bPaquets){
 
+        }else{
+            procesCMD(header->opType,header->Data,header->Size.Bytes,out);
+            in.Vaciar();
+        }
+    }
+
+    return result;
 }
-bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size){
+bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DArray& response){
     bool result = false;
 
     if(opType.bOperation){
@@ -114,7 +131,7 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size){
                 break;
             //
             case RPEP_HEADER::Operation::LoadPlugin:
-               result = PlugMgr.loadtPlugin(data);
+               result = PlugMgr.loadPlugin((RPEP_LOAD_PLUGIN*)data);
                break;
             case RPEP_HEADER::Operation::CancelPluginLoad:
                break;
@@ -147,4 +164,28 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size){
 }
 
 bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello){
+    bool result = false;
+    if(result){
+       ver = *(ushort*)&clientHello->Version;
+       setMaxPaquetSize(clientHello->MaxPaquetSize);
+       setPort(clientHello->Port,clientHello->PortCount);
+       setCompresAlg(clientHello->CompressionALGM);
+    }
+    return result;
+}
+
+
+void RPEP::setMaxPaquetSize(ulong s){
+MaxPaquetSize = s;
+}
+
+void RPEP::setCompresAlg(ulong CompresAlg){
+    this->CompresAlg = CompresAlg;
+}
+
+void RPEP::setPort(ushort *Port, ulong count){
+    if(count && Port){
+        this->Port = (ushort*)malloc(count*sizeof(*Port));
+        memcpy(this->Port,Port,count*sizeof(*Port));
+    }
 }

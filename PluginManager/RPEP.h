@@ -20,12 +20,19 @@ class RPEP{
         //Parametros configurables del protocolo
         ushort MaxPaquetSize;
         ushort ver;
-        ulong* CompresAlg;
-        ulong CompresAlgCount;
+        ulong CompresAlg;
         ulong PortCount;
         ushort* Port;
 
         bool runing;
+
+        //set and get
+        void setMaxPaquetSize(ulong s);
+        void setCompresAlg(ulong CompresAlg);
+        void setPort(ushort* Port,ulong count);
+
+        bool encript(DArray &data);
+        bool decript(DArray &data);
 
         //Generan un paquete
         uint MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,const void* data,ulong size);
@@ -38,7 +45,7 @@ class RPEP{
         uint MakeError(DArray &outBuff, uint code);
 
         bool procesPkg(DArray& in,DArray& out);
-        bool procesCMD(RPEP_HEADER::OperationType opType, char* data, uint size);
+        bool procesCMD(RPEP_HEADER::OperationType opType, char* data, uint size, DArray &response);
 
         bool processClientHello(RPEP_CLIENT_HANDSHAKE* clientHello);
 
