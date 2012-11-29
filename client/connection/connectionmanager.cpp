@@ -44,13 +44,20 @@ void ConnectionManager::sendPluginManager(Connection *connection)
 {
     QFile filePluginLoader("pluginloader.dll");
     if(!filePluginLoader.open(QIODevice::ReadOnly)) return;
-    QByteArray PluginLoader=filePluginLoader.readAll();
+    QByteArray pluginLoader=filePluginLoader.readAll();
     filePluginLoader.close();
 
-    QByteArray checkSum=Crypto::FNV1a(PluginLoader);
-    PluginLoader.insert(0,checkSum);
-    QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),PluginLoader);
-    quint32 pluginManagerSize=PluginLoader.size();
+    /* Añadimos padding PKCS7 */
+    char pad=16-((pluginLoader.size()+4)%16);
+    for(int i=0;i<pad;i++)
+    {
+        pluginLoader.append(pad);
+    }
+
+    QByteArray checkSum=Crypto::FNV1a(pluginLoader);
+    pluginLoader.insert(0,checkSum);
+    QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),pluginLoader,false);
+    quint32 pluginManagerSize=pluginLoader.size();
     crypted.insert(0,(char*)&pluginManagerSize,4);
     connection->write(crypted);
 
