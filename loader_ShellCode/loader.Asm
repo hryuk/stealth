@@ -285,7 +285,8 @@ endl
     push dword [eax+Playload.sizeEncripData] ;//Variable temporal para guardar el tamaño de los datos a leer
 
     push esp                       ;//v
-    push dword [eax+Playload.data]       ;//v
+    lea eax,[eax+Playload.data]       ;//v
+    push eax
     push edx                       ;//v
     push edx                       ;//v
     push edx                       ;//v
