@@ -7,17 +7,41 @@
 
 
 class RPEP{
+        typedef enum stateType{
+            noConfigured,
+            ready
+        }stateType;
+        //Indica el estado del protocolo
+        stateType state;
+        //Socket de la conexion
         TCPSocket conexion;
+        //Clave de cifrado
+        HCRYPTKEY hKey;
+        //Parametros configurables del protocolo
         ushort MaxPaquetSize;
+        ushort ver;
+        ulong* CompresAlg;
+        ulong CompresAlgCount;
+        ulong PortCount;
+        ushort* Port;
 
-        uint MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,DArray* inBuff = 0);
-        uint MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,char* inBuff = 0,ulong inSize = 0);
-        uint MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,RPEP_HEADER::OperationType opType,DArray* inBuff);
-        uint MakePacket(DArray& outBuff,ushort op,DArray* inBuff = 0);
-        uint MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,RPEP_HEADER::OperationType opType,char* inBuff,ulong inSize);
-        uint MakePacket(DArray& outBuff,ushort op,char* inBuff = 0,ulong inSize = 0);
-        uint MakeServerHello(DArray& outBuff,ushort ver,ulong MaxPaquetSize,ulong CompresAlgCount = 0,ulong* CompresAlg = 0);
+        bool runing;
+
+        //Generan un paquete
+        uint MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,const void* data,ulong size);
+        uint MakePacket(DArray& outBuff,ushort pluginID,const void* data,ulong size);
+        uint MakePacket(DArray& outBuff,bool IsOperation,ushort opOrIDCode,const void* data,ulong size);
+
+        //Generan paquetes determinados
+        uint MakeServerHello(DArray& outBuff);
         uint MakeClienHello(DArray& outBuff,ushort ver,ulong MaxPaquetSize,ulong CompresAlg,ulong PortCount = 1, ushort* Port = 0);
+        uint MakeError(DArray &outBuff, uint code);
+
+        bool procesPkg(DArray& in,DArray& out);
+        bool procesCMD(RPEP_HEADER::OperationType opType, char* data, uint size);
+
+        bool processClientHello(RPEP_CLIENT_HANDSHAKE* clientHello);
+
     public:
         /** Default constructor */
         RPEP(SOCKET hConexion,HCRYPTKEY hKey);

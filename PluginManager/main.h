@@ -13,13 +13,13 @@
     #define DLL_EXPORT __declspec(dllimport)
 #endif
 typedef struct LoaderFunTable{
-	//Puntero a las funciones para la carga y descarga de modulos desde memoria
-	unsigned char* (__stdcall *LoadLibraryFromMemoy)(unsigned char* AddrBase,char* ModName);
-	unsigned char* (__stdcall *FreeLibraryFromMemoy)(unsigned char* AddrBase);
-	//Puntero a los punteros que usan las funiones anteriores para estas apis
-	//Estan en una zona con permisos ReadExecute, pero se pueden cambiar
-	unsigned long** LoadLibraryA;
-	unsigned long** GetProcAddress;
+    //Puntero a las funciones para la carga y descarga de modulos desde memoria
+    HINSTANCE (__stdcall *LoadLibraryFromMemoy)(void* AddrBase,const char* ModName);
+    void* (__stdcall *FreeLibraryFromMemoy)(void* AddrBase);
+    //Puntero a los punteros que usan las funiones anteriores para estas apis
+    //Estan en una zona con permisos ReadExecute, pero se pueden cambiar
+    unsigned long** LoadLibraryA;
+    unsigned long** GetProcAddress;
 }LoaderFunTable;
 #ifdef __cplusplus
 extern "C"

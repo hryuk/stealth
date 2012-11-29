@@ -1,136 +1,76 @@
 #include "RPEP.h"
-struct PKG_DATA{
-    typedef enum ClientOpCode:unsigned short{
-        //Comandos del protocolo
-        clientHello = 1,
-        serverHello,
-        setSizePKG,
-        setCompressAlg,
-        setPorts,//Cambia el numero de puerto de una conexion
-        loadPlugin,
-        cancelLoadPlugin,
-        unloadPlugin,
-        pingRecuent,
-        pingResponse,
-        Error,
-        reserved = 0x3FFF,
-        //Comandos del pluginLoader
-        initPlugin,
-        stopPlugin,
-        enumPluginLoad,
-        updateLoader,
-        updateServer,
-        stopServer
-    }ClientOpCode;
-    struct Size{
-        union{
-            ulong NBlokes:31;
-            ulong NBytes:31;
-        };
-        ulong Blokes:1;//Indica si el tamaño esta en blokes o en bytes
-    }Size;
-    //Identificador de plugin u orden del cliente
-    struct ID_Plugin{
-        union{
-            ushort ID:15;
-            ushort CommandClient:15;
-        };
-        unsigned short IsCommand:1;
-    }ID_Plugin;
-    //Indica el numero de parte si hay mas de una.
-    //Si se usa Size por bloques, este campo tiene que estar
-    ulong NParte;
-    char data[0];
-};
-typedef enum:ulong{
-    null
-}compresAlg;
-typedef struct RPEP_ClientHello{
-    struct{
-        char low;
-        char high;
-    }version;
-    ushort maxSizePKG;
-    ulong compressAlg;
-    ulong NPortUsed;
-    ushort PortNumber[0];
-}RPEP_ClientHello;
-typedef struct RPEP_ServerHello{
-    struct{
-        char low;
-        char high;
-    }version;
-    ushort maxSizePKG;
-    ulong NSupportCompressAlg;
-    ulong supportCompressAlg[0];
-}RPEP_ServerHello;
-typedef struct RPEP_error{
-    ushort level;
-    ushort code;
-    ulong sourceID;
-    ulong ExtendSize;
-    char Extend[0];
-}RPEP_error;
-typedef struct RPEP_loadPlugin{
-    ulong pluginID;
-    bool externalDonwload;
-    char pluginName[0];
-    char pluginModule[0];
-}RPEP_loadPlugin;
-typedef struct RPEP_unloadPlugin{
-    ulong pluginID;
-    char pluginName[0];
-}RPEP_unloadPlugin;
-typedef struct RPEP_sizePKG{
-    ulong value;
-}RPEP_sizePKG;
-typedef struct RPEP_CompressAlgID{
-    ulong value;
-}RPEP_CompressAlgID;
-
+#include "PluginManager.h"
+#include "plugininterface.h"
 
 RPEP::RPEP(SOCKET hConexion,HCRYPTKEY hKey){
-    MaxPaquetSize = 0;
+    Port = NULL;
+    CompresAlg = NULL;
+    PortCount = CompresAlgCount = ver = MaxPaquetSize = 0;
+    runing = true;
+    this->ver = 0;
+    this->hKey = hKey;
     conexion.setSocketDescriptor(hConexion,AbtractSocket::SocketState::ConnectedState);
-    //ctor
-}
 
-RPEP::~RPEP(){
-    //dtor
 }
+RPEP::~RPEP(){}
+
 ulong RPEP::clientLoop(){
     return 0;
 };
-uint RPEP::MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,RPEP_HEADER::OperationType opType,DArray* inBuff){
-    return MakePacket(outBuff,op,opType,(char*)(inBuff?inBuff->data:0),inBuff?inBuff->size:0);
-}
-uint RPEP::MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,RPEP_HEADER::OperationType opType,char* inBuff,ulong inSize){
-    ulong  result = 0;
-    RPEP_HEADER head;
-    head.opCode = op;
-    head.opType = opType;
+ulong RPEP::serverLoop(){
+    DArray buff;
 
-    if(this->MaxPaquetSize && inSize>this->MaxPaquetSize){
-        //Se manda por partes al superar el maximo de cada paquete
-        head.Size.bPaquets = true;
+    MakeServerHello(buff);
+    conexion.write(buff);
+    do{
+        buff.Vaciar();
+        conexion.read(buff);
+    }while(runing);
+
+    return 0;
+}
+
+uint RPEP::MakePacket(DArray &outBuff, RPEP_HEADER::Operation op, const void *data, ulong size){
+    return MakePacket(outBuff,true,op,data,size);
+}
+uint RPEP::MakePacket(DArray &outBuff, ushort pluginID, const void *data, ulong size){
+    return MakePacket(outBuff,false,pluginID,data,size);
+}
+uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, const void *data, ulong size){
+    RPEP_HEADER header;
+
+    //Aqui aparece el tipo de codificacion usada para el tamaño
+    header.Size.bPaquets = size>MaxPaquetSize;
+    //Indico el tipo de operacion
+    header.opType.bOperation = IsOperation;
+    header.opType.op = opOrIDCode;
+    header.PacketIndex = 0;
+
+    //Segun el tipo de tamaño usado se agrega de una u otra manera
+    if(header.Size.bPaquets){
+        header.Size.Paquets = size/MaxPaquetSize;
+        //En caso de no caver en un solo paquete, lo voy dividiendo en trozos el contenido
+        for(;header.PacketIndex<header.Size.Paquets;header.PacketIndex++){
+            //Agrego la cabecera
+            outBuff.addData(&header,sizeof(header));
+            //Agrego los datos frgmentados
+            outBuff.addData(((char*)data)+header.PacketIndex*MaxPaquetSize,
+                            ((((header.PacketIndex+1)*MaxPaquetSize)<=size)?MaxPaquetSize:size%MaxPaquetSize));
+        }
+
     }else{
-        //Si no hay definido tamaño maximo o es menor que el Maximo se manda de una
-        head.Size.bPaquets = false;
-        head.Size.Bytes = inSize;
-
-        //Añado el header
-        outBuff.addData(&head,sizeof(head));
-        //Añado los datos
-        outBuff.addData(inBuff,inSize);
-        result++;
+        header.Size.Bytes = size;
+        outBuff.addData(&header,sizeof(header));
+        outBuff.addData(data,size);
     }
-
-    return result;
+    return 0;
 }
 
-uint RPEP::MakeServerHello(DArray& outBuff,ushort ver,ulong MaxPaquetSize,ulong CompresAlgCount,ulong* CompresAlg){
+
+uint RPEP::MakeServerHello(DArray& outBuff){
     //Buffert en pila para el hello
-    char buff[sizeof(RPEP_SERVER_HANDSHAKE)+CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm)];
+    uint buffSize = sizeof(RPEP_SERVER_HANDSHAKE)+CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm);
+    char buff[buffSize];
     register RPEP_SERVER_HANDSHAKE* sHello = (RPEP_SERVER_HANDSHAKE*)buff;
 
     *((ushort*)&sHello->Version) = ver;
@@ -138,7 +78,73 @@ uint RPEP::MakeServerHello(DArray& outBuff,ushort ver,ulong MaxPaquetSize,ulong 
     sHello->SupportedCompressionAlgmCount = CompresAlgCount;
     if(CompresAlgCount)memcpy(sHello->SupportedCompressionAlgm,CompresAlg,CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm));
 
-    //MakePacket(outBuff,RPEP_HEADER::Operation::ServerHandshake,0,(char*)buff,sizeof(RPEP_SERVER_HANDSHAKE)+CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm));
+    MakePacket(outBuff,RPEP_HEADER::Operation::ServerHandshake,buff,buffSize);
 
+    return 0;
+}
+uint RPEP::MakeError(DArray& outBuff,uint code){
+    RPEP_ERROR error;
 
+    error.Code = code;
+    return MakePacket(outBuff,RPEP_HEADER::Operation::Error,&error,sizeof(error));
+}
+
+bool RPEP::procesPkg(DArray& in,DArray& out){
+
+}
+bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size){
+    bool result = false;
+
+    if(opType.bOperation){
+        switch(opType.op){
+            case RPEP_HEADER::Operation::ClientHandshake:
+                processClientHello((RPEP_CLIENT_HANDSHAKE*)data);
+                break;
+            case RPEP_HEADER::Operation::ServerHandshake:
+                break;
+            case RPEP_HEADER::Operation::SetPacketSize:
+                break;
+            case RPEP_HEADER::Operation::SetCompressionAlgm:
+                break;
+            case RPEP_HEADER::Operation::PingRequest:
+                break;
+            case RPEP_HEADER::Operation::PingResponse:
+                break;
+            case RPEP_HEADER::Operation::Error:
+                break;
+            //
+            case RPEP_HEADER::Operation::LoadPlugin:
+               result = PlugMgr.loadtPlugin(data);
+               break;
+            case RPEP_HEADER::Operation::CancelPluginLoad:
+               break;
+            case RPEP_HEADER::Operation::InitPlugin:
+               break;
+            case RPEP_HEADER::Operation::StopPlugin:
+               break;
+            case RPEP_HEADER::Operation::UnloadPlugin:
+               break;
+            case RPEP_HEADER::Operation::EnumLoadedPlugins:
+               break;
+            //
+            case RPEP_HEADER::Operation::UpdateLoader:
+               break;
+            case RPEP_HEADER::Operation::UpdateServer:
+               break;
+            case RPEP_HEADER::Operation::StopServer:
+               break;
+            default:
+               //Desconocido
+               ;
+        }
+    }else{
+        plugin* currentPlugin;
+        if((currentPlugin = PlugMgr.getPluginById(opType.PluginID))){
+            currentPlugin->interdace->onReciveData(data,size);
+        }
+    }
+    return result;
+}
+
+bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello){
 }

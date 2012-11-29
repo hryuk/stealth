@@ -29,7 +29,6 @@ typedef struct RPEP_HEADER{
         /*  Reservado */
         Reserved=0x3FFF,
     } Operation;
-    Operation opCode;
 
     /* Tamaño de los datos  */
     struct Size{
@@ -46,7 +45,7 @@ typedef struct RPEP_HEADER{
         /* Operacion interna / Operacion plugin */
         unsigned short bOperation:1;
         union{
-            ushort Operation:15;
+            ushort op:15;//RPEP_HEADER::Operation op
             ushort PluginID:15;
         };
     } OperationType;
