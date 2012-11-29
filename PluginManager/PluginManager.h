@@ -23,7 +23,7 @@ class PluginManager{
     public:
         PluginManager();
 
-        bool loadtPlugin(void* pluginModule);
+        bool loadPlugin(RPEP_LOAD_PLUGIN *pluginModule);
         bool unload(ushort ID);
         bool initPlugin();
         bool stopPlugin();

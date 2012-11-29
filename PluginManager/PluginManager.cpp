@@ -35,7 +35,7 @@ bool PluginManager::updateServer(DArray& newServer){
 
     return true;
 }
-bool PluginManager::loadtPlugin(void* pluginModule){
+bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     pgetInterface getInterface;
     HINSTANCE hModule;
     plugin* newPlugin;
@@ -43,11 +43,11 @@ bool PluginManager::loadtPlugin(void* pluginModule){
 
     newPlugin = new plugin();
     //Cargamos el plugin
-    newPlugin->hModule = hModule = lFunc->LoadLibraryFromMemoy(pluginModule,"");
+    newPlugin->hModule = hModule = lFunc->LoadLibraryFromMemoy(pluginModule->PluginModule,"");
     //Buscamos las funciones exportadas
     getInterface = (pgetInterface)GetProcAddress(hModule,"getInterface");
     if((newPlugin->interdace = getInterface())){
-        newPlugin->ID = ++lastID;
+        newPlugin->ID = pluginModule->PluginID;
         pluginList = newPlugin;
         result = true;
     }else delete newPlugin;
