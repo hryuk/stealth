@@ -1,4 +1,7 @@
 # In repository we don't need to have:
+# makefiles
+Makefile
+Makefile.*
 # Compiled object files
 *.o
 
@@ -20,7 +23,7 @@ Release/
 *.dll
 *.bin
 PROJECT
-
+*.pro.*
 # Windows-specific files
 Thumbs.db
 desktop.ini
