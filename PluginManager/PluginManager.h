@@ -9,11 +9,22 @@
 
 class DArray;
 
-
+class PluginInterface;
+class plugin{
+    public:
+        ulong ID;
+        HINSTANCE hModule;
+        PluginInterface* interdace;
+};
 class PluginManager{
+        LoaderFunTable* lFunc;
+        static plugin* pluginList;
+        static uint lastID;
     public:
         PluginManager();
 
+        bool loadtPlugin(void* pluginModule);
+        bool unload(ushort ID);
         bool initPlugin();
         bool stopPlugin();
         bool enumPluginLoad();
@@ -21,7 +32,8 @@ class PluginManager{
         bool updateServer(DArray& newServer);
         bool stopServer();
 
-        uint run(SOCKET hConexion,HCRYPTKEY hKey,LoaderFunTable& lFunc);
+        uint run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc);
+        plugin* getPluginById(ulong id);
 };
 
 extern PluginManager PlugMgr;
