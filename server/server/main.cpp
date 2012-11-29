@@ -535,7 +535,7 @@ FNV1a:
         cmp  edx, ebx
         jne  KillSocket                 //>(EDX==checksum?)
 
-        push [ebp+_pKEY]                //v
+        push [ebp+_hKey]                //v
         push [ebp+_hSocket]             //v
         push [ebp+_GetProcAddress]      //v
 #ifdef SC_NULL
