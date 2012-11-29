@@ -185,8 +185,8 @@ endl
 	
 	.ExitError:
 	;//Salimos del programa
-	push 0
-	call ExitProcess
+	;push 0
+	;call ExitProcess
 			
 	popad
 	leave
