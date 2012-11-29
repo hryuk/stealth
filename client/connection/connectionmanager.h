@@ -31,7 +31,7 @@ public slots:
 
 signals:
     void connectionEstablished(Connection*);
-
+    void connectionReady(Connection*);
 };
 
 #endif // CONNECTIONMANAGER_H

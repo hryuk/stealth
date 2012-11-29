@@ -62,27 +62,70 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
     btnExpand->setLayout(nl);
 */
     this->setLayout(mainLayout);
-    for(int i=0;i<3;i++)
-    {
-        QTreeWidgetItem* item=new QTreeWidgetItem();
-        item->setIcon(0,QIcon(":/res/img/the-dark-knight-the-joker-02.png"));
-        QGraphicsView* gvSpeed=new QGraphicsView();
-        gvSpeed->setFocusPolicy(Qt::NoFocus);
-        gvSpeed->setStyleSheet("border: 1px solid grey");
-        gvSpeed->setFixedHeight(50);
-        gvSpeed->setFixedWidth(200);
-        treewidget->addTopLevelItem(item);
-        treewidget->setItemWidget(treewidget->topLevelItem(i),1,gvSpeed);
-
-
-        QGraphicsScene* scene=new QGraphicsScene();
-        scene->addText("To Do");
-        gvSpeed->setScene(scene);
-    }
 }
 
 GroupTreeWidget::~GroupTreeWidget()
 {
+}
+
+void GroupTreeWidget::addItem(QTreeWidgetItem* item)
+{
+    item->setIcon(0,QIcon(":/res/img/the-dark-knight-the-joker-02.png"));
+    QGraphicsView* gvSpeed=new QGraphicsView();
+    gvSpeed->setRenderHints(QPainter::Antialiasing|QPainter::SmoothPixmapTransform);
+    gvSpeed->setFocusPolicy(Qt::NoFocus);
+    gvSpeed->setStyleSheet("border: 1px solid black");
+    gvSpeed->setFixedHeight(50);
+    gvSpeed->setFixedWidth(200);
+    treewidget->addTopLevelItem(item);
+    treewidget->setItemWidget(treewidget->topLevelItem(0),1,gvSpeed);
+
+
+    /* DEMO */
+    QGraphicsScene* scene=new QGraphicsScene();
+    scene->setSceneRect(gvSpeed->rect());
+
+    QTime time = QTime::currentTime();
+    qsrand((uint)time.msec());
+
+    for(int i=0;i<3;i++)
+    {
+        QColor color;
+
+        switch(i)
+        {
+            case 0:
+                color=Qt::green;
+            break;
+            case 1:
+                color=Qt::red;
+            break;
+            case 2:
+                color=Qt::blue;
+            break;
+        }
+
+        QPen pen;
+        pen.setColor(color);
+        pen.setWidth(2);
+        pen.setCapStyle(Qt::RoundCap);
+        pen.setJoinStyle(Qt::RoundJoin);
+        int lastX=0,lastY=0;
+
+        for(int i=0;i<20;i++)
+        {
+            int newHeight=qrand()%48;
+            scene->addLine(lastX,lastY,lastX+10,newHeight,pen);
+            lastX+=10;
+            lastY=newHeight;
+        }
+    }
+
+
+    scene->addText("DEMO");
+    gvSpeed->setScene(scene);
+    gvSpeed->fitInView(scene->sceneRect());
+    /* /DEMO */
 }
 
 void GroupTreeWidget::setExpanded(bool expanded)

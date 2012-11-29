@@ -68,7 +68,7 @@ void ConnectionManager::processHandshake(Connection* connection)
 
     Connection::RPEP_CLIENT_HANDSHAKE* ClientHandShake;
 
-    //FIXME: Definir nÃºmro de puertos correcto
+    //FIXME: Definir número de puertos correcto
 #define NUM_PORTS 1
 
     ClientHandShake=(Connection::RPEP_CLIENT_HANDSHAKE*)malloc(
@@ -89,6 +89,9 @@ void ConnectionManager::processHandshake(Connection* connection)
 
     free(ClientHandShake);
     free(Operation);
+
+    connection->setState(Connection::Ready);
+    emit connectionReady(connection);
 }
 
 void ConnectionManager::addConnection(Connection* connection)

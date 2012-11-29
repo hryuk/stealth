@@ -18,7 +18,9 @@ SOURCES += main.cpp\
     connection/datastream/crypto.cpp \
     gui/grouptreewidget.cpp \
     gui/customtreewidget.cpp \
-    plugins/pluginmanager.cpp
+    plugins/pluginmanager.cpp \
+    gui/iteminfo.cpp \
+    gui/pluginwindow.cpp
 
 HEADERS  += gui/stealth.h \
     connection/connectionmanager.h \
@@ -29,9 +31,13 @@ HEADERS  += gui/stealth.h \
     gui/grouptreewidget.h \
     gui/customtreewidget.h \
     plugins/pluginmanager.h \
-    plugins/plugininterface.h
+    plugins/plugininterface.h \
+    gui/iteminfo.h \
+    gui/pluginwindow.h
 
-FORMS+= stealth.ui
+FORMS+= stealth.ui \
+    gui/iteminfo.ui \
+    gui/pluginwindow.ui
 
 RESOURCES += \
     Resource.qrc

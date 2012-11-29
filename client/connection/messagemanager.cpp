@@ -11,7 +11,7 @@ void MessageManager::readMessage()
     if(!connection) return;
     if(connection->getState()==Connection::JustConnected) return;
 
-    //FIXME: Si sie recibe otra cosa distinta de 0x01, el cliente se queda
+    //FIXME: Si se recibe otra cosa distinta de 0x01, el cliente se queda
     // esperando infinitamente, hay que limpiar el buffer de entrada del socket
     if(connection->getState()==Connection::WaitingForLoader)
     {

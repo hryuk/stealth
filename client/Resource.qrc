@@ -13,9 +13,9 @@
         <file>res/img/settings_3.png</file>
         <file>res/img/settings_4.png</file>
         <file>res/img/server.png</file>
-        <file>res/font/Cantarell-Bold.ttf</file>
-        <file>res/font/Cantarell-BoldOblique.ttf</file>
-        <file>res/font/Cantarell-Oblique.ttf</file>
-        <file>res/font/Cantarell-Regular.ttf</file>
+        <file>res/img/server_add.png</file>
+        <file>res/img/server_alt.png</file>
+        <file>res/img/server_down.png</file>
+        <file>res/img/server_remove.png</file>
     </qresource>
 </RCC>

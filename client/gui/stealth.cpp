@@ -23,45 +23,31 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 #endif
 
 
+    //TODO: Mover a main.cpp?
     server=new Server();
     mngMessage=new MessageManager();
     mngConnection=new ConnectionManager(this,mngMessage);
 
     //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
     connect(server,SIGNAL(newConnection(Connection*)),mngConnection,SLOT(sendLoader(Connection*)));
+    connect(mngConnection,SIGNAL(connectionReady(Connection*)),this,SLOT(addConnection(Connection*)));
 
     qDebug()<<tr("Servidor iniciado");
 
 
-    QApplication::setStyle(QStyleFactory::create("Plastique"));
+ //   QApplication::setStyle(QStyleFactory::create("Plastique"));
 
-    /* Puebla el TreeWidget, solo para testear */
-    for(int i=0;i<1/*3*/;i++)
-    {   
-        GroupTreeWidget* ctw;
-        if(i==0)
-        {
-            ctw=new GroupTreeWidget(true);
-            expandedGroup=ctw;
-        }
-        else
-        {
-            ctw=new GroupTreeWidget(false);
-        }
-        ui->centralFrameLayout->addWidget(ctw);
-        connect(this,SIGNAL(destroyed()),ctw,SLOT(deleteLater()));
-        connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
-        lstGroupWidgets.append(ctw);
-    }    
+    treewidget=new GroupTreeWidget(true);
+    ui->centralFrameLayout->addWidget(treewidget);
+    connect(this,SIGNAL(destroyed()),treewidget,SLOT(deleteLater()));
+    //connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
+    lstGroupWidgets.append(treewidget);
+
+    /* TEST */
+    this->addConnection(0);
     /* /TEST */
 
-
-    QFontDatabase::addApplicationFont(":/res/font/Cantarell-Bold.ttf");
-    QFontDatabase::addApplicationFont(":/res/font/Cantarell-BoldOblique.ttf");
-    QFontDatabase::addApplicationFont(":/res/font/Cantarell-Oblique.ttf");
-    QFontDatabase::addApplicationFont(":/res/font/Cantarell-Regular.ttf");
-
-    QApplication::setFont(QFont("Cantarell"));
+    connect(treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));
 }
 
 Stealth::~Stealth()
@@ -69,13 +55,25 @@ Stealth::~Stealth()
     delete ui;
 }
 
+void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int column)
+{
+    PluginWindow* pluginWindow=new PluginWindow(this);
+    pluginWindow->show();
+}
+
+
 void Stealth::closeCurrentExpanded(GroupTreeWidget* newExpanded)
 {
+    /*
     expandedGroup->setExpanded(false);
     expandedGroup=newExpanded;
+    */
 }
+
 
 void Stealth::addConnection(Connection *connection)
 {
-
+    //FIXME: Cambiar cuando se implementen los grupos
+    QTreeWidgetItem* item=new QTreeWidgetItem();
+    this->lstGroupWidgets.at(0)->addItem(item);
 }

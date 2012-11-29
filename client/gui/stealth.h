@@ -14,6 +14,7 @@
 #include "connectionmanager.h"
 #include "messagemanager.h"
 #include "grouptreewidget.h"
+#include "pluginwindow.h"
 
 class ConnectionManager;
 class MessageManager;
@@ -37,12 +38,13 @@ private:
     ConnectionManager* mngConnection;
     MessageManager* mngMessage;
     QList<GroupTreeWidget*> lstGroupWidgets;
-    GroupTreeWidget* expandedGroup;
+    GroupTreeWidget* treewidget;
 
 public slots:
     void addConnection(Connection* connection);
 private slots:
     void closeCurrentExpanded(GroupTreeWidget*);
+    void itemDoubleClicked(QTreeWidgetItem*,int);
 };
 
 #endif // STEALTH_H

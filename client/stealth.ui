@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Stealth</string>
+   <string>Stealth - Demo</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -103,13 +103,6 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
              <height>50</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>9</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
            <property name="focusPolicy">
             <enum>Qt::NoFocus</enum>
            </property>
@@ -150,13 +143,6 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
              <width>90</width>
              <height>50</height>
             </size>
-           </property>
-           <property name="font">
-            <font>
-             <pointsize>9</pointsize>
-             <weight>50</weight>
-             <bold>false</bold>
-            </font>
            </property>
            <property name="focusPolicy">
             <enum>Qt::NoFocus</enum>
@@ -199,13 +185,6 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
              <height>50</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>9</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
            <property name="focusPolicy">
             <enum>Qt::NoFocus</enum>
            </property>
@@ -244,13 +223,6 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
              <height>50</height>
             </size>
            </property>
-           <property name="font">
-            <font>
-             <pointsize>9</pointsize>
-             <weight>75</weight>
-             <bold>true</bold>
-            </font>
-           </property>
            <property name="focusPolicy">
             <enum>Qt::NoFocus</enum>
            </property>
@@ -259,7 +231,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
-             <normaloff>:/res/img/server.png</normaloff>:/res/img/server.png</iconset>
+             <normaloff>:/res/img/server_add.png</normaloff>:/res/img/server_add.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -373,13 +345,6 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
        </item>
        <item>
         <widget class="QPushButton" name="pushButton">
-         <property name="font">
-          <font>
-           <pointsize>9</pointsize>
-           <weight>75</weight>
-           <bold>true</bold>
-          </font>
-         </property>
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>
          </property>
