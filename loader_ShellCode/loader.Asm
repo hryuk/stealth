@@ -264,7 +264,7 @@ endl
 	mov eax,%$pPayload
 	
 	mov  esi, [eax+Playload.data]				;//ESI = pBuff = &Checksum
-    mov  ecx, [eax+Playload.checksum]			;//ECX = SizePayload
+    mov  ecx, [eax+Playload.sizeDecriptData]	;//ECX = SizePayload
     cdq                             ;//hash = 0
 FNV1a:
     lodsb                           ;//al = str[i]; i++;
