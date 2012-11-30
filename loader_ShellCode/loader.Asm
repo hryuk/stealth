@@ -189,8 +189,6 @@ endl
 	;call ExitProcess
 
 	popad
-	leave
-	ret
 endp
 
 	int3
