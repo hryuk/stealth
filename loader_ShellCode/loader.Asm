@@ -264,8 +264,9 @@ endl
 	mov eax,%$pPayload
 
 	lea  esi, [eax+Playload.data]				;//ESI = pBuff = &Checksum
-    mov  ecx, [eax+Playload.sizeDecriptData]	;//ECX = SizePayload
-    cdq                             ;//hash = 0
+    mov  ecx, [eax+Playload.sizeData]			;//ECX = SizePayload
+    sub ecx,Playload.data-Playload.checksum
+    cdq                             			;//hash = 0
 FNV1a:
     lodsb                           ;//al = str[i]; i++;
     xor  dl, al                     ;//>hash ^= str[i];
@@ -282,7 +283,7 @@ endl
 	cdq                            ;//EDX = 0
 
 	mov eax,%$pPlayload
-    push dword [eax+Playload.sizeEncripData] ;//Variable temporal para guardar el tamaño de los datos a leer
+    push dword [eax+Playload.sizeData] ;//Variable temporal para guardar el tamaño de los datos a leer
 
     push esp                       ;//v
     lea eax,[eax+Playload.checksum]    ;//Puntero al principio de los datos
@@ -368,8 +369,6 @@ endl
 	pushad
 	;//Inicializo la variable
 	xor eax,eax
-	;mov dword [ebx],eax
-	mov dword %$szReadData,eax
 
 	;//Leo el primer dword que indica el tamaño de los datos a leer
 	push dword 0
@@ -378,38 +377,24 @@ endl
 	push eax
 	push dword %$hConexion
 	ecall2 recv
-	lea ebx,%$szReadData
-	add dword [ebx],eax
 	cmp eax,-1
 	je .error
 	test eax,eax
 	jz .error
 
-	mov ebx,%$szBuff
-	;//Añado el tamaño de el cketsum
-	;add ebx,4
-	;test ebx,0xf
-	;//Calculo el tamaño del paquete que siempre es multiplo de 16
-	;jz .noAling
-	;shr ebx,4
-	;inc ebx
-	;shl ebx,4
-	;.noAling:
-
-	push ebx
+	push dword %$szBuff
 	add dword [esp],sizeof(Playload)-sizeof(DWORD)
 	ecall2 malloc
 	add esp,4;Quito el parametro del stack
 	mov %$pPlayload,eax
 	;//relleno los campos de Playload
-	mov [eax+Playload.sizeEncripData],ebx
 	mov ecx,%$szBuff
-	mov [eax+Playload.sizeDecriptData],ecx
+	mov [eax+Playload.sizeData],ecx
 
 
 	;//Leo los datos disponibles de la red
 	push dword MSG_WAITALL
-	push dword ebx
+	push dword %$szBuff
 	;//pongo la direccion de Playload.checksum para que rellene el checksum y los datos
 	push dword eax
 	add dword [esp],Playload.checksum;//copio a partir del checksum

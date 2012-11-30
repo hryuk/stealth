@@ -10,8 +10,7 @@
 %define MSG_PARTIAL                0x8000
 
 STRUC Playload
-	.sizeEncripData		resd 1
-	.sizeDecriptData	resd 1
+	.sizeData			resd 1
 	.checksum			resd 1
 	.data:
 ends
