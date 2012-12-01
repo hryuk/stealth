@@ -4,14 +4,16 @@
 #include "../ArkLib/src/datatypes.h"
 
 class pluginManagerInterface{
-        pluginManagerInterface();
+        pluginManagerInterface(){}
     public:
         virtual int sendData(char* data,uint size) = 0;
+        virtual int setErrorCode(uint code) = 0;
 };
 class PluginInterface{
-        PluginInterface();
+    protected:
+        PluginInterface(){}
     public:
-        virtual char* getPluginName() = 0;
+        virtual const char* getPluginName() = 0;
         virtual int onReciveData(char* data,uint size) = 0;
         virtual void setPluginManager(pluginManagerInterface* mgr) = 0;
 };

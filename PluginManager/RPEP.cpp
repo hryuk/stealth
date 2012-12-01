@@ -189,3 +189,24 @@ void RPEP::setPort(ushort *Port, ulong count){
         memcpy(this->Port,Port,count*sizeof(*Port));
     }
 }
+
+
+bool RPEP::encript(DArray &data){
+    if(data.size){
+        //Coloco el padding  si hace falta
+        if(data.size &0xf){
+            for(int i = 0;data.size &0xf;i++){
+                data.addData("\0",1);
+            }
+            CryptEncrypt(hKey,0,false,0,data.data,&data.size,data.size);
+        }
+    }
+    return false;
+}
+
+bool RPEP::decript(DArray &data){
+    if(data.size){
+        return CryptDecrypt(hKey,0,false,0,data.data,&data.size);
+    }
+    return false;
+}
