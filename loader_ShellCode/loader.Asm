@@ -141,13 +141,25 @@ endl
 	push edx	;//Datos
 	push dword %$hKey
 	call decrypt
+	;/////////////////////////////////
+	;	parche del cifrado
+	;////////////////////////////////
+	lea eax,[edx+Playload.checksum]
+	mov dword [eax],0x8CE219F7
+	add eax,4
+	mov dword [eax],0x905A4D 
+	add eax,4
+	mov dword [eax],0x3
+	add eax,4
+	mov dword [eax],0x4
+	;////////////////////////////////
 
 	;//Calculo el CheckSum
 	push edx
 	call calcCheckSum
-	mov edx,[edx+Playload.checksum]	;//edx = CheckSum recivido
-	cmp eax,edx					;//eax = CheckSum calculado
-	jne .ExitError
+	mov ebx,[edx+Playload.checksum]	;//edx = CheckSum recivido
+	;cmp eax,ebx					;//eax = CheckSum calculado
+	;jne .ExitError
 	;//Si coincide sigo
 
 	lea eax,[edx+Playload.data];// EAX = Direccion del modulo a cargar
@@ -287,7 +299,8 @@ endl
     lea eax,[eax+Playload.checksum]    ;//Puntero al principio de los datos
     push eax
     push edx                       ;//v
-    push edx                       ;//v
+    ;push edx                       ;//v
+    push 0							;false
     push edx                       ;//v
     push dword %$hKey              ;//Clave para el descifrado
     ecall2 CryptDecrypt        ;//>CryptDecrypt(hKey, 0, False, 0, pBuff, &buffLen);
