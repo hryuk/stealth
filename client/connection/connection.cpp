@@ -6,8 +6,14 @@ Connection::Connection()
     this->NextBlockHeader.Size.Bytes=0;
     this->NextBlockHeader.Size.Blocks=0;
     //FIXME: Cambiar por contraseña de conexión
-    this->Key=QString("karcrack:1234");
-    this->IV.append(Crypto::AES_IV());
+    this->strKey=QString("karcrack:1234");
+
+    QCA::InitializationVector iv(16);
+    unsigned int keylen=16;
+    QCA::SecureArray password=QCA::hexToArray(Crypto::sha1(strKey).toHex());
+    key=QCA::PBKDF2("sha1").makeKey(password,0,keylen,1);
+
+    this->cipher=new QCA::Cipher("aes128",QCA::Cipher::CBC,QCA::Cipher::NoPadding,QCA::Encode,key,iv);
 }
 
 Connection::State Connection::getState()
@@ -22,17 +28,17 @@ void Connection::setState(State state)
 
 void Connection::setIV(QByteArray IV)
 {
-    this->IV=IV;
+    return;
 }
 
 QByteArray Connection::getIV()
 {
-    return this->IV;
+    return 0;
 }
 
 QString Connection::getKey()
 {
-    return this->Key;
+    return this->strKey;
 }
 
 void Connection::setBlockSize(ulong PacketSize)
@@ -80,4 +86,22 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation, char *data, int si
     free(Header);
 
     return size;
+}
+
+QByteArray Connection::addPadding(QByteArray data)
+{
+    /* Añadimos padding PKCS7 */
+    char pad=16-((data.size()+4)%16);
+    for(int i=0;i<pad;i++)
+    {
+        data.append(pad);
+    }
+
+    return data;
+}
+
+QByteArray Connection::crypt(QByteArray data,bool padding)
+{
+    if(padding) data=addPadding(data);
+    return cipher->process(data).toByteArray();
 }

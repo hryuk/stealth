@@ -32,7 +32,7 @@ void ConnectionManager::sendLoader(Connection *connection)
         QByteArray checkSum=Crypto::FNV1a(Loader);
         Loader.insert(0,checkSum);
 
-        QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),Loader,false);
+        QByteArray crypted=connection->crypt(Loader,false);
 
         connection->write(connection->getIV()+crypted);
 
@@ -56,7 +56,10 @@ void ConnectionManager::sendPluginManager(Connection *connection)
 
     QByteArray checkSum=Crypto::FNV1a(pluginLoader);
     pluginLoader.insert(0,checkSum);
-    QByteArray crypted=Crypto::AES(connection->getIV(),connection->getKey(),pluginLoader,false);
+
+
+    QByteArray crypted=connection->crypt(pluginLoader,false);
+
     quint32 pluginManagerSize=pluginLoader.size();
     crypted.insert(0,(char*)&pluginManagerSize,4);
     connection->write(crypted);

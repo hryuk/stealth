@@ -20,7 +20,7 @@ void MessageManager::readMessage()
         char ok;
         connection->read(&ok,1);
 
-        if(ok==1)
+        if(ok==0x01)
         {
             emit receivedLoaderOk(connection);
         }

@@ -147,7 +147,7 @@ public:
     Connection();
     void setState(State state);
     void setIV(QByteArray IV);
-    void setKey(QString Key);
+    void setKey(QString strKey);
     void setBlockSize(ulong BlockSize);
     State getState();
     QString getKey();
@@ -160,12 +160,18 @@ public:
 
 private:
     State state;
-    QByteArray IV;
-    QString Key;
+    QCA::SymmetricKey key;
+    QString strKey;
     ulong BlockSize;
+    QCA::Cipher* cipher;
+    QCA::Initializer init;
+
+private slots:
+    QByteArray addPadding(QByteArray data);
 
 public slots:
     int send(RPEP_HEADER::_OperationType* operation,char* data,int size);
+    QByteArray crypt(QByteArray data,bool padding=true);
 };
 
 #endif // CONNECTION_H

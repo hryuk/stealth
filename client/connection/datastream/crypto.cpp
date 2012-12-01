@@ -39,7 +39,7 @@ QByteArray Crypto::AES_IV()
 
 QByteArray Crypto::AES(QByteArray IV, QString strKey, QByteArray data,bool bPadding)
 {
-    QCA::Initializer init;
+
 
     unsigned int keylen=16;
 
