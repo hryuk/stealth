@@ -2,6 +2,7 @@
 #define __MAIN_H__
 
 #include <windows.h>
+#include <wincrypt.h>
 
 /*  To use this exported function of dll, include this header
  *  in your project.
@@ -28,7 +29,7 @@ extern "C"
 
 //void DLL_EXPORT SomeFunction(const LPCSTR sometext);
 bool DLL_EXPORT WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
-int DLL_EXPORT WINAPI InitPluginLoader(long hConexion,long hKey,LoaderFunTable& lFunc);
+int DLL_EXPORT WINAPI InitPluginLoader(SOCKET hConexion,HCRYPTKEY hKey,LoaderFunTable& lFunc);
 
 #ifdef __cplusplus
 }

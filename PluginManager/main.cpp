@@ -7,20 +7,12 @@
 
 using namespace std;
 
-typedef enum typoEnum{
-    value1,
-    value2
-}typoEnum;
-
-typoEnum enumVar;
-
-
 void SomeFunction(const char* sometext)
 {
     //MessageBoxA(0, sometext, "DLL Message", MB_OK | MB_ICONINFORMATION);
 }
 
-bool DLL_EXPORT WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
+bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
