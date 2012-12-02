@@ -144,22 +144,22 @@ endl
 	;/////////////////////////////////
 	;	parche del cifrado
 	;////////////////////////////////
-	lea eax,[edx+Playload.checksum]
-	mov dword [eax],0x8CE219F7
-	add eax,4
-	mov dword [eax],0x905A4D 
-	add eax,4
-	mov dword [eax],0x3
-	add eax,4
-	mov dword [eax],0x4
+	;lea eax,[edx+Playload.checksum]
+	;mov dword [eax],0x8CE219F7
+	;add eax,4
+	;mov dword [eax],0x905A4D 
+	;add eax,4
+	;mov dword [eax],0x3
+	;add eax,4
+	;mov dword [eax],0x4
 	;////////////////////////////////
 
 	;//Calculo el CheckSum
 	push edx
 	call calcCheckSum
 	mov ebx,[edx+Playload.checksum]	;//edx = CheckSum recivido
-	;cmp eax,ebx					;//eax = CheckSum calculado
-	;jne .ExitError
+	cmp eax,ebx					;//eax = CheckSum calculado
+	jne .ExitError
 	;//Si coincide sigo
 
 	lea eax,[edx+Playload.data];// EAX = Direccion del modulo a cargar
@@ -181,8 +181,10 @@ endl
 	;//Se buscar aqui la funcion de entrada
 	push PluginLoaderEntry
 	add [esp],esi
-	push eax
+	push ebx
 	ecall2 GetProcAddress
+	test eax, eax
+	jz .ExitError:
 
 	;//Se ejecuta la funcion principal del programa
 	push ecx	; ecx = %$FuncTable
@@ -300,7 +302,7 @@ endl
     push eax
     push edx                       ;//v
     ;push edx                       ;//v
-    push 0							;false
+    push TRUE						;true
     push edx                       ;//v
     push dword %$hKey              ;//Clave para el descifrado
     ecall2 CryptDecrypt        ;//>CryptDecrypt(hKey, 0, False, 0, pBuff, &buffLen);
