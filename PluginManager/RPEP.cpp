@@ -91,7 +91,9 @@ uint RPEP::MakeServerHello(DArray& outBuff){
 uint RPEP::MakeError(DArray& outBuff,uint code){
     RPEP_ERROR error;
 
+    ZeroMemory(&error,sizeof(error));
     error.Code = code;
+
     return MakePacket(outBuff,RPEP_HEADER::Operation::Error,&error,sizeof(error));
 }
 
@@ -198,7 +200,7 @@ bool RPEP::encript(DArray &data){
             for(int i = 0;data.size &0xf;i++){
                 data.addData("\0",1);
             }
-            CryptEncrypt(hKey,0,false,0,data.data,&data.size,data.size);
+            CryptEncrypt(hKey,0,true,0,data.data,&data.size,data.size);
         }
     }
     return false;
@@ -206,7 +208,7 @@ bool RPEP::encript(DArray &data){
 
 bool RPEP::decript(DArray &data){
     if(data.size){
-        return CryptDecrypt(hKey,0,false,0,data.data,&data.size);
+        return CryptDecrypt(hKey,0,true,0,data.data,&data.size);
     }
     return false;
 }

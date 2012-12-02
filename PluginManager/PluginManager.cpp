@@ -8,17 +8,22 @@ PluginManager PlugMgr;
 plugin* PluginManager::pluginList;
 uint PluginManager::lastID;
 
+class PluginManagerInterfacePrivate :public pluginManagerInterface{
+        virtual int sendData(char* data,uint size);
+        virtual int setErrorCode(uint code);
+};
 
 PluginManager::PluginManager(){
 }
 
 uint PluginManager::run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc){
     RPEP client(hConexion,hKey);
+    printf("");
 
     this->lFunc = &lFunc;
 
-    MessageBoxA(0, "PluginLoader::run", "DLL Message", MB_OK | MB_ICONINFORMATION);
-    return client.clientLoop();
+    MessageBoxA(0, "PluginManager::run", "DLL Message", MB_OK | MB_ICONINFORMATION);
+    return client.serverLoop();
 }
 
 bool PluginManager::updateServer(DArray& newServer){
