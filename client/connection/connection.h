@@ -145,8 +145,8 @@ public:
     } RPEP_SET_COMPRESSION_ALGORITHM;
 
     Connection();
+    ~Connection();
     void setState(State state);
-    void setIV(QByteArray IV);
     void setKey(QString strKey);
     void setBlockSize(ulong BlockSize);
     State getState();
@@ -165,6 +165,7 @@ private:
     ulong BlockSize;
     QCA::Cipher* cipher;
     QCA::Initializer init;
+    QCA::InitializationVector* iv;
 
 private slots:
     QByteArray addPadding(QByteArray data);

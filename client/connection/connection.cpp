@@ -1,5 +1,6 @@
 #include "connection.h"
 
+/*FIXME: Crear destructor para liberar IV y Cipher */
 Connection::Connection()
 {
     this->state=JustConnected;
@@ -8,12 +9,18 @@ Connection::Connection()
     //FIXME: Cambiar por contraseña de conexión
     this->strKey=QString("karcrack:1234");
 
-    QCA::InitializationVector iv(16);
+    iv=new QCA::InitializationVector(16);
     unsigned int keylen=16;
     QCA::SecureArray password=QCA::hexToArray(Crypto::sha1(strKey).toHex());
     key=QCA::PBKDF2("sha1").makeKey(password,0,keylen,1);
 
-    this->cipher=new QCA::Cipher("aes128",QCA::Cipher::CBC,QCA::Cipher::NoPadding,QCA::Encode,key,iv);
+    this->cipher=new QCA::Cipher("aes128",QCA::Cipher::CBC,QCA::Cipher::NoPadding,QCA::Encode,key,*iv);
+}
+
+Connection::~Connection()
+{
+    delete this->iv;
+    delete this->cipher;
 }
 
 Connection::State Connection::getState()
@@ -26,14 +33,9 @@ void Connection::setState(State state)
     this->state=state;
 }
 
-void Connection::setIV(QByteArray IV)
-{
-    return;
-}
-
 QByteArray Connection::getIV()
 {
-    return 0;
+    return this->iv->toByteArray();
 }
 
 QString Connection::getKey()
