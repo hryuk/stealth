@@ -4,11 +4,15 @@
 
 RPEP::RPEP(SOCKET hConexion,HCRYPTKEY hKey){
     Port = NULL;
-    CompresAlg = PortCount = ver = MaxPaquetSize = 0;
+    CompresAlg = PortCount = ver = 0;
+    MaxPaquetSize = 4096*10;
     runing = true;
     this->ver = 0;
     this->hKey = hKey;
-    conexion.setSocketDescriptor(hConexion,AbtractSocket::SocketState::ConnectedState);
+
+    printf("RPEP::ctor \n");
+    conexion.setSocketDescriptor(hConexion);
+    this->hConexion = hConexion;
 
 }
 RPEP::~RPEP(){}
@@ -19,16 +23,26 @@ ulong RPEP::clientLoop(){
 ulong RPEP::serverLoop(){
     DArray readBuff,writeBuff;
 
+    //printf("serverLoop::MakeServerHello \n");
     MakeServerHello(writeBuff);
-    encript(writeBuff);
-    conexion.write(writeBuff);
+    //printf("serverLoop::encript(writeBuff) \n");
+    //encript(writeBuff);
+    //conexion.write(writeBuff);
+
+    send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
+
     writeBuff.Vaciar();
     do{
         conexion.read(readBuff);
-        decript(readBuff);
+        //decript(readBuff);
         if(procesPkg(readBuff,writeBuff)){
             readBuff.Vaciar();
+            if(writeBuff.size){
+                conexion.write(writeBuff);
+            }
         }
+        Sleep(1);
+        printf("serverLoop \n");
     }while(runing);
 
     return 0;
@@ -84,6 +98,7 @@ uint RPEP::MakeServerHello(DArray& outBuff){
     sHello->SupportedCompressionAlgmCount = CompresAlgCount;
     if(CompresAlgCount)memcpy(sHello->SupportedCompressionAlgm,CompresAlg,CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm));
 
+    printf("MakeServerHello \n");
     MakePacket(outBuff,RPEP_HEADER::Operation::ServerHandshake,buff,buffSize);
 
     return 0;
@@ -117,7 +132,7 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DAr
     if(opType.bOperation){
         switch(opType.op){
             case RPEP_HEADER::Operation::ClientHandshake:
-                processClientHello((RPEP_CLIENT_HANDSHAKE*)data);
+                processClientHello((RPEP_CLIENT_HANDSHAKE*)data,response);
                 break;
             case RPEP_HEADER::Operation::ServerHandshake:
                 break;
@@ -165,13 +180,15 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DAr
     return result;
 }
 
-bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello){
+bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello,DArray& response){
     bool result = false;
     if(result){
        ver = *(ushort*)&clientHello->Version;
        setMaxPaquetSize(clientHello->MaxPaquetSize);
        setPort(clientHello->Port,clientHello->PortCount);
        setCompresAlg(clientHello->CompressionALGM);
+
+       MakeError(response,0);
     }
     return result;
 }

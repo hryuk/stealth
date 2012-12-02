@@ -7,7 +7,7 @@ class pluginManagerInterface{
     protected:
         pluginManagerInterface(){}
     public:
-        virtual int sendData(char* data,uint size) = 0;
+        virtual int sendData(const char* data,uint size) = 0;
         virtual int setErrorCode(uint code) = 0;
 };
 class PluginInterface{

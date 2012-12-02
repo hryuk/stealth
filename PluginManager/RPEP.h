@@ -15,6 +15,7 @@ class RPEP{
         stateType state;
         //Socket de la conexion
         TCPSocket conexion;
+        SOCKET hConexion;
         //Clave de cifrado
         HCRYPTKEY hKey;
         //Parametros configurables del protocolo
@@ -47,7 +48,7 @@ class RPEP{
         bool procesPkg(DArray& in,DArray& out);
         bool procesCMD(RPEP_HEADER::OperationType opType, char* data, uint size, DArray &response);
 
-        bool processClientHello(RPEP_CLIENT_HANDSHAKE* clientHello);
+        bool processClientHello(RPEP_CLIENT_HANDSHAKE* clientHello, DArray &response);
 
     public:
         /** Default constructor */

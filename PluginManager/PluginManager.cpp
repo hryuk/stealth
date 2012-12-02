@@ -9,7 +9,10 @@ plugin* PluginManager::pluginList;
 uint PluginManager::lastID;
 
 class PluginManagerInterfacePrivate :public pluginManagerInterface{
-        virtual int sendData(char* data,uint size);
+        PluginManager* mgr;
+    public:
+        PluginManagerInterfacePrivate(PluginManager& mgr);
+        virtual int sendData(const char* data,uint size);
         virtual int setErrorCode(uint code);
 };
 
@@ -18,7 +21,7 @@ PluginManager::PluginManager(){
 
 uint PluginManager::run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc){
     RPEP client(hConexion,hKey);
-    printf("");
+    printf("despues de client\n");
 
     this->lFunc = &lFunc;
 
