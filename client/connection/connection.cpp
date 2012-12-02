@@ -18,6 +18,7 @@ Connection::Connection()
     /* Se comprueba que la conexión está activa cada 10 segundos */
     timer.setInterval(10000);
     connect(&timer,SIGNAL(timeout()),this,SLOT(checkTimeout()));
+    timer.start();
 }
 
 Connection::~Connection()
@@ -36,8 +37,6 @@ void Connection::checkTimeout()
             emit timeout();
         }
     }
-
-/*enum State {JustConnected,WaitingForLoader,WaitingForGreeting,ReadingGreeting,Ready,Sending,Receiving};*/
 }
 
 Connection::State Connection::getState()

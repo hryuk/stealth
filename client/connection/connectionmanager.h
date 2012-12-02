@@ -29,6 +29,10 @@ public slots:
     void addConnection(Connection*);
     void processHandshake(Connection*);
 
+private slots:
+    void connection_timeout();
+    void connectionError(QAbstractSocket::SocketError);
+
 signals:
     void connectionEstablished(Connection*);
     void connectionReady(Connection*);

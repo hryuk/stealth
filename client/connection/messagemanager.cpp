@@ -11,8 +11,6 @@ void MessageManager::readMessage()
     if(!connection) return;
     if(connection->getState()==Connection::JustConnected) return;
 
-    //FIXME: Si se recibe otra cosa distinta de 0x01, el cliente se queda
-    // esperando infinitamente, hay que limpiar el buffer de entrada del socket
     if(connection->getState()==Connection::WaitingForLoader)
     {
         if(connection->bytesAvailable()<1) return; //WTF
@@ -23,6 +21,10 @@ void MessageManager::readMessage()
         if(ok==0x01)
         {
             emit receivedLoaderOk(connection);
+        }
+        else
+        {
+            connection->readAll();
         }
         return;
     }
@@ -58,6 +60,8 @@ void MessageManager::readMessage()
 
         QMessageBox::information(0,":P","Recibido handshake");
 
+        /*TODO: esperar a que el servidor responda antes de añadir
+                la conexión a la GUI */
         emit receivedHandshake(connection);
         return;
     }
