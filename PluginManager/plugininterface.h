@@ -4,6 +4,7 @@
 #include "../ArkLib/src/datatypes.h"
 
 class pluginManagerInterface{
+    protected:
         pluginManagerInterface(){}
     public:
         virtual int sendData(char* data,uint size) = 0;
