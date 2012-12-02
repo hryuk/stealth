@@ -184,7 +184,7 @@ endl
 	push ebx
 	ecall2 GetProcAddress
 	test eax, eax
-	jz .ExitError:
+	jz .ExitError
 
 	;//Se ejecuta la funcion principal del programa
 	push ecx	; ecx = %$FuncTable
