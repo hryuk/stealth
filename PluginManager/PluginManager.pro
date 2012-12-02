@@ -11,7 +11,7 @@ else {
 
 DEFINES +=BUILD_DLL
 
-LIBS += -L$$quote(../ArkLib) -lArkLib -lntdll
+LIBS += -L$$quote(../ArkLib) -lArkLib -lntdll -lWs2_32 --static
 
 
 SOURCES +=	main.cpp \
