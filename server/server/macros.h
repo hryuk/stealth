@@ -25,7 +25,7 @@
 **    }
 *###############################################################################*/
 #define ERR_CHECK
-#undef ERR_CHECK
+//#undef ERR_CHECK
 
 /*###############################################################################
 ** Control de errores:
@@ -55,8 +55,8 @@
 *###############################################################################*/
 #define SC_DELTA
 #define SC_NULL
-#undef SC_NULL
-#undef SC_DELTA
+//#undef SC_NULL
+//#undef SC_DELTA
 
 #pragma message("[i] COMPILANDO CON LAS SIGUIENTES FLAGS ACTIVADAS:")
 

