@@ -2,6 +2,7 @@
 #define CONNECTION_H
 
 #include <QTcpSocket>
+#include <QTimer>
 
 #include "crypto.h"
 
@@ -159,6 +160,8 @@ public:
     QByteArray Data;
 
 private:
+    /* Estado previo usado para el timeout */
+    State previousState;
     State state;
     QCA::SymmetricKey key;
     QString strKey;
@@ -166,13 +169,18 @@ private:
     QCA::Cipher* cipher;
     QCA::Initializer init;
     QCA::InitializationVector* iv;
+    QTimer timer;
 
 private slots:
     QByteArray addPadding(QByteArray data);
+    void checkTimeout();
 
 public slots:
     int send(RPEP_HEADER::_OperationType* operation,char* data,int size);
     QByteArray crypt(QByteArray data,bool padding=true);
+
+signals:
+    void timeout();
 };
 
 #endif // CONNECTION_H

@@ -1,6 +1,5 @@
 #include "connection.h"
 
-/*FIXME: Crear destructor para liberar IV y Cipher */
 Connection::Connection()
 {
     this->state=JustConnected;
@@ -15,12 +14,30 @@ Connection::Connection()
     key=QCA::PBKDF2("sha1").makeKey(password,0,keylen,1);
 
     this->cipher=new QCA::Cipher("aes128",QCA::Cipher::CBC,QCA::Cipher::NoPadding,QCA::Encode,key,*iv);
+
+    /* Se comprueba que la conexión está activa cada 10 segundos */
+    timer.setInterval(10000);
+    connect(&timer,SIGNAL(timeout()),this,SLOT(checkTimeout()));
 }
 
 Connection::~Connection()
 {
     delete this->iv;
     delete this->cipher;
+}
+
+void Connection::checkTimeout()
+{
+    if(state==JustConnected || state==WaitingForLoader ||
+       state==WaitingForGreeting || state==ReadingGreeting)
+    {
+        if(state==previousState)
+        {
+            emit timeout();
+        }
+    }
+
+/*enum State {JustConnected,WaitingForLoader,WaitingForGreeting,ReadingGreeting,Ready,Sending,Receiving};*/
 }
 
 Connection::State Connection::getState()

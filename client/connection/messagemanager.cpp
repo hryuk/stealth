@@ -56,6 +56,8 @@ void MessageManager::readMessage()
             return;
         }
 
+        QMessageBox::information(0,":P","Recibido handshake");
+
         emit receivedHandshake(connection);
         return;
     }

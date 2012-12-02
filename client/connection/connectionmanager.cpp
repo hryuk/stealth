@@ -95,13 +95,19 @@ void ConnectionManager::processHandshake(Connection* connection)
 
     Connection::RPEP_HEADER::_OperationType* Operation=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType*));
 
+    QMessageBox::information(0,":P","Enviando handshake");
+
     connection->send(Operation,(char*)ClientHandShake,sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS);
 
     free(ClientHandShake);
     free(Operation);
 
+    QMessageBox::information(0,":P","Handshake enviado");
+
     connection->setState(Connection::Ready);
     emit connectionReady(connection);
+
+
 }
 
 void ConnectionManager::addConnection(Connection* connection)
