@@ -44,7 +44,7 @@ void ConnectionManager::sendLoader(Connection *connection)
 
 void ConnectionManager::sendPluginManager(Connection *connection)
 {
-    QFile filePluginLoader("pluginloader.dll");
+    QFile filePluginLoader("pluginmanager.dll");
     if(!filePluginLoader.open(QIODevice::ReadOnly)) return;
     QByteArray pluginLoader=filePluginLoader.readAll();
     filePluginLoader.close();
@@ -117,14 +117,17 @@ void ConnectionManager::addConnection(Connection* connection)
 
 void ConnectionManager::connection_timeout()
 {
+    /* TODO: eliminar de la gui tambien */
+
     Connection* connection=qobject_cast<Connection*>(sender());
-    delete connection;
+    connection->deleteLater();
 }
 
 void ConnectionManager::connectionError(QAbstractSocket::SocketError)
 {
-    /*FIXME: Hacer que si hay un error en la conexión cuando la conexión ya
+    /* TODO: Hacer que si hay un error en la conexión cuando la conexión ya
              está añadida a la GUI, se elimine el item del TreeView */
+
     Connection* connection=qobject_cast<Connection*>(sender());
-    delete connection;
+    connection->deleteLater();
 }

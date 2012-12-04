@@ -2,6 +2,7 @@
 
 Connection::Connection()
 {
+    this->previousState=JustConnected;
     this->state=JustConnected;
     this->NextBlockHeader.Size.Bytes=0;
     this->NextBlockHeader.Size.Blocks=0;
@@ -18,17 +19,21 @@ Connection::Connection()
     /* Se comprueba que la conexión está activa cada 10 segundos */
     timer.setInterval(10000);
     connect(&timer,SIGNAL(timeout()),this,SLOT(checkTimeout()));
+    timer.setSingleShot(false);
     timer.start();
 }
 
 Connection::~Connection()
 {
     delete this->iv;
-    delete this->cipher;
+
+    //FIXME: Comprobar por que no puedo eliminar el objeto cipher
+    //delete this->cipher;
 }
 
 void Connection::checkTimeout()
 {
+
     if(state==JustConnected || state==WaitingForLoader ||
        state==WaitingForGreeting || state==ReadingGreeting)
     {
@@ -36,6 +41,7 @@ void Connection::checkTimeout()
         {
             emit timeout();
         }
+        else previousState=state;
     }
 }
 

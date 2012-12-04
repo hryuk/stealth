@@ -7,6 +7,8 @@ MessageManager::MessageManager(QObject *parent) : QObject(parent)
 
 void MessageManager::readMessage()
 {
+    QMessageBox::information(0,":P","CrashTest 1");
+
     Connection* connection=qobject_cast<Connection*>(sender());
     if(!connection) return;
     if(connection->getState()==Connection::JustConnected) return;
@@ -34,12 +36,25 @@ void MessageManager::readMessage()
         QDataStream in(connection);
         in.setVersion(QDataStream::Qt_4_8);
 
+
+
         if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
 
         if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
 
-        if(!connection->NextBlockHeader.OperationType.bOperation || connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::ServerHandshake) return;
+        QMessageBox::information(0,":P","Comprobacion #1");
+
+        //if(!connection->NextBlockHeader.OperationType.bOperation) return;
+
+        QMessageBox::information(0,":P","Comprobacion #2");
+
+        if(connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::ServerHandshake) return;
+
+
+        QMessageBox::information(0,":P","Comprobacion #3");
         if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=sizeof(Connection::RPEP_SERVER_HANDSHAKE)) return;
+
+        QMessageBox::information(0,":P","Comprobacion #4");
 
         connection->setState(Connection::ReadingGreeting);
     }
@@ -49,11 +64,18 @@ void MessageManager::readMessage()
         QDataStream in(connection);
         in.setVersion(QDataStream::Qt_4_8);
 
-        if(connection->bytesAvailable()<connection->NextBlockHeader.Size.Bytes) return;
+        QMessageBox::information(0,":P","Recibiendo handshake");
+
+        if(connection->bytesAvailable()<connection->NextBlockHeader.Size.Bytes)
+        {
+            QMessageBox::information(0,":P","Handshake Error 1");
+            return;
+        }
 
         connection->Data.resize(connection->NextBlockHeader.Size.Bytes);
         if(in.readRawData(connection->Data.data(),connection->NextBlockHeader.Size.Bytes)!=connection->NextBlockHeader.Size.Bytes)
         {
+            QMessageBox::information(0,":P","Handshake Error 2");
             connection->setState(Connection::WaitingForGreeting);
             return;
         }
