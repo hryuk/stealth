@@ -59,7 +59,7 @@ Stealth::~Stealth()
 
 void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int column)
 {
-    PluginWindow* pluginWindow=new PluginWindow(0,pluginManager->plugins);
+    PluginWindow* pluginWindow=new PluginWindow(0,pluginManager->plugins,this);
     pluginWindow->show();
 }
 
