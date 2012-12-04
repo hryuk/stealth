@@ -344,6 +344,23 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
         </spacer>
        </item>
        <item>
+        <widget class="QPushButton" name="btnDebug">
+         <property name="text">
+          <string>DEBUG</string>
+         </property>
+         <property name="icon">
+          <iconset resource="Resource.qrc">
+           <normaloff>:/res/img/debug.png</normaloff>:/res/img/debug.png</iconset>
+         </property>
+         <property name="iconSize">
+          <size>
+           <width>32</width>
+           <height>24</height>
+          </size>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QPushButton" name="pushButton">
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>

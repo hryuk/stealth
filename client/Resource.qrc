@@ -17,5 +17,6 @@
         <file>res/img/server_alt.png</file>
         <file>res/img/server_down.png</file>
         <file>res/img/server_remove.png</file>
+        <file>res/img/debug.png</file>
     </qresource>
 </RCC>

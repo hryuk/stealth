@@ -16,6 +16,7 @@
 #include "grouptreewidget.h"
 #include "pluginmanager.h"
 #include "pluginwindow.h"
+#include "debugshell.h"
 
 class ConnectionManager;
 class MessageManager;
@@ -46,6 +47,7 @@ public slots:
 private slots:
     void closeCurrentExpanded(GroupTreeWidget*);
     void itemDoubleClicked(QTreeWidgetItem*,int);
+    void on_btnDebug_clicked();
 };
 
 #endif // STEALTH_H

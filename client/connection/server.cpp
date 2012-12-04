@@ -13,5 +13,7 @@ void Server::incomingConnection(int socketDescriptor)
     connection->setState(Connection::JustConnected);
     connection->setSocketDescriptor(socketDescriptor);
 
+    qDebug()<<tr("Recibida conexion");
+
     emit newConnection(connection);
 }

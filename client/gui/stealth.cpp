@@ -8,7 +8,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
 
-    QCA::Initializer init;
+
 
 #ifdef Q_WS_WIN
     /* Comprobamos que las dlls que la necesitamos estan en su sitio */
@@ -24,6 +24,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     qDebug()<<tr("DLL correctas");
 #endif
 
+    QCA::Initializer init;
 
     //TODO: Mover a main.cpp?
     server=new Server();
@@ -77,4 +78,10 @@ void Stealth::addConnection(Connection *connection)
     //FIXME: Cambiar cuando se implementen los grupos
     QTreeWidgetItem* item=new QTreeWidgetItem();
     this->treewidget->addItem(item);
+}
+
+void Stealth::on_btnDebug_clicked()
+{
+    DebugShell* debugShell=new DebugShell(this);
+    debugShell->show();
 }

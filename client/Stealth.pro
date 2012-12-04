@@ -20,7 +20,8 @@ SOURCES += main.cpp\
     gui/customtreewidget.cpp \
     plugins/pluginmanager.cpp \
     gui/iteminfo.cpp \
-    gui/pluginwindow.cpp
+    gui/pluginwindow.cpp \
+    gui/debugshell.cpp
 
 HEADERS  += gui/stealth.h \
     connection/connectionmanager.h \
@@ -33,11 +34,13 @@ HEADERS  += gui/stealth.h \
     plugins/pluginmanager.h \
     plugins/plugininterface.h \
     gui/iteminfo.h \
-    gui/pluginwindow.h
+    gui/pluginwindow.h \
+    gui/debugshell.h
 
 FORMS+= stealth.ui \
     gui/iteminfo.ui \
-    gui/pluginwindow.ui
+    gui/pluginwindow.ui \
+    gui/debugshell.ui
 
 RESOURCES += \
     Resource.qrc
