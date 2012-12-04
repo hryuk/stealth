@@ -27,14 +27,15 @@ DebugShell::~DebugShell()
 
 void DebugShell::updateLog()
 {
+    QTime time=QTime::currentTime();
     QString debug_data=logFile->readAll();
 
     QStringList lines=debug_data.split("\n");
     foreach(QString line,lines)
     {
-        if(line.startsWith("Debug:")) ui->textEdit->append("<font color=\"blue\">[Debug] "+line.replace("Debug: ","").replace("\"","")+"</font>");
-        else if(line.startsWith("Critical:")) ui->textEdit->append("<font color=\"orange\">[Critical] "+line.replace("Critical: ","").replace("\"","")+"</font>");
-        else if(line.startsWith("Warning:")) ui->textEdit->append("<font color=\"yellow\">[Warning] "+line.replace("Warning: ","").replace("\"","")+"</font>");
-        else if(line.startsWith("Fatal:")) ui->textEdit->append("<font color=\"red\">[Fatal] "+line.replace("Fatal: ","").replace("\"","")+"</font>");
+        if(line.startsWith("Debug:")) ui->textEdit->append("<font color=\"blue\">[i]["+time.toString()+"] "+line.replace("Debug: ","").replace("\"","")+"</font>");
+        else if(line.startsWith("Critical:")) ui->textEdit->append("<font color=\"orange\">[x]["+time.toString()+"] "+line.replace("Critical: ","").replace("\"","")+"</font>");
+        else if(line.startsWith("Warning:")) ui->textEdit->append("<font color=\"yellow\">[!]["+time.toString()+"] "+line.replace("Warning: ","").replace("\"","")+"</font>");
+        else if(line.startsWith("Fatal:")) ui->textEdit->append("<font color=\"red\">[X]["+time.toString()+"] "+line.replace("Fatal: ","").replace("\"","")+"</font>");
     }
 }

@@ -25,6 +25,8 @@ Connection::Connection()
 
 Connection::~Connection()
 {
+
+    qWarning()<<"Conexion eliminada";
     delete this->iv;
 
     //FIXME: Comprobar por que no puedo eliminar el objeto cipher
@@ -33,7 +35,7 @@ Connection::~Connection()
 
 void Connection::checkTimeout()
 {
-
+    qWarning()<<"Conexion ausente";
     if(state==JustConnected || state==WaitingForLoader ||
        state==WaitingForGreeting || state==ReadingGreeting)
     {

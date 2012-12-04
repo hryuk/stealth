@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QFile>
 #include <QTimer>
+#include <QTime>
 
 namespace Ui {
 class DebugShell;
