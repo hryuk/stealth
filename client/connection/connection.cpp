@@ -20,7 +20,7 @@ Connection::Connection()
     timer.setInterval(10000);
     connect(&timer,SIGNAL(timeout()),this,SLOT(checkTimeout()));
     timer.setSingleShot(false);
-    timer.start();
+    //timer.start();
 }
 
 Connection::~Connection()

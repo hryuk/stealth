@@ -19,13 +19,14 @@ PluginManager::PluginManager(QObject *parent) :
             PluginInterface* stealthPlugin=qobject_cast<PluginInterface*>(plugin);
             if(stealthPlugin)
             {
+                qDebug("Cargado plugin");
                 plugins<<stealthPlugin;
             }
             else
             {
-                /** ERROR **/
+                qCritical("Error al cargar plugin inválido");
             }
         }
-        else { /** ERROR **/ };
+        else { qCritical("Error al cargar plugin inválido"); }
     }
 }

