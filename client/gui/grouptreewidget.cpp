@@ -95,13 +95,13 @@ void GroupTreeWidget::addItem(QTreeWidgetItem* item)
         switch(i)
         {
             case 0:
-                color=Qt::green;
+                color=Qt::darkGreen;
             break;
             case 1:
-                color=Qt::red;
+                color=Qt::darkRed;
             break;
             case 2:
-                color=Qt::blue;
+                color=Qt::darkBlue;
             break;
         }
 
@@ -121,8 +121,12 @@ void GroupTreeWidget::addItem(QTreeWidgetItem* item)
         }
     }
 
+    QGraphicsTextItem* textItem = new QGraphicsTextItem();
+    textItem->setPos(60,0);
+    textItem->setHtml("<font size=\"14\"><b>DEMO</b></font>");
+    textItem->setOpacity(0.6);
+    scene->addItem(textItem);
 
-    scene->addText("DEMO");
     gvSpeed->setScene(scene);
     gvSpeed->fitInView(scene->sceneRect());
     /* /DEMO */

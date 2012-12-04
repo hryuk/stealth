@@ -17,18 +17,23 @@ void MessageManager::readMessage()
     {
         if(connection->bytesAvailable()<1) return; //WTF
 
-        char ok;
-        connection->read(&ok,1);
+        QByteArray cmsgOk=connection->read(16);
 
-        if(ok==0x01)
+        QByteArray msgOk=connection->decrypt(cmsgOk);
+        foreach(char c,msgOk)
         {
-            emit receivedLoaderOk(connection);
+            if(c!=0x01)
+            {
+                char err=0;
+                connection->write(&err,1);
+                connection->readAll();
+                return;
+            }
+            else
+            {
+                emit receivedLoaderOk(connection);
+            }
         }
-        else
-        {
-            connection->readAll();
-        }
-        return;
     }
 
     if(connection->getState()==Connection::WaitingForGreeting)

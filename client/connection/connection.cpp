@@ -26,7 +26,7 @@ Connection::Connection()
 Connection::~Connection()
 {
 
-    qWarning()<<"Conexion eliminada";
+    qCritical()<<"Conexion eliminada";
     delete this->iv;
 
     //FIXME: Comprobar por que no puedo eliminar el objeto cipher
@@ -129,5 +129,13 @@ QByteArray Connection::addPadding(QByteArray data)
 QByteArray Connection::crypt(QByteArray data,bool padding)
 {
     if(padding) data=addPadding(data);
+
+    cipher->setup(QCA::Encode,key,*iv);
+    return cipher->process(data).toByteArray();
+}
+
+QByteArray Connection::decrypt(QByteArray data)
+{
+    cipher->setup(QCA::Decode,key,*iv);
     return cipher->process(data).toByteArray();
 }

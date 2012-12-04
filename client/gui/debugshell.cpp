@@ -33,9 +33,9 @@ void DebugShell::updateLog()
     QStringList lines=debug_data.split("\n");
     foreach(QString line,lines)
     {
-        if(line.startsWith("Debug:")) ui->textEdit->append("<font color=\"blue\">[i]["+time.toString()+"] "+line.replace("Debug: ","").replace("\"","")+"</font>");
-        else if(line.startsWith("Critical:")) ui->textEdit->append("<font color=\"orange\">[x]["+time.toString()+"] "+line.replace("Critical: ","").replace("\"","")+"</font>");
-        else if(line.startsWith("Warning:")) ui->textEdit->append("<font color=\"yellow\">[!]["+time.toString()+"] "+line.replace("Warning: ","").replace("\"","")+"</font>");
+        if(line.startsWith("Debug:")) ui->textEdit->append("<font color=\"#B3FFB3\">[i]["+time.toString()+"] "+line.replace("Debug: ","").replace("\"","")+"</font>");
+        else if(line.startsWith("Critical:")) ui->textEdit->append("<font color=\"#E60039\">[x]["+time.toString()+"] "+line.replace("Critical: ","").replace("\"","")+"</font>");
+        else if(line.startsWith("Warning:")) ui->textEdit->append("<font color=\"#FFD147\">[!]["+time.toString()+"] "+line.replace("Warning: ","").replace("\"","")+"</font>");
         else if(line.startsWith("Fatal:")) ui->textEdit->append("<font color=\"red\">[X]["+time.toString()+"] "+line.replace("Fatal: ","").replace("\"","")+"</font>");
     }
 }
