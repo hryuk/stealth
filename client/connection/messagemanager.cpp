@@ -17,6 +17,19 @@ void MessageManager::readMessage()
     {
         if(connection->bytesAvailable()<1) return; //WTF
 
+        char ok;
+        connection->read(&ok,1);
+
+        if(ok==0x01)
+        {
+            emit receivedLoaderOk(connection);
+        }
+        else
+        {
+            connection->readAll();
+        }
+        return;
+/*
         QByteArray cmsgOk=connection->read(16);
 
         QByteArray msgOk=connection->decrypt(cmsgOk);
@@ -34,14 +47,13 @@ void MessageManager::readMessage()
                 emit receivedLoaderOk(connection);
             }
         }
+*/
     }
 
     if(connection->getState()==Connection::WaitingForGreeting)
     {
         QDataStream in(connection);
         in.setVersion(QDataStream::Qt_4_8);
-
-
 
         if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
 
