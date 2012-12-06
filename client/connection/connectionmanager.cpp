@@ -156,6 +156,7 @@ void ConnectionManager::checkHandshakeOk(Connection* connection)
         return;
     }
 
+    qDebug()<<"Confirmación Hanshake correcto, conexión lista";
     connection->setState(Connection::Ready);
     emit connectionReady(connection);
 }
