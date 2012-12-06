@@ -2,7 +2,7 @@
 
 Server::Server()
 {
-    this->listen(QHostAddress::Any,11155);
+    this->listen(QHostAddress::Any,2000);
 }
 
 //Si hay una conexión prendiente, creamos un nuevo socket

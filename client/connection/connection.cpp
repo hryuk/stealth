@@ -20,7 +20,7 @@ Connection::Connection()
     timer.setInterval(10000);
     connect(&timer,SIGNAL(timeout()),this,SLOT(checkTimeout()));
     timer.setSingleShot(false);
-    //timer.start();
+    timer.start();
 }
 
 Connection::~Connection()
@@ -35,7 +35,6 @@ Connection::~Connection()
 
 void Connection::checkTimeout()
 {
-    qWarning()<<"Conexion ausente";
     if(state==JustConnected || state==WaitingForLoader ||
        state==WaitingForGreeting || state==ReadingGreeting)
     {
@@ -77,17 +76,17 @@ ulong Connection::getBlockSize()
     return this->BlockSize;
 }
 
-int Connection::send(_RPEP_HEADER::_OperationType* operation, char *data, int size)
+int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size)
 {
     RPEP_HEADER* Header=(RPEP_HEADER*)malloc(sizeof(RPEP_HEADER)+HandShake.MaxBlockSize);
     Header->OperationType=*operation;
     Header->BlockIndex=0;
-    Header->Size.bBlocks=true;
-    Header->Size.Blocks=size/this->HandShake.MaxBlockSize+(size%this->HandShake.MaxBlockSize?1:0);
+    Header->Size.bBlocks=size/HandShake.MaxBlockSize?true:false;
+    Header->Size.Blocks=size/HandShake.MaxBlockSize+(size%HandShake.MaxBlockSize?1:0);
 
-    if(size/this->HandShake.MaxBlockSize)
+    if(size/HandShake.MaxBlockSize)
     {
-        for(int i=0;i<(size/this->HandShake.MaxBlockSize);i++)
+        for(int i=0;i<(size/HandShake.MaxBlockSize);i++)
         {
             Header->BlockIndex++;
             memcpy(Header->Data,&data[Header->BlockIndex*HandShake.MaxBlockSize],HandShake.MaxBlockSize);

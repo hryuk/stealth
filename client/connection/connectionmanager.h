@@ -31,6 +31,7 @@ public slots:
 
 private slots:
     void connection_timeout();
+    void connection_disconnected();
     void connectionError(QAbstractSocket::SocketError);
 
 signals:

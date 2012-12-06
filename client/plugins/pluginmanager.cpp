@@ -8,7 +8,11 @@ PluginManager::PluginManager(QObject *parent) :
     /* Cargamos todos los plugins */
 
     QDir pluginsDir=QDir(qApp->applicationDirPath());
-    pluginsDir.cd("plugins");
+    if(!pluginsDir.cd("plugins"))
+    {
+        qWarning()<<"No encontrado directorio /plugins";
+        return;
+    }
 
     foreach(QString fileName,pluginsDir.entryList(QDir::Files))
     {
@@ -24,7 +28,7 @@ PluginManager::PluginManager(QObject *parent) :
             }
             else
             {
-                qCritical("Error al cargar plugin inválido");
+                qDebug()<<L"Error al cargar plugin inválido";
             }
         }
         else { qCritical("Error al cargar plugin inválido"); }

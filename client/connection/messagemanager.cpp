@@ -15,8 +15,9 @@ void MessageManager::readMessage()
     if(connection->getState()==Connection::WaitingForLoader)
     {
         qDebug("Leyendo OK");
-        if(connection->bytesAvailable()<1) return; //WTF
+        if(connection->bytesAvailable()<16) return;
 
+        /*
         char ok;
         connection->read(&ok,1);
 
@@ -32,7 +33,9 @@ void MessageManager::readMessage()
             connection->readAll();
         }
         return;
-/*
+
+        */
+
         QByteArray cmsgOk=connection->read(16);
 
         QByteArray msgOk=connection->decrypt(cmsgOk);
@@ -45,13 +48,12 @@ void MessageManager::readMessage()
                 connection->readAll();
                 return;
             }
-            else
-            {
-                emit receivedLoaderOk(connection);
-            }
         }
-*/
+
+        emit receivedLoaderOk(connection);
     }
+
+    return;
 
     if(connection->getState()==Connection::WaitingForGreeting)
     {

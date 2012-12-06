@@ -7,6 +7,7 @@
 #include <QGraphicsView>
 #include <QTreeWidget>
 #include <QFontDatabase>
+#include <QTextCodec>
 #include <QFile>
 #include <QDir>
 

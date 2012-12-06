@@ -4,6 +4,7 @@
 #include <QObject>
 #include <QApplication>
 #include <QPluginLoader>
+#include <QDebug>
 #include <QDir>
 #include <QList>
 

