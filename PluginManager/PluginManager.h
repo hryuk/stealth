@@ -14,7 +14,7 @@ class plugin{
     public:
         ulong ID;
         HINSTANCE hModule;
-        PluginInterface* interdace;
+        PluginInterface* plugInterface;
 };
 class PluginManager{
         LoaderFunTable* lFunc;

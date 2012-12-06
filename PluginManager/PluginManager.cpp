@@ -54,7 +54,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     newPlugin->hModule = hModule = lFunc->LoadLibraryFromMemoy(pluginModule->PluginModule,"");
     //Buscamos las funciones exportadas
     getInterface = (pgetInterface)GetProcAddress(hModule,"getInterface");
-    if((newPlugin->interdace = getInterface())){
+    if((newPlugin->plugInterface = getInterface())){
         newPlugin->ID = pluginModule->PluginID;
         pluginList = newPlugin;
         result = true;

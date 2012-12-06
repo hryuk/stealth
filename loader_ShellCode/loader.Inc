@@ -4,6 +4,43 @@
 %include "PE.inc"
 %include "WIN32N.INC"
 
+;//tabla d funciones
+%define TlsAlloc		TlsAlloc_
+%define TlsSetValue		TlsSetValue_
+%define ExitProcess		ExitProcess_
+%define VirtualAlloc	VirtualAlloc
+%define VirtualFree		VirtualFree_
+%define VirtualProtect	VirtualProtect_
+%define LoadLibraryA	LoadLibraryA_
+%define GetProcAddress	GetProcAddress_
+%define malloc			malloc_
+%define realloc			realloc_
+%define free			free_
+;Funciones de red
+%define recv			recv_
+%define send			send_
+%define ioctlsocket		ioctlsocket_
+;//Funciones de encriptacion
+%define CryptDecrypt	CryptDecrypt_
+
+;export TlsAlloc
+;export TlsSetValue
+;export ExitProcess
+;export VirtualAlloc
+;export VirtualFree
+;export VirtualProtect
+;export LoadLibraryA
+;export GetProcAddress
+;export malloc
+;export realloc
+;export free
+;Funciones de red
+;export recv
+;export send
+;export ioctlsocket
+;//Funciones de encriptacion
+;export CryptDecrypt
+
 struc LoaderParam
 
 ends

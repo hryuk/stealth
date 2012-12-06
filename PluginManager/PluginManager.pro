@@ -1,3 +1,4 @@
+TARGET=pluginmanager
 TEMPLATE = lib
 #CONFIG += console
 CONFIG -= qt
@@ -11,7 +12,8 @@ else {
 
 DEFINES +=BUILD_DLL
 
-LIBS += -L$$quote(../ArkLib) -lArkLib -lntdll -lWs2_32 --static
+#LIBS += -L$$quote(../ArkLib) -lArkLib -lntdll -lWs2_32 --static
+LIBS += -L$$quote(../ArkLib) -lArkLib -lntdll -lWs2_32
 
 
 SOURCES +=	main.cpp \

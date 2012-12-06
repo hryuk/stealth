@@ -20,7 +20,7 @@ class RPEP{
         HCRYPTKEY hKey;
         //Parametros configurables del protocolo
         ushort MaxPaquetSize;
-        ushort ver;
+        version ver;
         ulong CompresAlg;
         ulong PortCount;
         ushort* Port;
@@ -45,7 +45,7 @@ class RPEP{
         uint MakeClienHello(DArray& outBuff,ushort ver,ulong MaxPaquetSize,ulong CompresAlg,ulong PortCount = 1, ushort* Port = 0);
         uint MakeError(DArray &outBuff, uint code);
 
-        bool procesPkg(DArray& in,DArray& out);
+        bool procesPkg(DArray& in, DArray& out, DArray& extraBuff);
         bool procesCMD(RPEP_HEADER::OperationType opType, char* data, uint size, DArray &response);
 
         bool processClientHello(RPEP_CLIENT_HANDSHAKE* clientHello, DArray &response);

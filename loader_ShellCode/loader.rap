@@ -56,8 +56,8 @@ Group=Added files,Assembly,Resources,Misc,Modules
 5=
 [Size]
 3=0,0,0,0,3284
-1=0,0,0,0,21530
-2=0,0,0,0,11
+1=0,0,0,0,1416
+2=0,0,0,0,916
 4=0,0,0,0,555
 5=0,0,0,0,306
 [VersionControl]
@@ -70,7 +70,7 @@ MilestoneOnTime=2
 MilestoneOnDate=0
 MilestoneOnDateWhen=1
 MilestoneOnDateStatus=0
-MilestoneOnDateDate=2
+MilestoneOnDateDate=3
 MilestoneOnDateTimeYear=2011
 MilestoneOnDateTimeMonth=12
 MilestoneOnDateTimeDate=10
@@ -116,13 +116,13 @@ ProductVer4Range=0
 [BreakPoint]
 0=
 [Find]
-1="int3"
-2="GetProcAddress"
-3="free"
-4="key"
-5="ecall"
-6="Playload."
-7="Playload"
-8="decrypt"
-9="malloc"
-10="calcCheckSum"
+1="%define "
+2="int3"
+3="GetProcAddress"
+4="free"
+5="key"
+6="ecall"
+7="Playload."
+8="Playload"
+9="decrypt"
+10="malloc"
