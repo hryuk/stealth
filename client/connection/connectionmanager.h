@@ -28,6 +28,7 @@ public slots:
     void sendPluginManager(Connection*);
     void addConnection(Connection*);
     void processHandshake(Connection*);
+    void checkHandshakeOk(Connection*);
 
 private slots:
     void connection_timeout();

@@ -76,18 +76,10 @@ void MessageManager::readMessage()
 
         qDebug("     -Cabecera correcta");
         connection->setState(Connection::ReadingGreeting);
-    }
 
-    if(connection->getState()==Connection::ReadingGreeting)
-    {
         qDebug("Leyendo Hanshake");
-        QDataStream in(connection);
-        in.setVersion(QDataStream::Qt_4_8);
 
-        if(connection->bytesAvailable()<connection->NextBlockHeader.Size.Bytes)
-        {
-            return;
-        }
+        if(connection->bytesAvailable()<connection->NextBlockHeader.Size.Bytes) return;
 
         connection->Data.resize(connection->NextBlockHeader.Size.Bytes);
         if(in.readRawData(connection->Data.data(),connection->NextBlockHeader.Size.Bytes)!=connection->NextBlockHeader.Size.Bytes)
@@ -99,6 +91,45 @@ void MessageManager::readMessage()
         /*TODO: esperar a que el servidor responda antes de añadir
                 la conexión a la GUI */
         emit receivedHandshake(connection);
+        return;
+    }
+
+    if(connection->getState()==Connection::WaitingGreetingOk)
+    {
+        qDebug("Leyendo cabecera Hanshake OK");
+
+        QDataStream in(connection);
+        in.setVersion(QDataStream::Qt_4_8);
+
+        if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
+
+        qDebug("-Leyendo cabecera");
+
+        if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
+
+        qDebug("     -Comprobando bOperation");
+        if(!connection->NextBlockHeader.OperationType.bOperation) return;
+
+        qDebug("     -Comprobando Operation");
+        if(connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::ServerHandshake) return;
+
+        qDebug("     -Comprobando Tamaño");
+        if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=sizeof(Connection::RPEP_ERROR)) return;
+
+        qDebug("     -Cabecera correcta");
+        qDebug("    -Leyendo Handshake Confirmation");
+
+        if(connection->bytesAvailable()<connection->NextBlockHeader.Size.Bytes) return;
+        if(in.readRawData(connection->Data.data(),connection->NextBlockHeader.Size.Bytes)!=connection->NextBlockHeader.Size.Bytes)
+        {
+            connection->readAll();
+            connection->setState(Connection::WaitingForGreeting);
+            return;
+        }
+
+        connection->setState(Connection::ReadingGreetingOk);
+
+        emit receivedHanshakeOk(connection);
         return;
     }
 }

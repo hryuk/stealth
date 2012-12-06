@@ -11,7 +11,7 @@ class Connection : public QTcpSocket
     Q_OBJECT
 
 public:
-    enum State {JustConnected,WaitingForLoader,WaitingForGreeting,ReadingGreeting,Ready,Sending,Receiving};
+    enum State {JustConnected,WaitingForLoader,WaitingForGreeting,ReadingGreeting,WaitingGreetingOk,ReadingGreetingOk,Ready,Sending,Receiving};
 
     typedef struct _RPEP_HEADER
     {

@@ -84,7 +84,15 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
     Header->OperationType=*operation;
     Header->BlockIndex=0;
     Header->Size.bBlocks=size/HandShake.MaxBlockSize?true:false;
-    Header->Size.Blocks=size/HandShake.MaxBlockSize+(size%HandShake.MaxBlockSize?1:0);
+
+    if(Header->Size.bBlocks)
+    {
+        Header->Size.Blocks=size/HandShake.MaxBlockSize+(size%HandShake.MaxBlockSize?1:0);
+    }
+    else
+    {
+        Header->Size.Bytes=size;
+    }
 
     if(size/HandShake.MaxBlockSize)
     {

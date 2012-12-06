@@ -19,6 +19,7 @@ public slots:
     void dispatchMessage();
 
 signals:
+    void receivedHanshakeOk(Connection*);
     void receivedHandshake(Connection*);
     void receivedLoaderOk(Connection*);
 };
