@@ -51,9 +51,8 @@ void MessageManager::readMessage()
         }
 
         emit receivedLoaderOk(connection);
+        return;
     }
-
-    return;
 
     if(connection->getState()==Connection::WaitingForGreeting)
     {
