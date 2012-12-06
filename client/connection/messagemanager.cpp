@@ -111,7 +111,7 @@ void MessageManager::readMessage()
         if(!connection->NextBlockHeader.OperationType.bOperation) return;
 
         qDebug("     -Comprobando Operation");
-        if(connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::ServerHandshake) return;
+        if(connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::Error) return;
 
         qDebug("     -Comprobando Tamaño");
         if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=sizeof(Connection::RPEP_ERROR)) return;

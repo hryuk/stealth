@@ -145,12 +145,12 @@ void ConnectionManager::checkHandshakeOk(Connection* connection)
 
     Connection::RPEP_ERROR ok=*(Connection::RPEP_ERROR*)connection->Data.data();
 
-    if(ok.Code!=0 && ok.Code!=-1)
+    if(ok.Code!=0 && ok.Code!=0xFFFF)
     {
         qWarning("Confirmacion de Handshake invalida");
         return;
     }
-    else if(ok.Code==-1)
+    else if(ok.Code==0xFFFF)
     {
         qWarning()<<"Confirmación de Hanshake errónea, el pluginmanager no soporta el handshake enviado";
         return;
