@@ -78,7 +78,9 @@ ulong Connection::getBlockSize()
 
 int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size)
 {
-    RPEP_HEADER* Header=(RPEP_HEADER*)malloc(sizeof(RPEP_HEADER)+HandShake.MaxBlockSize);
+    uint headerSize=size/HandShake.MaxBlockSize?sizeof(RPEP_HEADER)+HandShake.MaxBlockSize:sizeof(RPEP_HEADER)+size;
+    RPEP_HEADER* Header=(RPEP_HEADER*)malloc(headerSize);
+
     Header->OperationType=*operation;
     Header->BlockIndex=0;
     Header->Size.bBlocks=size/HandShake.MaxBlockSize?true:false;
@@ -86,9 +88,10 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
 
     if(size/HandShake.MaxBlockSize)
     {
+        qCritical()<<"Uuuuuu malo malo...";
         for(int i=0;i<(size/HandShake.MaxBlockSize);i++)
         {
-            Header->BlockIndex++;
+
             memcpy(Header->Data,&data[Header->BlockIndex*HandShake.MaxBlockSize],HandShake.MaxBlockSize);
 
             if(write((char*)Header,sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)
@@ -96,10 +99,13 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
                 qWarning()<<tr("No se pudieron enviar los datos #1");
                 return 0;
             }
+            else
+            {
+                Header->BlockIndex++;
+            }
         }
     }
 
-    Header->BlockIndex++;
     memcpy(Header->Data,&data[Header->BlockIndex*HandShake.MaxBlockSize],size%HandShake.MaxBlockSize);
 
     if(write((char*)Header,sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)

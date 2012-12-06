@@ -91,6 +91,13 @@ void ConnectionManager::processHandshake(Connection* connection)
     //Guardamos el HandShake
     connection->HandShake=*(Connection::RPEP_SERVER_HANDSHAKE*)connection->Data.data();
 
+    /* Nos aseguramos de que el tamaño maximo cumple con un mínimo */
+    if(connection->HandShake.MaxBlockSize<0x400)
+    {
+        qWarning("ClientHandShake.MaxBlockSize inválido");
+        return;
+    }
+
     Connection::RPEP_CLIENT_HANDSHAKE* ClientHandShake;
 
     //FIXME: Definir número de puertos correcto
@@ -105,11 +112,18 @@ void ConnectionManager::processHandshake(Connection* connection)
     ClientHandShake->Version.High=1;
     ClientHandShake->Version.Low=0;
 
+    if(ClientHandShake->MaxBlockSize==0)
+    {
+        qWarning()<<"ClientHandShake->MaxBlockSize==0";
+    }
+
     Connection::RPEP_HEADER::_OperationType* opType=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType));
     opType->bOperation=true;
     opType->Operation=Connection::RPEP_HEADER::ClientHandshake;
 
     qDebug("Enviando handshake");
+
+    qDebug()<<QString("MaxBlockSize = 0x"+QString::number(ClientHandShake->MaxBlockSize,16)).toAscii();
 
     connection->send(opType,(char*)ClientHandShake,sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS);
 

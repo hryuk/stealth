@@ -56,10 +56,7 @@ void MessageManager::readMessage()
 
     if(connection->getState()==Connection::WaitingForGreeting)
     {
-        QString msg;
-        msg+="+Leyendo cabecera del hanshake";
-        msg+=QString::number((uint)sizeof(Connection::RPEP_HEADER));
-        qDebug(msg.toAscii().data());
+        qDebug("+Leyendo cabecera del hanshake");
         QDataStream in(connection);
         in.setVersion(QDataStream::Qt_4_8);
 
