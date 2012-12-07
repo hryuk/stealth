@@ -21,7 +21,7 @@ PluginManager::PluginManager(){
 
 uint PluginManager::run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc){
     RPEP client(hConexion,hKey);
-    printf("despues de client\n");
+    //printf("despues de client\n");
 
     this->lFunc = &lFunc;
 

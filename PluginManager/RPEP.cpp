@@ -15,7 +15,6 @@ RPEP::RPEP(SOCKET hConexion,HCRYPTKEY hKey){
     ver.Low = 0;
     this->hKey = hKey;
 
-    printf("RPEP::ctor \n");
     conexion.setSocketDescriptor(hConexion);
     this->hConexion = hConexion;
 
@@ -26,12 +25,10 @@ ulong RPEP::clientLoop(){
     return 0;
 }
 ulong RPEP::serverLoop(){
-    DArray readBuff,writeBuff,extraBuff;
+    DArray readBuff,writeBuff,workBuff;
     char buff[4096];
 
-    //printf("serverLoop::MakeServerHello \n");
-    MakeServerHello(writeBuff);
-    //printf("serverLoop::encript(writeBuff) \n");
+    MakeServerHello(writeBuff);;
     //encript(writeBuff);
     //conexion.write(writeBuff);
 
@@ -39,33 +36,28 @@ ulong RPEP::serverLoop(){
     printf("writeBuff.size %d \n",(int)writeBuff.size);
 
     writeBuff.Vaciar();
+    int readBytes;
     do{
-        for(int i = 0;(i = recv(hConexion,buff,sizeof(buff),0));){
-            printf("recv i= %d\n",i);
-            if((i > 0) && (i != -1)){
-                readBuff.addData(buff,i);
-                if(((uint)i)<sizeof(buff))break;
-            }else{
-                if(i == -1){
-                    runing = false;
-                    printf("Conexion perdida\n");
-                }
-                break;
+        for(readBytes = 0;(readBytes = recv(hConexion,buff,sizeof(buff) > 0,0));){
+            printf("recv i= %d\n",readBytes);
+            //Concateno los datos hasta que no quede mas por recibir
+            readBuff.addData(buff,readBytes);
+            if(((uint)readBytes)<sizeof(buff))break;
+        }
+        if(readBytes == -1){
+            runing = false;
+            continue;
+        }
+        //conexion.read(readBuff);
+        //decript(readBuff);
+        if(procesPkg(readBuff,writeBuff,workBuff)){
+            if(writeBuff.size){
+                send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
+                writeBuff.Vaciar();
+                //conexion.write(writeBuff);
             }
         }
-        if(runing){
-            //conexion.read(readBuff);
-            //decript(readBuff);
-            if(procesPkg(readBuff,writeBuff,extraBuff)){
-                readBuff.Vaciar();
-                if(writeBuff.size){
-                    send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
-                    //conexion.write(writeBuff);
-                }
-            }
-            Sleep(1);
-        }
-        //printf("serverLoop \n");
+        Sleep(1);
     }while(runing);
 
     return 0;
@@ -86,8 +78,6 @@ uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, cons
     //Indico el tipo de operacion
     header.opType.bOperation = IsOperation;
 
-    printf("IsOperation %x\n",IsOperation);
-
     header.opType.Operation = opOrIDCode;
     header.BlockIndex = 0;
 
@@ -104,23 +94,28 @@ uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, cons
         }
 
     }else{
+        //Tamaño por bytes
         header.Size.Bytes = size;
         outBuff.addData(&header,sizeof(header));
         outBuff.addData(data,size);
     }
+    //Mensajes de depuracion
     printf("header.Size.Bytes %d \nheader.opType.bOperation %d \n",(int)header.Size.Bytes,(int)header.opType.bOperation);
     return 0;
 }
 
 
 uint RPEP::MakeServerHello(DArray& outBuff){
-    //Buffert en pila para el hello
     static ulong* CompresAlg = {};
     ulong CompresAlgCount = 0;
+
+    //calculamos el tamaño dl buffer para contener al ServerHello
     uint buffSize = sizeof(RPEP_SERVER_HANDSHAKE)+CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm);
+    //Buffert en pila para el hello
     char buff[buffSize];
     register RPEP_SERVER_HANDSHAKE* sHello = (RPEP_SERVER_HANDSHAKE*)buff;
 
+    //Inicializo el hello
     *((version*)&sHello->Version) = ver;
     sHello->MaxBlockSize = MaxPaquetSize;
     sHello->SupportedCompressionAlgmCount = CompresAlgCount;
@@ -140,27 +135,58 @@ uint RPEP::MakeError(DArray& outBuff,uint code){
     return MakePacket(outBuff,RPEP_HEADER::Operation::Error,&error,sizeof(error));
 }
 
-bool RPEP::procesPkg(DArray& in, DArray& out, DArray &extraBuff){
+bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
     bool result = true;
-    RPEP_HEADER* header = (RPEP_HEADER*)in.data;
-    if(in.size){
-        printf("procesPkg \n");
-        printf("header \n\tbBlocks %x\n\tOperation %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation);
-        while(result && in.size){
-            if(header->Size.bBlocks){
+    uint bytesRead = 0;
+    RPEP_HEADER* header = 0;
 
+    //Pasamos los datos al buffer de trabajo
+    while(bytesRead < in.size){
+        header = (RPEP_HEADER*)(in.cadena+bytesRead);
+        if(header->Size.bBlocks){
+            //Si no hay datos suficientes salimos
+            if((in.size-bytesRead)<(MaxPaquetSize+sizeof(RPEP_HEADER)))break;
+            ///////////////////////////////////////////////////////
+            //mensages de depuracion
+            printf("procesPkg \n");
+            printf("header \n\tbBlocks %x\n\tOperation %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation);
+            /////////////////////////////////////////////////////////
+            //Voy acumulando los datos hasta tener suficientes
+            if(workBuff.size){
+                workBuff.addData(in.cadena,MaxPaquetSize+sizeof(RPEP_HEADER));
             }else{
-                if(!((header->Size.Bytes+sizeof(RPEP_HEADER)) > in.size)){
-                    procesCMD(header->opType,header->Data,header->Size.Bytes,out);
-                    if((header->Size.Bytes+sizeof(RPEP_HEADER)) == in.size){
-                        in.Vaciar();
-                    }else{
-                        in.DelData(0,header->Size.Bytes+sizeof(RPEP_HEADER));
-                    }
+                workBuff.addData(header->Data,MaxPaquetSize);
+                header = (RPEP_HEADER*)workBuff.data;
+
+                if(workBuff.size == (header->Size.Blocks*MaxPaquetSize+sizeof(RPEP_HEADER))){
+                    //Proceso el comando
+                    procesCMD(header->opType,header->Data,(header->Size.Blocks*MaxPaquetSize),out);
+                    workBuff.Vaciar();
                 }
             }
+            bytesRead += MaxPaquetSize+sizeof(RPEP_HEADER);
+        }else{
+            //Si no hay datos suficientes salimos
+            if((in.size-bytesRead)<header->Size.Bytes)break;
+            ///////////////////////////////////////////////////////
+            //mensages de depuracion
+            printf("procesPkg \n");
+            printf("header \n\tbBlocks %x\n\tOperation %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation);
+            /////////////////////////////////////////////////////////
+
+            //Se procesa el comando
+            procesCMD(header->opType,header->Data,header->Size.Bytes,out);
+            //Se aumenta el indicador de bytes procesados
+            bytesRead += header->Size.Bytes+sizeof(RPEP_HEADER);
         }
     }
+    //limpio el buffer
+    if(in.size == bytesRead){
+        in.Vaciar();
+    }else{
+        in.DelData(0,bytesRead);
+    }
+
 
 
     return result;
@@ -230,7 +256,7 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DAr
                ;
         }
     }else{
-        printf("comando para prugin\n");
+        printf("comando para plugin\n");
         plugin* currentPlugin;
         if((currentPlugin = PlugMgr.getPluginById(opType.PluginID))){
             currentPlugin->plugInterface->onReciveData(data,size);

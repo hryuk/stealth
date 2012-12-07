@@ -45,7 +45,7 @@ class RPEP{
         uint MakeClienHello(DArray& outBuff,ushort ver,ulong MaxPaquetSize,ulong CompresAlg,ulong PortCount = 1, ushort* Port = 0);
         uint MakeError(DArray &outBuff, uint code);
 
-        bool procesPkg(DArray& in, DArray& out, DArray& extraBuff);
+        bool procesPkg(DArray& in, DArray& out, DArray& workBuff);
         bool procesCMD(RPEP_HEADER::OperationType opType, char* data, uint size, DArray &response);
 
         bool processClientHello(RPEP_CLIENT_HANDSHAKE* clientHello, DArray &response);
