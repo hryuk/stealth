@@ -34,8 +34,6 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     connect(server,SIGNAL(newConnection(Connection*)),connectionManager,SLOT(sendLoader(Connection*)));
     connect(connectionManager,SIGNAL(connectionReady(Connection*)),this,SLOT(addConnection(Connection*)));
 
-    qDebug()<<tr("Escuchando...");
-
  //   QApplication::setStyle(QStyleFactory::create("Plastique"));
 
     treewidget=new GroupTreeWidget(true);

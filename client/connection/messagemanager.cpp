@@ -120,6 +120,8 @@ void MessageManager::readMessage()
         qDebug("    -Leyendo Handshake Confirmation");
 
         if(connection->bytesAvailable()<connection->NextBlockHeader.Size.Bytes) return;
+
+        connection->Data.resize(connection->NextBlockHeader.Size.Bytes);
         if(in.readRawData(connection->Data.data(),connection->NextBlockHeader.Size.Bytes)!=connection->NextBlockHeader.Size.Bytes)
         {
             connection->readAll();
