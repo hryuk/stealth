@@ -7,8 +7,6 @@ PluginWindow::PluginWindow(Connection *connection, QList<PluginInterface *> plug
 {
     ui->setupUi(this);
 
-    setAttribute(Qt::WA_DeleteOnClose,true);
-
     QVBoxLayout* layout=new QVBoxLayout();
     layout->setMargin(0);
 

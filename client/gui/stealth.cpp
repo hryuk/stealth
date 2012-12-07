@@ -42,7 +42,10 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     //connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
 
     /* TEST */
-    this->addConnection(0);
+    addConnection(0);
+    addConnection(0);
+    addConnection(0);
+    addConnection(0);
     /* /TEST */
 
     connect(treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));

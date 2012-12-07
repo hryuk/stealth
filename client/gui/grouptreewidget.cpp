@@ -71,14 +71,18 @@ GroupTreeWidget::~GroupTreeWidget()
 void GroupTreeWidget::addItem(QTreeWidgetItem* item)
 {
     item->setIcon(0,QIcon(":/res/img/the-dark-knight-the-joker-02.png"));
+    treewidget->addTopLevelItem(item);
+
+    ItemInfo* info=new ItemInfo(this);
+    treewidget->setItemWidget(treewidget->topLevelItem(treewidget->topLevelItemCount()-1),0,info);
     QGraphicsView* gvSpeed=new QGraphicsView();
     gvSpeed->setRenderHints(QPainter::Antialiasing|QPainter::SmoothPixmapTransform);
     gvSpeed->setFocusPolicy(Qt::NoFocus);
     gvSpeed->setStyleSheet("border: 1px solid black");
     gvSpeed->setFixedHeight(50);
     gvSpeed->setFixedWidth(200);
-    treewidget->addTopLevelItem(item);
-    treewidget->setItemWidget(treewidget->topLevelItem(0),1,gvSpeed);
+
+    treewidget->setItemWidget(treewidget->topLevelItem(treewidget->topLevelItemCount()-1),1,gvSpeed);
 
 
     /* DEMO */
@@ -124,7 +128,7 @@ void GroupTreeWidget::addItem(QTreeWidgetItem* item)
     QGraphicsTextItem* textItem = new QGraphicsTextItem();
     textItem->setPos(60,0);
     textItem->setHtml("<font size=\"14\"><b>DEMO</b></font>");
-    textItem->setOpacity(0.6);
+    //textItem->setOpacity(0.6);
     scene->addItem(textItem);
 
     gvSpeed->setScene(scene);

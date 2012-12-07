@@ -140,13 +140,8 @@ void ConnectionManager::processHandshake(Connection* connection)
 
 void ConnectionManager::checkHandshakeOk(Connection* connection)
 {
-
-    qDebug("    -Comprobando estado y tamaños");
-
     if(connection->getState()!=Connection::ReadingGreetingOk) return;
     if(connection->Data.size()!=connection->NextBlockHeader.Size.Bytes) return;
-
-    qDebug("    -Tamaño y estados correctos, comprobando código");
 
     Connection::RPEP_ERROR ok=*(Connection::RPEP_ERROR*)connection->Data.data();
 

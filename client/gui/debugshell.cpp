@@ -7,6 +7,8 @@ DebugShell::DebugShell(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    setAttribute(Qt::WA_DeleteOnClose,true);
+
     logFile=new QFile("debug_log.txt");
     if(!logFile->open(QIODevice::ReadOnly)) return;
 
