@@ -345,6 +345,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
        </item>
        <item>
         <widget class="QPushButton" name="btnDebug">
+         <property name="styleSheet">
+          <string notr="true"/>
+         </property>
          <property name="text">
           <string>DEBUG</string>
          </property>
@@ -357,6 +360,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
            <width>32</width>
            <height>24</height>
           </size>
+         </property>
+         <property name="checkable">
+          <bool>false</bool>
          </property>
         </widget>
        </item>

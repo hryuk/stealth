@@ -36,12 +36,12 @@ public:
     ~Stealth();
 
 private:
-    Ui::Stealth *ui;
     Server* server;
     ConnectionManager* connectionManager;
     MessageManager* messageManager;
     PluginManager* pluginManager;
     GroupTreeWidget* treewidget;
+    Ui::Stealth *ui;
 
 public slots:
     void addConnection(Connection* connection);

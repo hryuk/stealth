@@ -127,6 +127,8 @@ void MessageManager::readMessage()
             return;
         }
 
+        qDebug("    -Leído Hanshake Ok, comprobando que sea valido");
+
         connection->setState(Connection::ReadingGreetingOk);
 
         emit receivedHanshakeOk(connection);
