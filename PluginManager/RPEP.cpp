@@ -24,7 +24,7 @@ RPEP::~RPEP(){}
 
 ulong RPEP::clientLoop(){
     return 0;
-};
+}
 ulong RPEP::serverLoop(){
     DArray readBuff,writeBuff,extraBuff;
     char buff[4096];
@@ -45,19 +45,26 @@ ulong RPEP::serverLoop(){
             if((i > 0) && (i != -1)){
                 readBuff.addData(buff,i);
                 if(((uint)i)<sizeof(buff))break;
-            }else break;
-        }
-
-        //conexion.read(readBuff);
-        //decript(readBuff);
-        if(procesPkg(readBuff,writeBuff,extraBuff)){
-            readBuff.Vaciar();
-            if(writeBuff.size){
-                send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
-                //conexion.write(writeBuff);
+            }else{
+                if(i == -1){
+                    runing = false;
+                    printf("Conexion perdida\n");
+                }
+                break;
             }
         }
-        Sleep(1);
+        if(runing){
+            //conexion.read(readBuff);
+            //decript(readBuff);
+            if(procesPkg(readBuff,writeBuff,extraBuff)){
+                readBuff.Vaciar();
+                if(writeBuff.size){
+                    send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
+                    //conexion.write(writeBuff);
+                }
+            }
+            Sleep(1);
+        }
         //printf("serverLoop \n");
     }while(runing);
 
