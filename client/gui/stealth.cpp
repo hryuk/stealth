@@ -50,6 +50,9 @@ Stealth::~Stealth()
 void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int)
 {
     QVariant id=item->data(0,Qt::UserRole);
+
+    qDebug()<<"Clicado item, id="+QString::number(id.toInt());
+
     Connection* connection=connectionManager->connection(id.toInt());
 
     foreach(PluginWindow* pw,pluginWindows)

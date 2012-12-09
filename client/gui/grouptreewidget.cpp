@@ -70,17 +70,12 @@ GroupTreeWidget::~GroupTreeWidget()
 
 void GroupTreeWidget::addItem(Connection *connection)
 {
+
+    qDebug()<<"Añadiendo item, id="+QString::number(connection->getID());
     QTreeWidgetItem* item=new QTreeWidgetItem();
     item->setIcon(0,QIcon(":/res/img/the-dark-knight-the-joker-02.png"));
 
-    if(connection)
-    {
-        item->setData(0,Qt::UserRole,QVariant(connection->getID()));
-    }
-    else
-    {
-        item->setData(0,Qt::UserRole,QVariant(treewidget->topLevelItemCount()));
-    }
+    item->setData(0,Qt::UserRole,QVariant(connection->getID()));
 
     treewidget->addTopLevelItem(item);
 

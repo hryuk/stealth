@@ -20,6 +20,9 @@
 #include "pluginwindow.h"
 #include "debugshell.h"
 
+class MessageManager;
+class ConnectionManager;
+
 namespace Ui {
     class Stealth;
     class ItemInfo;

@@ -38,7 +38,6 @@ private slots:
     void connectionError(QAbstractSocket::SocketError);
 
 signals:
-    void connectionEstablished(Connection*);
     void connectionReady(Connection*);
 };
 
