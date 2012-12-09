@@ -25,7 +25,7 @@
 **    }
 *###############################################################################*/
 #define ERR_CHECK
-//#undef ERR_CHECK
+#undef ERR_CHECK
 
 /*###############################################################################
 ** Control de errores:
@@ -125,7 +125,8 @@
 *###############################################################################*/
 
 #ifdef SC_NULL
-    #define K 0xFEEDCAFE
+    //0xFEEDCAFE, 0xBAADF00D, 0xC0DEC0DE, 0xBAADC0DE
+    #define K 0xBAADC0DE
     /*###############################################################################
     ** pushc:
     **    Macro que pushea en el stack una constante y eliminando los bytes nulos
