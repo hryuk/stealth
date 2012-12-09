@@ -4,6 +4,7 @@ ConnectionManager::ConnectionManager(Stealth* stealth,MessageManager* mngMessage
 {
     this->mngMessage=mngMessage;
     this->stealth=stealth;
+    this->connectionIndex=0;
 
     connect(this,SIGNAL(connectionEstablished(Connection*)),this,SLOT(addConnection(Connection*)));
     connect(mngMessage,SIGNAL(receivedHandshake(Connection*)),this,SLOT(processHandshake(Connection*)));
@@ -157,6 +158,9 @@ void ConnectionManager::checkHandshakeOk(Connection* connection)
     }
 
     qDebug()<<"Confirmación Hanshake correcto, conexión lista";
+
+    connection->setID(++connectionIndex);
+
     connection->setState(Connection::Ready);
     emit connectionReady(connection);
 }
@@ -164,6 +168,16 @@ void ConnectionManager::checkHandshakeOk(Connection* connection)
 void ConnectionManager::addConnection(Connection* connection)
 {
     Connections.append(connection);
+}
+
+Connection* ConnectionManager::connection(int ID)
+{
+    foreach(Connection* cn,Connections)
+    {
+        if(cn->getID()==ID) return cn;
+    }
+
+    return 0;
 }
 
 void ConnectionManager::connection_timeout()

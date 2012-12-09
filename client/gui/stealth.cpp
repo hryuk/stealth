@@ -34,19 +34,10 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     connect(server,SIGNAL(newConnection(Connection*)),connectionManager,SLOT(sendLoader(Connection*)));
     connect(connectionManager,SIGNAL(connectionReady(Connection*)),this,SLOT(addConnection(Connection*)));
 
- //   QApplication::setStyle(QStyleFactory::create("Plastique"));
-
     treewidget=new GroupTreeWidget(true);
     ui->centralFrameLayout->addWidget(treewidget);
     connect(this,SIGNAL(destroyed()),treewidget,SLOT(deleteLater()));
     //connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
-
-    /* TEST */
-    addConnection(0);
-    addConnection(0);
-    addConnection(0);
-    addConnection(0);
-    /* /TEST */
 
     connect(treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));
 }
@@ -56,12 +47,20 @@ Stealth::~Stealth()
     delete ui;
 }
 
-void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int column)
+void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int)
 {
-    PluginWindow* pluginWindow=new PluginWindow(0,pluginManager->plugins,this);
-    pluginWindow->show();
-}
+    QVariant id=item->data(0,Qt::UserRole);
+    Connection* connection=connectionManager->connection(id.toInt());
 
+    foreach(PluginWindow* pw,pluginWindows)
+    {
+        if(pw->getID()==connection->getID())
+        {
+            pw->show();
+            return;
+        }
+    }
+}
 
 void Stealth::closeCurrentExpanded(GroupTreeWidget* newExpanded)
 {
@@ -74,9 +73,10 @@ void Stealth::closeCurrentExpanded(GroupTreeWidget* newExpanded)
 
 void Stealth::addConnection(Connection *connection)
 {
-    //FIXME: Cambiar cuando se implementen los grupos
-    QTreeWidgetItem* item=new QTreeWidgetItem();
-    this->treewidget->addItem(item);
+    PluginWindow* pluginWindow=new PluginWindow(connection,pluginManager->plugins,this);
+    this->pluginWindows.append(pluginWindow);
+
+    this->treewidget->addItem(connection);
 }
 
 void Stealth::on_btnDebug_clicked()

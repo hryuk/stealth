@@ -5,6 +5,13 @@ PluginWindow::PluginWindow(Connection *connection, QList<PluginInterface *> plug
     QMainWindow(parent),
     ui(new Ui::PluginWindow)
 {
+
+    if(connection)
+    {
+        ID=connection->getID();
+        setWindowTitle(connection->peerAddress().toString());
+    }
+
     ui->setupUi(this);
 
     QVBoxLayout* layout=new QVBoxLayout();
@@ -30,4 +37,9 @@ PluginWindow::PluginWindow(Connection *connection, QList<PluginInterface *> plug
 PluginWindow::~PluginWindow()
 {
     delete ui;
+}
+
+int PluginWindow::getID()
+{
+    return this->ID;
 }

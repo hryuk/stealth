@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "connection.h"
 #include "pluginmanager.h"
+#include "QHostAddress"
 
 namespace Ui {
 class PluginWindow;
@@ -19,6 +20,10 @@ public:
     
 private:
     Ui::PluginWindow *ui;
+    int ID;
+
+public slots:
+    int getID();
 };
 
 #endif // PLUGINWINDOW_H

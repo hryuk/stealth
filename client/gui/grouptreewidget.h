@@ -13,6 +13,7 @@
 
 #include "customtreewidget.h"
 #include "iteminfo.h"
+#include "connection.h"
 
 class GroupTreeWidget : public QWidget
 {
@@ -38,7 +39,7 @@ private slots:
 public slots:
     void setExpanded(bool expanded);
     bool isExpanded();
-    void addItem(QTreeWidgetItem *item);
+    void addItem(Connection*);
 
 signals:
     void expandedChanged(GroupTreeWidget* newExpanded);

@@ -10,6 +10,7 @@
 #include <QTextCodec>
 #include <QFile>
 #include <QDir>
+#include <QList>
 
 #include "server.h"
 #include "connectionmanager.h"
@@ -18,9 +19,6 @@
 #include "pluginmanager.h"
 #include "pluginwindow.h"
 #include "debugshell.h"
-
-class ConnectionManager;
-class MessageManager;
 
 namespace Ui {
     class Stealth;
@@ -36,6 +34,7 @@ public:
     ~Stealth();
 
 private:
+    QList<PluginWindow*> pluginWindows;
     Server* server;
     ConnectionManager* connectionManager;
     MessageManager* messageManager;
@@ -45,6 +44,7 @@ private:
 
 public slots:
     void addConnection(Connection* connection);
+
 private slots:
     void closeCurrentExpanded(GroupTreeWidget*);
     void itemDoubleClicked(QTreeWidgetItem*,int);

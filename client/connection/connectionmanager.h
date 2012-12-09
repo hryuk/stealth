@@ -22,6 +22,7 @@ private:
     QList<Connection*> Connections;
     MessageManager* mngMessage;
     Stealth* stealth;
+    int connectionIndex;
 
 public slots:
     void sendLoader(Connection*);
@@ -29,6 +30,7 @@ public slots:
     void addConnection(Connection*);
     void processHandshake(Connection*);
     void checkHandshakeOk(Connection*);
+    Connection* connection(int ID);
 
 private slots:
     void connection_timeout();

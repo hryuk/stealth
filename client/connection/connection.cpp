@@ -4,6 +4,7 @@ Connection::Connection()
 {
     this->previousState=JustConnected;
     this->state=JustConnected;
+    this->ID=0;
     this->NextBlockHeader.Size.Bytes=0;
     this->NextBlockHeader.Size.Blocks=0;
     //FIXME: Cambiar por contraseña de conexión
@@ -36,7 +37,8 @@ Connection::~Connection()
 void Connection::checkTimeout()
 {
     if(state==JustConnected || state==WaitingForLoader ||
-       state==WaitingForGreeting || state==ReadingGreeting)
+       state==WaitingForGreeting || state==ReadingGreeting||
+       state==WaitingGreetingOk|| state==ReadingGreetingOk)
     {
         if(state==previousState)
         {
@@ -151,4 +153,14 @@ QByteArray Connection::decrypt(QByteArray data)
 {
     cipher->setup(QCA::Decode,key,*iv);
     return cipher->process(data).toByteArray();
+}
+
+void Connection::setID(int id)
+{
+    this->ID=id;
+}
+
+int Connection::getID()
+{
+    return this->ID;
 }

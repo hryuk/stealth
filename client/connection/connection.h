@@ -170,6 +170,7 @@ private:
     QCA::Initializer init;
     QCA::InitializationVector* iv;
     QTimer timer;
+    int ID;
 
 private slots:
     QByteArray addPadding(QByteArray data);
@@ -179,6 +180,8 @@ public slots:
     int send(RPEP_HEADER::_OperationType* operation,char* data,int size);
     QByteArray crypt(QByteArray data,bool padding=true);
     QByteArray decrypt(QByteArray data);
+    void setID(int id);
+    int getID();
 
 signals:
     void timeout();
