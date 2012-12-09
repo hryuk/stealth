@@ -5,12 +5,8 @@ PluginWindow::PluginWindow(Connection *connection, QList<PluginInterface *> plug
     QMainWindow(parent),
     ui(new Ui::PluginWindow)
 {
-
-    if(connection)
-    {
-        ID=connection->getID();
-        setWindowTitle(connection->peerAddress().toString());
-    }
+    this->connection=connection;
+    this->ID=connection->getID();
 
     ui->setupUi(this);
 
@@ -37,6 +33,11 @@ PluginWindow::PluginWindow(Connection *connection, QList<PluginInterface *> plug
 PluginWindow::~PluginWindow()
 {
     delete ui;
+}
+
+void PluginWindow::showEvent(QShowEvent *)
+{
+    setWindowTitle(connection->peerAddress().toString());
 }
 
 int PluginWindow::getID()

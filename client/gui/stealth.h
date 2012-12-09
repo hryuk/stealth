@@ -11,6 +11,7 @@
 #include <QFile>
 #include <QDir>
 #include <QList>
+#include <QShowEvent>
 
 #include "server.h"
 #include "connectionmanager.h"
