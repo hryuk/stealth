@@ -358,7 +358,6 @@ _cont:  xor  eax, eax                   //EAX = 0
         **    Otra vez más utilizamos el stack para evitar crear buffers innecesarios.
         *###############################################################################*/
 
-newSocket:
         //Iniciamos el socket
         xor  ebx, ebx                   //EBX = 0
         mov  bl, 0x19                   //EBX = 0x19
@@ -374,8 +373,9 @@ newSocket:
         call [ebp+_WSAStartup]          //>WSAStartup(0x202, &WSADATA);
         add  esp, ebx                   //Restauramos la pila eliminando WSADATA de ésta
 
+newSocket:
         //Creamos el socket AF_INET y SOCK_STREAM
-        cdq                             //EDX = 0
+        xor  edx, edx                   //EDX = 0
         push edx                        //v
         push edx                        //v
         push edx                        //v
