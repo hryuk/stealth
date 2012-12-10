@@ -18,7 +18,7 @@ int TestPlugin::onReciveData(char *data, uint size){
     if(pluginMgr){
         int MsgResult;
 
-        MsgResult = MessageBox(0,"TestPlugin",data,0);
+        MsgResult = MessageBox(0,"TestPlugin",data,MB_YESNO);
 
         pluginMgr->sendData((char*)&MsgResult,sizeof(MsgResult));
         result = true;
