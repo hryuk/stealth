@@ -16,9 +16,10 @@ class plugin{
         HINSTANCE hModule;
         PluginInterface* plugInterface;
 };
+class PluginManagerInterfacePrivate;
 class PluginManager{
         LoaderFunTable* lFunc;
-        static plugin* pluginList;
+        static PluginManagerInterfacePrivate* pluginList;
         static uint lastID;
     public:
         PluginManager();

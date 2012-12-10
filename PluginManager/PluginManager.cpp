@@ -5,13 +5,15 @@
 #include <stdio.h>
 
 PluginManager PlugMgr;
-plugin* PluginManager::pluginList;
+PluginManagerInterfacePrivate* PluginManager::pluginList;
 uint PluginManager::lastID;
 
 class PluginManagerInterfacePrivate :public pluginManagerInterface{
         PluginManager* mgr;
+        plugin* p;
     public:
-        PluginManagerInterfacePrivate(PluginManager& mgr);
+        PluginManagerInterfacePrivate(PluginManager& mgr, plugin& p);
+        plugin* getPlugInformation();
         virtual int sendData(const char* data,uint size);
         virtual int setErrorCode(uint code);
 };
@@ -47,6 +49,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     pgetInterface getInterface;
     HINSTANCE hModule;
     plugin* newPlugin;
+    PluginManagerInterfacePrivate* pluginPrivate;
     bool result = false;
 
     newPlugin = new plugin();
@@ -56,11 +59,28 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     getInterface = (pgetInterface)GetProcAddress(hModule,"getInterface");
     if((newPlugin->plugInterface = getInterface())){
         newPlugin->ID = pluginModule->PluginID;
-        pluginList = newPlugin;
+        pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
+        pluginList = pluginPrivate;
         result = true;
     }else delete newPlugin;
     return result;
 }
 plugin* PluginManager::getPluginById(ulong id){
-    return pluginList;
+    return pluginList->getPlugInformation();
+}
+
+PluginManagerInterfacePrivate::PluginManagerInterfacePrivate(PluginManager &mgr, plugin &p){
+    this->mgr = &mgr;
+    this->p = &p;
+    p.plugInterface->setPluginManager(this);
+}
+
+plugin* PluginManagerInterfacePrivate::getPlugInformation(){
+    return p;
+}
+
+int PluginManagerInterfacePrivate::sendData(const char *data, uint size){
+}
+
+int PluginManagerInterfacePrivate::setErrorCode(uint code){
 }
