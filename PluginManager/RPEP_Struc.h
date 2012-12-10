@@ -106,8 +106,6 @@ usa tamaño por bloques, este campo es obligatorio */
     typedef struct _RPEP_LOAD_PLUGIN
     {
         ulong PluginID;
-        bool ExternalDonwload;
-        char PluginName[];
         char PluginModule[];
     } RPEP_LOAD_PLUGIN;
 
