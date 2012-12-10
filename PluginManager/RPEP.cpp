@@ -38,8 +38,8 @@ ulong RPEP::serverLoop(){
     writeBuff.Vaciar();
     int readBytes;
     do{
-        for(readBytes = 0;(readBytes = recv(hConexion,buff,sizeof(buff) > 0,0));){
-            printf("recv i= %d\n",readBytes);
+        for(readBytes = 0;(readBytes = recv(hConexion,buff,sizeof(buff),0))> 0;){
+            printf("recv readBytes = %d\n",readBytes);
             //Concateno los datos hasta que no quede mas por recibir
             readBuff.addData(buff,readBytes);
             if(((uint)readBytes)<sizeof(buff))break;
@@ -59,6 +59,7 @@ ulong RPEP::serverLoop(){
         }
         Sleep(1);
     }while(runing);
+    printf("conexion cerrada\n");
 
     return 0;
 }
@@ -259,7 +260,12 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DAr
         printf("comando para plugin\n");
         plugin* currentPlugin;
         if((currentPlugin = PlugMgr.getPluginById(opType.PluginID))){
-            currentPlugin->plugInterface->onReciveData(data,size);
+             char buff[size+1];
+             ZeroMemory(buff,size+1);
+             memcpy(buff,data,size);
+             printf("onReciveData size %x cadena %s\n",(uint)size,(char*)buff);
+
+             currentPlugin->plugInterface->onReciveData(data,size);
         }
     }
     return result;
@@ -272,10 +278,10 @@ bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello,DArray& respons
        MessageBox(0,"pause","pause",0);
        printf("ClientHello \n\tMaxBlockSize %x\n\tPortCount %x\n\tCompressionALGM %x\n\tVersion %x.%x\n",
               clientHello->MaxBlockSize,
-              clientHello->PortCount,
-              clientHello->CompressionALGM,
-              clientHello->Version.High,
-              clientHello->Version.Low);
+              (uint)clientHello->PortCount,
+              (uint)clientHello->CompressionALGM,
+              (uint)clientHello->Version.High,
+              (uint)clientHello->Version.Low);
 
        if(clientHello->MaxBlockSize >= MinBlockSize && (ver.High >= clientHello->Version.High)
                && (ver.Low >= clientHello->Version.Low)){
