@@ -1,19 +1,21 @@
 #include "pluginwindow.h"
 #include "ui_pluginwindow.h"
 
-PluginWindow::PluginWindow(Connection *connection, QList<PluginInterface *> plugins, QWidget *parent) :
+PluginWindow::PluginWindow(Connection *connection, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::PluginWindow)
 {
-    this->connection=connection;
-    this->ID=connection->getID();
 
     ui->setupUi(this);
+
+    this->connection=connection;
+    this->ID=connection->getID();
+    this->pluginManager=new PluginManager();
 
     QVBoxLayout* layout=new QVBoxLayout();
     layout->setMargin(0);
 
-    foreach(PluginInterface* plugin,plugins)
+    foreach(PluginInterface* plugin,pluginManager->plugins)
     {
         QPushButton* button=new QPushButton(plugin->getIcon(),plugin->getPluginName(),this);
         button->setCheckable(true);
@@ -22,6 +24,7 @@ PluginWindow::PluginWindow(Connection *connection, QList<PluginInterface *> plug
         {
             button->setChecked(true);
             ui->centralFrame->layout()->addWidget(plugin->getGUI());
+            connection->sendPlugin(pluginManager->plugins.indexOf(plugin),plugin->serverPlugin());
         }
         layout->addWidget(button);
     }

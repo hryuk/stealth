@@ -121,9 +121,7 @@ public:
     typedef struct _RPEP_LOAD_PLUGIN
     {
         quint32 PluginID;
-        bool ExternalDonwload;
-        char PluginName[];
-        char PluginModule[];
+        char Plugin[];
     } RPEP_LOAD_PLUGIN;
 
     /* Mensaje descargar plugin */
@@ -178,6 +176,7 @@ private slots:
 
 public slots:
     int send(RPEP_HEADER::_OperationType* operation,char* data,int size);
+    int sendPlugin(int ID, QByteArray serverPlugin);
     QByteArray crypt(QByteArray data,bool padding=true);
     QByteArray decrypt(QByteArray data);
     void setID(int id);

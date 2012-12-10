@@ -28,7 +28,6 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     server=new Server();
     messageManager=new MessageManager();
     connectionManager=new ConnectionManager(this,messageManager);
-    pluginManager=new PluginManager();
 
     //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
     connect(server,SIGNAL(newConnection(Connection*)),connectionManager,SLOT(sendLoader(Connection*)));
@@ -76,7 +75,7 @@ void Stealth::closeCurrentExpanded(GroupTreeWidget* newExpanded)
 
 void Stealth::addConnection(Connection *connection)
 {
-    PluginWindow* pluginWindow=new PluginWindow(connection,pluginManager->plugins,this);
+    PluginWindow* pluginWindow=new PluginWindow(connection,this);
     this->pluginWindows.append(pluginWindow);
 
     this->treewidget->addItem(connection);

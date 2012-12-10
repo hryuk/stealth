@@ -15,7 +15,7 @@ class PluginWindow : public QMainWindow
     Q_OBJECT
     
 public:
-    explicit PluginWindow(Connection* connection,QList<PluginInterface*> plugins,QWidget *parent = 0);
+    explicit PluginWindow(Connection* connection,QWidget *parent = 0);
     ~PluginWindow();
     void showEvent(QShowEvent*);
     
@@ -23,6 +23,7 @@ private:
     Ui::PluginWindow *ui;
     int ID;
     Connection* connection;
+    PluginManager* pluginManager;
 
 public slots:
     int getID();

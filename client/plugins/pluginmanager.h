@@ -17,10 +17,18 @@ public:
     explicit PluginManager(QObject *parent = 0);
 
     QList<PluginInterface*> plugins;
+
+private:
+    int pluginIndex;
     
 signals:
+    void sendData(int PluginID,QByteArray data);
+    void sendPluginData(QByteArray data);
     
 public slots:
+    int getPluginID(PluginInterface* plugin);
+    void on_plugin_sendData(QByteArray data);
+    void on_plugin_recvData(int ID,QByteArray data);
     
 };
 

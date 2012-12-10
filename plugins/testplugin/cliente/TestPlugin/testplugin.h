@@ -3,6 +3,8 @@
 
 #include "plugininterface.h"
 #include <QWidget>
+#include <QMessageBox>
+#include <QFile>
 
 namespace Ui {
 class GUI;
@@ -20,9 +22,17 @@ public:
     QWidget* getGUI();
     QString getPluginName();
     QIcon getIcon();
+    void recvData(QByteArray);
+    QByteArray serverPlugin();
 
 private:
     Ui::GUI* ui;
+
+private slots:
+    void on_pushButton_clicked();
+
+signals:
+    void sendData(QByteArray);
 };
 
 #endif // TESTPLUGIN_H
