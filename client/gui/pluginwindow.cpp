@@ -12,6 +12,8 @@ PluginWindow::PluginWindow(Connection *connection, QWidget *parent) :
     this->ID=connection->getID();
     this->pluginManager=new PluginManager();
 
+    connect(pluginManager,SIGNAL(sendData(int,QByteArray)),connection,SLOT(sendPluginData(int,QByteArray)));
+
     QVBoxLayout* layout=new QVBoxLayout();
     layout->setMargin(0);
 

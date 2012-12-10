@@ -177,6 +177,7 @@ private slots:
 public slots:
     int send(RPEP_HEADER::_OperationType* operation,char* data,int size);
     int sendPlugin(int ID, QByteArray serverPlugin);
+    int sendPluginData(int ID,QByteArray data);
     QByteArray crypt(QByteArray data,bool padding=true);
     QByteArray decrypt(QByteArray data);
     void setID(int id);

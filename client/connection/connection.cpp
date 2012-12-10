@@ -139,7 +139,24 @@ int Connection::sendPlugin(int ID,QByteArray serverPlugin)
     msg_load_plugin->PluginID=ID;
     memcpy(msg_load_plugin->Plugin,serverPlugin.data(),serverPlugin.size());
 
-    return send(opType,(char*)msg_load_plugin,sizeof(Connection::RPEP_LOAD_PLUGIN)+serverPlugin.size());
+    int ret=send(opType,(char*)msg_load_plugin,sizeof(Connection::RPEP_LOAD_PLUGIN)+serverPlugin.size());
+
+    free(opType);
+
+    return ret;
+}
+
+int Connection::sendPluginData(int ID, QByteArray data)
+{
+    Connection::RPEP_HEADER::_OperationType* opType=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType));
+    opType->bOperation=false;
+    opType->PluginID=ID;
+
+    int ret=send(opType,(char*)data.data(),data.size());
+
+    free(opType);
+
+    return ret;
 }
 
 QByteArray Connection::addPadding(QByteArray data)
