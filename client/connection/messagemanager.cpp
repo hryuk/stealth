@@ -12,6 +12,9 @@ void MessageManager::readMessage()
     if(!connection) return;
     if(connection->getState()==Connection::JustConnected) return;
 
+    QDataStream in(connection);
+    in.setVersion(QDataStream::Qt_4_8);
+
     if(connection->getState()==Connection::WaitingForLoader)
     {
         qDebug("Leyendo OK");
@@ -57,8 +60,6 @@ void MessageManager::readMessage()
     if(connection->getState()==Connection::WaitingForGreeting)
     {
         qDebug("+Leyendo cabecera del hanshake");
-        QDataStream in(connection);
-        in.setVersion(QDataStream::Qt_4_8);
 
         if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
 
@@ -98,9 +99,6 @@ void MessageManager::readMessage()
     {
         qDebug("Leyendo cabecera Hanshake OK");
 
-        QDataStream in(connection);
-        in.setVersion(QDataStream::Qt_4_8);
-
         if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
 
         qDebug("-Leyendo cabecera");
@@ -135,6 +133,33 @@ void MessageManager::readMessage()
 
         emit receivedHanshakeOk(connection);
         return;
+    }
+
+    if(connection->getState()==Connection::Ready)
+    {
+        qDebug("Leyendo cabecera mensaje");
+
+        if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
+        if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
+
+        if(connection->NextBlockHeader.Size.bBlocks)
+        {
+            qWarning()<<"Mensaje por bloques no implementado aún, descartado";
+            connection->readAll();
+            return;
+        }
+
+        qDebug("Cabecera leída, identificando mensaje");
+
+        if(!connection->NextBlockHeader.OperationType.bOperation)
+        {
+            qDebug()<<"Mensaje para el plugin #"+QString::number(connection->NextBlockHeader.OperationType.PluginID);
+
+            QByteArray msg=connection->read(connection->NextBlockHeader.Size.Bytes);
+
+            qDebug()<<"Mensaje leído, enviando mensaje al plugin #"+QString::number(connection->NextBlockHeader.OperationType.PluginID);
+            emit receivedPluginMessage(connection,connection->NextBlockHeader.OperationType.PluginID,msg);
+        }
     }
 }
 

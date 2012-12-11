@@ -18,12 +18,12 @@ public:
     explicit PluginWindow(Connection* connection,QWidget *parent = 0);
     ~PluginWindow();
     void showEvent(QShowEvent*);
+    PluginManager* pluginManager;
     
 private:
     Ui::PluginWindow *ui;
     int ID;
     Connection* connection;
-    PluginManager* pluginManager;
 
 public slots:
     int getID();

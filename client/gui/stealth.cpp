@@ -33,6 +33,9 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     connect(server,SIGNAL(newConnection(Connection*)),connectionManager,SLOT(sendLoader(Connection*)));
     connect(connectionManager,SIGNAL(connectionReady(Connection*)),this,SLOT(addConnection(Connection*)));
 
+    //FIXME: Mover esto a otra parte más adecuada
+    connect(messageManager,SIGNAL(receivedPluginMessage(Connection*,int,QByteArray)),this,SLOT(processPluginMessage(Connection*,int,QByteArray)));
+
     treewidget=new GroupTreeWidget(true);
     ui->centralFrameLayout->addWidget(treewidget);
     connect(this,SIGNAL(destroyed()),treewidget,SLOT(deleteLater()));
@@ -79,6 +82,22 @@ void Stealth::addConnection(Connection *connection)
     this->pluginWindows.append(pluginWindow);
 
     this->treewidget->addItem(connection);
+}
+
+
+/* FIXME: Hay que reestructurar para mover esto de aquí, esta clase no tendría
+          que preocuparse de estas cosas */
+void Stealth::processPluginMessage(Connection* connection , int PluginID, QByteArray data)
+{
+    foreach(PluginWindow* pw,pluginWindows)
+    {
+        if(pw->getID()==connection->getID())
+        {
+            pw->pluginManager->on_plugin_recvData(PluginID,data);
+            return;
+        }
+    }
+
 }
 
 void Stealth::on_btnDebug_clicked()

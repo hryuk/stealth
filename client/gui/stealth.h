@@ -53,6 +53,7 @@ private slots:
     void closeCurrentExpanded(GroupTreeWidget*);
     void itemDoubleClicked(QTreeWidgetItem*,int);
     void on_btnDebug_clicked();
+    void processPluginMessage(Connection*,int PluginID,QByteArray data);
 };
 
 #endif // STEALTH_H

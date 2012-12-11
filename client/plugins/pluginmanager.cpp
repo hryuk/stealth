@@ -51,5 +51,6 @@ void PluginManager::on_plugin_sendData(QByteArray data)
 
 void PluginManager::on_plugin_recvData(int ID, QByteArray data)
 {
+    qDebug()<<"Llamando al plugin";
     plugins.at(ID)->recvData(data);
 }

@@ -22,6 +22,7 @@ signals:
     void receivedHanshakeOk(Connection*);
     void receivedHandshake(Connection*);
     void receivedLoaderOk(Connection*);
+    void receivedPluginMessage(Connection*,int PluginID,QByteArray data);
 };
 
 #endif // MESSAGEMANAGER_H
