@@ -63,17 +63,9 @@ ulong RPEP::serverLoop(){
 
     return 0;
 }
-int RPEP::send(const void* data,uint size,RPEP_HEADER::Operation op){
-    DArray buff;
-    MakePacket(buff,true,op,data,size);
-    return ::send(this->hConexion,(char*)buff.data,buff.size,0);
+int RPEP::send(const void* data,uint size){
+    return ::send(this->hConexion,(char*)data,size,0);
 }
-int RPEP::send(const void* data,uint size,ushort pluginID){
-    DArray buff;
-    MakePacket(buff,false,pluginID,data,size);
-    return ::send(this->hConexion,(char*)buff.data,buff.size,0);
-}
-
 uint RPEP::MakePacket(DArray &outBuff, RPEP_HEADER::Operation op, const void *data, ulong size){
     return MakePacket(outBuff,true,op,data,size);
 }
@@ -82,7 +74,14 @@ uint RPEP::MakePacket(DArray &outBuff, ushort pluginID, const void *data, ulong 
 }
 uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, const void *data, ulong size){
     RPEP_HEADER header;
-    printf("sizeof(header) = %d \n",sizeof(header));
+    DArray encriptBuff;
+    //printf("sizeof(header) = %d \n",sizeof(header));
+
+    encriptBuff.addData(data,size);
+    //Compresion
+
+    //Encriptacion
+    encript(encriptBuff);
 
     //Aqui aparece el tipo de codificacion usada para el tamaño
     header.Size.bBlocks = size>MaxPaquetSize;
@@ -100,15 +99,15 @@ uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, cons
             //Agrego la cabecera
             outBuff.addData(&header,sizeof(header));
             //Agrego los datos frgmentados
-            outBuff.addData(((char*)data)+header.BlockIndex*MaxPaquetSize,
-                            ((((header.BlockIndex+1)*MaxPaquetSize)<=size)?MaxPaquetSize:size%MaxPaquetSize));
+            outBuff.addData(((char*)encriptBuff.data)+header.BlockIndex*MaxPaquetSize,
+                            ((((header.BlockIndex+1)*MaxPaquetSize)<=encriptBuff.size)?MaxPaquetSize:encriptBuff.size%MaxPaquetSize));
         }
 
     }else{
         //Tamaño por bytes
-        header.Size.Bytes = size;
+        header.Size.Bytes = encriptBuff.size;
         outBuff.addData(&header,sizeof(header));
-        outBuff.addData(data,size);
+        outBuff.addData(encriptBuff.data,encriptBuff.size);
     }
     //Mensajes de depuracion
     printf("header.Size.Bytes %d \nheader.opType.bOperation %d \n",(int)header.Size.Bytes,(int)header.opType.bOperation);
@@ -132,10 +131,10 @@ uint RPEP::MakeServerHello(DArray& outBuff){
     sHello->SupportedCompressionAlgmCount = CompresAlgCount;
     if(CompresAlgCount)memcpy(sHello->SupportedCompressionAlgm,CompresAlg,CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm));
 
-    printf("MakeServerHello \n");
+    //printf("MakeServerHello \n");
     MakePacket(outBuff,RPEP_HEADER::Operation::ServerHandshake,buff,buffSize);
 
-    return 0;
+    return outBuff.size;
 }
 uint RPEP::MakeError(DArray& outBuff,uint code){
     RPEP_ERROR error;
