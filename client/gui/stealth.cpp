@@ -43,6 +43,8 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 
     connect(treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));
 
+    connect(connectionManager,SIGNAL(connectionDeleted(int)),this,SLOT(deleteConnection(int)));
+
 }
 
 Stealth::~Stealth()
@@ -88,6 +90,21 @@ void Stealth::addConnection(Connection *connection)
     this->pluginWindows.append(pluginWindow);
 
     this->treewidget->addItem(connection);
+}
+
+void Stealth::deleteConnection(int ID)
+{
+    for(int i=0;i<treewidget->treewidget->topLevelItemCount();i++)
+    {
+        QTreeWidgetItem* item=treewidget->treewidget->topLevelItem(i);
+        QVariant id=item->data(0,Qt::UserRole);
+
+        if(ID==id.toInt())
+        {
+            delete item;
+            return;
+        }
+    }
 }
 
 

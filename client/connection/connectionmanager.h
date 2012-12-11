@@ -39,6 +39,7 @@ private slots:
 
 signals:
     void connectionReady(Connection*);
+    void connectionDeleted(int ID);
 };
 
 #endif // CONNECTIONMANAGER_H

@@ -182,11 +182,13 @@ Connection* ConnectionManager::connection(int ID)
 
 void ConnectionManager::connection_timeout()
 {
-    /* TODO: eliminar de la gui tambien */
 
     qWarning()<<"Conexión ausente";
 
     Connection* connection=qobject_cast<Connection*>(sender());
+
+    emit connectionDeleted(connection->getID());
+
     connection->deleteLater();
 }
 
@@ -196,6 +198,9 @@ void ConnectionManager::connectionError(QAbstractSocket::SocketError)
              está añadida a la GUI, se elimine el item del TreeView */
 
     Connection* connection=qobject_cast<Connection*>(sender());
+
+    emit connectionDeleted(connection->getID());
+
     connection->deleteLater();
 }
 
@@ -204,5 +209,8 @@ void ConnectionManager::connection_disconnected()
     qWarning("Conexión perdida");
 
     Connection* connection=qobject_cast<Connection*>(sender());
-    if(connection) connection->deleteLater();
+
+    emit connectionDeleted(connection->getID());
+
+    connection->deleteLater();
 }

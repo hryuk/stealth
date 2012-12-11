@@ -57,6 +57,7 @@ private slots:
     void on_btnDebug_clicked();
     void processPluginMessage(Connection*,int PluginID,QByteArray data);
     void debugSheell_destroyed();
+    void deleteConnection(int ID);
 };
 
 #endif // STEALTH_H
