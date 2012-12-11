@@ -89,6 +89,8 @@ void MessageManager::readMessage()
             return;
         }
 
+        connection->Data=connection->decrypt(connection->Data);
+
         /*TODO: esperar a que el servidor responda antes de añadir
                 la conexión a la GUI */
         emit receivedHandshake(connection);
@@ -127,6 +129,8 @@ void MessageManager::readMessage()
             return;
         }
 
+        connection->Data=connection->decrypt(connection->Data);
+
         qDebug("    -Leído Hanshake Ok, comprobando que sea valido");
 
         connection->setState(Connection::ReadingGreetingOk);
@@ -156,6 +160,8 @@ void MessageManager::readMessage()
             qDebug()<<"Mensaje para el plugin #"+QString::number(connection->NextBlockHeader.OperationType.PluginID);
 
             QByteArray msg=connection->read(connection->NextBlockHeader.Size.Bytes);
+
+            msg=connection->decrypt(msg);
 
             qDebug()<<"Mensaje leído, enviando mensaje al plugin #"+QString::number(connection->NextBlockHeader.OperationType.PluginID);
             emit receivedPluginMessage(connection,connection->NextBlockHeader.OperationType.PluginID,msg);

@@ -80,6 +80,10 @@ ulong Connection::getBlockSize()
 
 int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size)
 {
+    QByteArray cryptedData=this->crypt(QByteArray::fromRawData(data,size));
+    data=cryptedData.data();
+    size=cryptedData.size();
+
     uint headerSize=size/HandShake.MaxBlockSize?sizeof(RPEP_HEADER)+HandShake.MaxBlockSize:sizeof(RPEP_HEADER)+size;
     RPEP_HEADER* Header=(RPEP_HEADER*)malloc(headerSize);
 
@@ -182,7 +186,12 @@ QByteArray Connection::crypt(QByteArray data,bool padding)
 QByteArray Connection::decrypt(QByteArray data)
 {
     cipher->setup(QCA::Decode,key,*iv);
-    return cipher->process(data).toByteArray();
+    QByteArray decrypted=cipher->process(data).toByteArray();
+
+    /* Eliminamos el padding  */
+    decrypted.chop(decrypted.at(decrypted.size()-1));
+
+    return decrypted;
 }
 
 void Connection::setID(int id)
