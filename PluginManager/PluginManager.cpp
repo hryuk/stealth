@@ -6,7 +6,6 @@
 
 PluginManager PlugMgr;
 PluginManagerInterfacePrivate* PluginManager::pluginList;
-uint PluginManager::lastID;
 
 class PluginManagerInterfacePrivate :public pluginManagerInterface{
         PluginManager* mgr;
@@ -23,6 +22,7 @@ PluginManager::PluginManager(){
 
 uint PluginManager::run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc){
     RPEP client(hConexion,hKey);
+    protocol = &client;
     //printf("despues de client\n");
 
     this->lFunc = &lFunc;
@@ -69,6 +69,10 @@ plugin* PluginManager::getPluginById(ulong id){
     return pluginList->getPlugInformation();
 }
 
+RPEP *PluginManager::getProtocol(){
+    return protocol;
+}
+
 PluginManagerInterfacePrivate::PluginManagerInterfacePrivate(PluginManager &mgr, plugin &p){
     this->mgr = &mgr;
     this->p = &p;
@@ -80,6 +84,7 @@ plugin* PluginManagerInterfacePrivate::getPlugInformation(){
 }
 
 int PluginManagerInterfacePrivate::sendData(const char *data, uint size){
+    return this->mgr->getProtocol()->send(data,size,p->ID);
 }
 
 int PluginManagerInterfacePrivate::setErrorCode(uint code){

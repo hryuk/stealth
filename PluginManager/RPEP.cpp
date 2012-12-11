@@ -32,7 +32,7 @@ ulong RPEP::serverLoop(){
     //encript(writeBuff);
     //conexion.write(writeBuff);
 
-    send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
+    ::send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
     printf("writeBuff.size %d \n",(int)writeBuff.size);
 
     writeBuff.Vaciar();
@@ -52,7 +52,7 @@ ulong RPEP::serverLoop(){
         //decript(readBuff);
         if(procesPkg(readBuff,writeBuff,workBuff)){
             if(writeBuff.size){
-                send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
+                ::send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
                 writeBuff.Vaciar();
                 //conexion.write(writeBuff);
             }
@@ -62,6 +62,16 @@ ulong RPEP::serverLoop(){
     printf("conexion cerrada\n");
 
     return 0;
+}
+int RPEP::send(const void* data,uint size,RPEP_HEADER::Operation op){
+    DArray buff;
+    MakePacket(buff,true,op,data,size);
+    return ::send(this->hConexion,(char*)buff.data,buff.size,0);
+}
+int RPEP::send(const void* data,uint size,ushort pluginID){
+    DArray buff;
+    MakePacket(buff,false,pluginID,data,size);
+    return ::send(this->hConexion,(char*)buff.data,buff.size,0);
 }
 
 uint RPEP::MakePacket(DArray &outBuff, RPEP_HEADER::Operation op, const void *data, ulong size){

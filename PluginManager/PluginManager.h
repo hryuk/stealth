@@ -17,10 +17,11 @@ class plugin{
         PluginInterface* plugInterface;
 };
 class PluginManagerInterfacePrivate;
+class RPEP;
 class PluginManager{
         LoaderFunTable* lFunc;
+        RPEP* protocol;
         static PluginManagerInterfacePrivate* pluginList;
-        static uint lastID;
     public:
         PluginManager();
 
@@ -35,6 +36,7 @@ class PluginManager{
 
         uint run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc);
         plugin* getPluginById(ulong id);
+        RPEP* getProtocol();
 };
 
 extern PluginManager PlugMgr;

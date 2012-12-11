@@ -35,10 +35,7 @@ class RPEP{
         bool encript(DArray &data);
         bool decript(DArray &data);
 
-        //Generan un paquete
-        uint MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,const void* data,ulong size);
-        uint MakePacket(DArray& outBuff,ushort pluginID,const void* data,ulong size);
-        uint MakePacket(DArray& outBuff,bool IsOperation,ushort opOrIDCode,const void* data,ulong size);
+
 
         //Generan paquetes determinados
         uint MakeServerHello(DArray& outBuff);
@@ -57,7 +54,16 @@ class RPEP{
         virtual ~RPEP();
         ulong clientLoop();
         ulong serverLoop();
-    protected:
+
+        //Manda los datos al otro extremo
+        int send(const void *data, uint size, ushort pluginID);
+        int send(const void *data, uint size, RPEP_HEADER::Operation op);
+
+        //Generan un paquete
+        uint MakePacket(DArray& outBuff,RPEP_HEADER::Operation op,const void* data,ulong size);
+        uint MakePacket(DArray& outBuff,ushort pluginID,const void* data,ulong size);
+        uint MakePacket(DArray& outBuff,bool IsOperation,ushort opOrIDCode,const void* data,ulong size);
+protected:
     private:
 };
 
