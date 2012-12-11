@@ -42,11 +42,17 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     //connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
 
     connect(treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));
+
 }
 
 Stealth::~Stealth()
 {
     delete ui;
+}
+
+void Stealth::showEvent(QShowEvent *)
+{
+    this->bdebugShell=false;
 }
 
 void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int)
@@ -102,6 +108,16 @@ void Stealth::processPluginMessage(Connection* connection , int PluginID, QByteA
 
 void Stealth::on_btnDebug_clicked()
 {
-    DebugShell* debugShell=new DebugShell(this);
-    debugShell->show();
+    if(!this->bdebugShell)
+    {
+        DebugShell* debugShell=new DebugShell(this);
+        connect(debugShell,SIGNAL(destroyed()),this,SLOT(debugSheell_destroyed()));
+        debugShell->show();
+        bdebugShell=true;
+    }
+}
+
+void Stealth::debugSheell_destroyed()
+{
+    this->bdebugShell=false;
 }

@@ -36,6 +36,7 @@ class Stealth : public QMainWindow
 public:
     explicit Stealth(QWidget *parent = 0);
     ~Stealth();
+    void showEvent(QShowEvent*);
 
 private:
     QList<PluginWindow*> pluginWindows;
@@ -45,6 +46,7 @@ private:
     PluginManager* pluginManager;
     GroupTreeWidget* treewidget;
     Ui::Stealth *ui;
+    bool bdebugShell;
 
 public slots:
     void addConnection(Connection* connection);
@@ -54,6 +56,7 @@ private slots:
     void itemDoubleClicked(QTreeWidgetItem*,int);
     void on_btnDebug_clicked();
     void processPluginMessage(Connection*,int PluginID,QByteArray data);
+    void debugSheell_destroyed();
 };
 
 #endif // STEALTH_H
