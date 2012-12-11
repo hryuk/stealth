@@ -30,7 +30,20 @@ void TestPlugin::on_pushButton_clicked()
 
 void TestPlugin::recvData(QByteArray data)
 {
-    QMessageBox::information(this,"Respuesta",QString(data));
+    if(data.size()!=4) return;
+
+    int msg=data.toInt();
+
+    if(msg!=6 && msg!=7) return;
+
+    if(msg==6)
+    {
+        QMessageBox::information(this,"Respuesta","El servidor ha pulsado YES!");
+    }
+    else
+    {
+        QMessageBox::information(this,"Respuesta","El servidor ha pulsado NO!");
+    }
 }
 
 QByteArray TestPlugin::serverPlugin()

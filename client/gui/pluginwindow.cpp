@@ -22,6 +22,7 @@ PluginWindow::PluginWindow(Connection *connection, QWidget *parent) :
         QPushButton* button=new QPushButton(plugin->getIcon(),plugin->getPluginName(),this);
         button->setCheckable(true);
         button->setAutoExclusive(true);
+        button->setFocusPolicy(Qt::NoFocus);
         if(layout->count()==0)
         {
             button->setChecked(true);

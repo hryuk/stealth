@@ -132,6 +132,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
          </item>
          <item>
           <widget class="QPushButton" name="pushButton_5">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -161,7 +164,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             </size>
            </property>
            <property name="checkable">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="autoExclusive">
             <bool>true</bool>
@@ -171,7 +174,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
          <item>
           <widget class="QPushButton" name="pushButton_4">
            <property name="enabled">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -211,6 +214,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
          </item>
          <item>
           <widget class="QPushButton" name="pushButton_2">
+           <property name="enabled">
+            <bool>false</bool>
+           </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -345,6 +351,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
        </item>
        <item>
         <widget class="QPushButton" name="btnDebug">
+         <property name="focusPolicy">
+          <enum>Qt::NoFocus</enum>
+         </property>
          <property name="styleSheet">
           <string notr="true"/>
          </property>
@@ -368,6 +377,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
        </item>
        <item>
         <widget class="QPushButton" name="pushButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>
          </property>
