@@ -28,7 +28,7 @@ ulong RPEP::serverLoop(){
     DArray readBuff,writeBuff,workBuff;
     char buff[4096];
 
-    MakeServerHello(writeBuff);;
+    MakeServerHello(writeBuff);
     //encript(writeBuff);
     //conexion.write(writeBuff);
 
@@ -44,7 +44,7 @@ ulong RPEP::serverLoop(){
             readBuff.addData(buff,readBytes);
             if(((uint)readBytes)<sizeof(buff))break;
         }
-        if(readBytes == -1){
+        if(readBytes == -1 || !readBytes){
             runing = false;
             continue;
         }
@@ -328,13 +328,11 @@ void RPEP::setPort(ushort *Port, ulong count){
 
 bool RPEP::encript(DArray &data){
     if(data.size){
-        //Coloco el padding  si hace falta
-        if(data.size &0xf){
-            for(int i = 0;data.size &0xf;i++){
-                data.addData("\0",1);
-            }
-            CryptEncrypt(hKey,0,true,0,data.data,&data.size,data.size);
-        }
+        //Coloco el paddingpo
+        int buffSize = ((data.size>>4)+1)<<4;
+        data.Expand(buffSize);
+
+        return CryptEncrypt(hKey,0,true,0,data.data,&data.size,buffSize);
     }
     return false;
 }
