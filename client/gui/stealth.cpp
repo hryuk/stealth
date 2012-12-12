@@ -12,22 +12,32 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     /* Comprobamos que las dlls que la necesitamos estan en su sitio */
     QDir dir=QDir::currentPath();
     QFile file;
-    if(!file.exists(dir.filePath("ssleay32.dll"))) qFatal("Cannot find the \"ssleay32.dll\" file");
-    if(!file.exists(dir.filePath("qca2.dll"))) qFatal("Cannot find the \"qca2.dll\" file");
-    if(!file.exists(dir.filePath("libeay32.dll"))) qFatal("Cannot find the \"libeay32.dll\" file");
+    if(!file.exists(dir.filePath("ssleay32.dll"))) qFatal("No se encontró \"ssleay32.dll\"");
+    else qDebug()<<"Cargada ssleay32.dll";
 
-    if(!dir.cd("crypto")) qFatal("Cannot find the \"/crypto\" directory");
-    else if(!file.exists(dir.filePath("qca-ossl2.dll"))) qFatal("Cannot find the \"/crypto/qca-ossl2.dll\" file");
+    if(!file.exists(dir.filePath("qca2.dll"))) qFatal("No se encontró \"qca2.dll\"");
+    else qDebug()<<"Cargada qca2.dll";
 
-    qDebug()<<tr("DLL correctas");
+    if(!file.exists(dir.filePath("libeay32.dll"))) qFatal("No se encontró \"libeay32.dll\"");
+    else qDebug()<<"Cargada libeay32.dll";
+
+    if(!dir.cd("crypto")) qFatal("No se encontró \"/crypto\"");
+    else
+    {
+        if(!file.exists(dir.filePath("qca-ossl2.dll"))) qFatal("No se encontró \"/crypto/qca-ossl2.dll\"");
+        else qDebug()<<"Cargada /crypto/qca-ossl2.dll";
+    }
 #endif
 
     QCA::Initializer init;
 
     //TODO: Mover a main.cpp?
     server=new Server();
+    qDebug()<<"Creado Server()";
     messageManager=new MessageManager();
+    qDebug()<<"Creado MessageManager()";
     connectionManager=new ConnectionManager(this,messageManager);
+    qDebug()<<"Creado ConnectionManager";
 
     //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
     connect(server,SIGNAL(newConnection(Connection*)),connectionManager,SLOT(sendLoader(Connection*)));
@@ -61,7 +71,7 @@ void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int)
 {
     QVariant id=item->data(0,Qt::UserRole);
 
-    qDebug()<<"Clicado item, id="+QString::number(id.toInt());
+    qDebug()<<"Clicado item #"+QString::number(id.toInt());
 
     Connection* connection=connectionManager->connection(id.toInt());
 

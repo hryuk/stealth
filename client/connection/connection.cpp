@@ -15,7 +15,12 @@ Connection::Connection()
     QCA::SecureArray password=QCA::hexToArray(Crypto::sha1(strKey).toHex());
     key=QCA::PBKDF2("sha1").makeKey(password,0,keylen,1);
 
+
+    qDebug()<<"+Creando cipher AES 128";
+    qDebug()<<"    -Clave cifrado: 0x"+QString(password.toByteArray().toHex());
+    qDebug()<<"    -IV: 0x"+QString(iv->toByteArray().toHex());
     this->cipher=new QCA::Cipher("aes128",QCA::Cipher::CBC,QCA::Cipher::NoPadding,QCA::Encode,key,*iv);
+    qDebug()<<"Cipher creado";
 
     /* Se comprueba que la conexión está activa cada 10 segundos */
     timer.setInterval(10000);
@@ -26,12 +31,12 @@ Connection::Connection()
 
 Connection::~Connection()
 {
-
-    qCritical()<<"Conexion eliminada";
     delete this->iv;
 
     //FIXME: Comprobar por que no puedo eliminar el objeto cipher
     //delete this->cipher;
+
+    qWarning()<<"Conexion eliminada";
 }
 
 void Connection::checkTimeout()
@@ -80,9 +85,13 @@ ulong Connection::getBlockSize()
 
 int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size)
 {
+    qDebug()<<"+Enviando mensaje";
     QByteArray cryptedData=this->crypt(QByteArray::fromRawData(data,size));
+
     data=cryptedData.data();
     size=cryptedData.size();
+
+    qDebug()<<"    -Tamaño mensaje: 0x"+QString::number(size,16);
 
     uint headerSize=size/HandShake.MaxBlockSize?sizeof(RPEP_HEADER)+HandShake.MaxBlockSize:sizeof(RPEP_HEADER)+size;
     RPEP_HEADER* Header=(RPEP_HEADER*)malloc(headerSize);
@@ -94,23 +103,23 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
     if(Header->Size.bBlocks)
     {
         Header->Size.Blocks=size/HandShake.MaxBlockSize+(size%HandShake.MaxBlockSize?1:0);
+        qDebug()<<"    -Envío en varios bloques";
     }
     else
     {
         Header->Size.Bytes=size;
+        qDebug()<<"    -Envío en un solo bloque";
     }
 
     if(size/HandShake.MaxBlockSize)
     {
-        qCritical()<<"Uuuuuu malo malo...";
         for(int i=0;i<(size/HandShake.MaxBlockSize);i++)
         {
-
             memcpy(Header->Data,&data[Header->BlockIndex*HandShake.MaxBlockSize],HandShake.MaxBlockSize);
 
             if(write((char*)Header,sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)
             {
-                qWarning()<<tr("No se pudieron enviar los datos #1");
+                qWarning()<<"No se pudo enviar el mensaje #1";
                 return 0;
             }
             else
@@ -124,17 +133,20 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
 
     if(write((char*)Header,sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)
     {
-        qWarning()<<tr("No se pudieron enviar los datos #1");
+        qWarning()<<"No se pudo enviar el mensaje #2";
         return 0;
     }
 
     free(Header);
+
+    qDebug("Mensaje enviado");
 
     return size;
 }
 
 int Connection::sendPlugin(int ID,QByteArray serverPlugin)
 {
+    qDebug("Enviando plugin");
     Connection::RPEP_HEADER::_OperationType* opType=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType));
     opType->bOperation=true;
     opType->Operation=Connection::RPEP_HEADER::LoadPlugin;
@@ -147,11 +159,14 @@ int Connection::sendPlugin(int ID,QByteArray serverPlugin)
 
     free(opType);
 
+    if(ret) qDebug()<<"Plugin Enviado";
+
     return ret;
 }
 
 int Connection::sendPluginData(int ID, QByteArray data)
 {
+    qDebug()<<"Enviando mensaje a plugin #"+QString::number(ID);
     Connection::RPEP_HEADER::_OperationType* opType=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType));
     opType->bOperation=false;
     opType->PluginID=ID;
@@ -165,6 +180,7 @@ int Connection::sendPluginData(int ID, QByteArray data)
 
 QByteArray Connection::addPadding(QByteArray data)
 {
+    qDebug()<<"Añadiendo padding PKCS7";
     /* Añadimos padding PKCS7 */
     char pad=16-((data.size()+4)%16);
     for(int i=0;i<pad;i++)
@@ -177,20 +193,27 @@ QByteArray Connection::addPadding(QByteArray data)
 
 QByteArray Connection::crypt(QByteArray data,bool padding)
 {
+    qDebug()<<"Cifrando datos";
     if(padding) data=addPadding(data);
 
     cipher->setup(QCA::Encode,key,*iv);
-    return cipher->process(data).toByteArray();
+    QByteArray crypted=cipher->process(data).toByteArray();
+
+    qDebug("Datos cifrados");
+
+    return crypted;
 }
 
 QByteArray Connection::decrypt(QByteArray data)
 {
+    qDebug()<<"Descifrando datos";
     cipher->setup(QCA::Decode,key,*iv);
     QByteArray decrypted=cipher->process(data).toByteArray();
 
-    /* Eliminamos el padding  */
+    qDebug()<<"Eliminando padding";
     decrypted.chop(decrypted.at(decrypted.size()-1));
 
+    qDebug()<<"Datos descifrados";
     return decrypted;
 }
 

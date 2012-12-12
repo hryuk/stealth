@@ -5,8 +5,7 @@
 #include <QCryptographicHash>
 #include <QDataStream>
 #include <QtCrypto>
-
-#include <QMessageBox>
+#include <QDebug>
 
 class Crypto
 {

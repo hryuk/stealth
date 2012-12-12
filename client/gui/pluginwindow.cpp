@@ -17,7 +17,9 @@ PluginWindow::PluginWindow(Connection *connection, QWidget *parent) :
     QVBoxLayout* layout=new QVBoxLayout();
     layout->setMargin(0);
 
-    foreach(PluginInterface* plugin,pluginManager->plugins)
+    //foreach(PluginInterface* plugin,pluginManager->plugins)
+    /* De momento solo permitimos que se cargue un plugin */
+    PluginInterface* plugin=pluginManager->plugins.at(0);
     {
         QPushButton* button=new QPushButton(plugin->getIcon(),plugin->getPluginName(),this);
         button->setCheckable(true);

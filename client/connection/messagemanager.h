@@ -19,7 +19,7 @@ public slots:
     void dispatchMessage();
 
 signals:
-    void receivedHanshakeOk(Connection*);
+    void receivedHandshakeOk(Connection*);
     void receivedHandshake(Connection*);
     void receivedLoaderOk(Connection*);
     void receivedPluginMessage(Connection*,int PluginID,QByteArray data);

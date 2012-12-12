@@ -27,14 +27,14 @@ PluginManager::PluginManager(QObject *parent) :
             {
                 connect(plugin,SIGNAL(sendData(QByteArray)),this,SLOT(on_plugin_sendData(QByteArray)));
                 plugins<<stealthPlugin;
-                qDebug()<<"Cargado plugin "+stealthPlugin->getPluginName();
+                qDebug()<<"Cargado plugin #"+plugins.count()-1+stealthPlugin->getPluginName();
             }
             else
             {
-                qDebug()<<"Error al cargar plugin inválido";
+                qWarning()<<"Error al cargar plugin inválido \""+fileName+"\"";
             }
         }
-        else { qCritical("Error al cargar plugin inválido"); }
+        else { qWarning()<<"Error al cargar plugin inválido \""+fileName+"\""; }
     }
 }
 
@@ -46,11 +46,12 @@ int PluginManager::getPluginID(PluginInterface *plugin)
 void PluginManager::on_plugin_sendData(QByteArray data)
 {
     PluginInterface* plugin=qobject_cast<PluginInterface*>(sender());
+    qDebug()<<"Plugin #"+QString::number(plugins.indexOf(plugin))+" envía un mensaje";
     emit sendData(plugins.indexOf(plugin),data);
 }
 
 void PluginManager::on_plugin_recvData(int ID, QByteArray data)
 {
-    qDebug()<<"Llamando al plugin";
+    qDebug()<<"Transfiriendo mensaje al plugin #"+QString::number(ID);
     plugins.at(ID)->recvData(data);
 }
