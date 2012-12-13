@@ -33,7 +33,7 @@ class RPEP{
         void setPort(ushort* Port,ulong count);
 
         bool encript(DArray &data);
-        bool decript(DArray &data);
+        bool decript(DArray &data, ulong offset = 0);
 
 
         //Generan un paquete

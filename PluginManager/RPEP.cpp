@@ -170,7 +170,7 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
 
                 if(workBuff.size == (header->Size.Blocks*MaxPaquetSize+sizeof(RPEP_HEADER))){
                     //Proceso el comando
-                    decript(workBuff);
+                    decript(workBuff,sizeof(RPEP_HEADER));
                     procesCMD(header->opType,header->Data,workBuff.size-sizeof(header),out);
                     workBuff.Vaciar();
                 }
@@ -186,7 +186,7 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
             /////////////////////////////////////////////////////////
 
             //Se procesa el comando
-            decript(in);
+            decript(in,sizeof(RPEP_HEADER));
             procesCMD(header->opType,header->Data,in.size-sizeof(header),out);
             //Se aumenta el indicador de bytes procesados
             bytesRead += header->Size.Bytes+sizeof(RPEP_HEADER);
@@ -339,9 +339,12 @@ bool RPEP::encript(DArray &data){
     return false;
 }
 
-bool RPEP::decript(DArray &data){
+bool RPEP::decript(DArray &data,ulong offset){
+    bool result = false;
     if(data.size){
-        return CryptDecrypt(hKey,0,true,0,data.data,&data.size);
+        ulong szData = data.size-offset;
+        result = CryptDecrypt(hKey,0,true,0,((uchar*)data.data)+offset,&szData);
+        data.size = szData+offset;
     }
-    return false;
+    return result;
 }
