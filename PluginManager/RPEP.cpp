@@ -75,7 +75,7 @@ uint RPEP::MakePacket(DArray &outBuff, ushort pluginID, const void *data, ulong 
 uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, const void *data, ulong size){
     RPEP_HEADER header;
     DArray encriptBuff;
-    //printf("sizeof(header) = %d \n",sizeof(header));
+    printf("sizeof(header) = %u size %u\n",sizeof(header),(uint)size);
 
     encriptBuff.addData(data,size);
     //Compresion
@@ -170,7 +170,8 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
 
                 if(workBuff.size == (header->Size.Blocks*MaxPaquetSize+sizeof(RPEP_HEADER))){
                     //Proceso el comando
-                    procesCMD(header->opType,header->Data,(header->Size.Blocks*MaxPaquetSize),out);
+                    decript(workBuff);
+                    procesCMD(header->opType,header->Data,workBuff.size-sizeof(header),out);
                     workBuff.Vaciar();
                 }
             }
@@ -185,7 +186,8 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
             /////////////////////////////////////////////////////////
 
             //Se procesa el comando
-            procesCMD(header->opType,header->Data,header->Size.Bytes,out);
+            decript(in);
+            procesCMD(header->opType,header->Data,in.size-sizeof(header),out);
             //Se aumenta el indicador de bytes procesados
             bytesRead += header->Size.Bytes+sizeof(RPEP_HEADER);
         }
