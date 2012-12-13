@@ -182,7 +182,7 @@ QByteArray Connection::addPadding(QByteArray data)
 {
     qDebug()<<"Añadiendo padding PKCS7";
     /* Añadimos padding PKCS7 */
-    char pad=16-((data.size()+4)%16);
+    char pad=16-((data.size())%16);
     for(int i=0;i<pad;i++)
     {
         data.append(pad);
@@ -225,4 +225,10 @@ void Connection::setID(int id)
 int Connection::getID()
 {
     return this->ID;
+}
+
+int Connection::round16(int size)
+{
+    int pad=16-(size%16);
+    return (size+pad);
 }

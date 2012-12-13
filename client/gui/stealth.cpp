@@ -104,8 +104,12 @@ void Stealth::addConnection(Connection *connection)
 
 void Stealth::deleteConnection(int ID)
 {
+    qDebug()<<"Eliminando item #"<<ID;
+
+    /*
     for(int i=0;i<treewidget->treewidget->topLevelItemCount();i++)
     {
+        qDebug()<<"Test";
         QTreeWidgetItem* item=treewidget->treewidget->topLevelItem(i);
         QVariant id=item->data(0,Qt::UserRole);
 
@@ -115,6 +119,7 @@ void Stealth::deleteConnection(int ID)
             return;
         }
     }
+    */
 }
 
 

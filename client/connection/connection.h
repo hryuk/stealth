@@ -182,6 +182,7 @@ public slots:
     QByteArray decrypt(QByteArray data);
     void setID(int id);
     int getID();
+    int round16(int size);
 
 signals:
     void timeout();

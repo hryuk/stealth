@@ -73,7 +73,14 @@ void MessageManager::readMessage()
         if(connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::ServerHandshake) return;
 
         qDebug("     -Comprobando Tamaño");
-        if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=sizeof(Connection::RPEP_SERVER_HANDSHAKE)) return;
+        qDebug()<<"    -Tamaño recibido: 0x"+QString::number(connection->NextBlockHeader.Size.Bytes);
+        qDebug()<<"    -Tamaño esperado: 0x"+QString::number(sizeof(Connection::RPEP_SERVER_HANDSHAKE));
+        qDebug()<<"    -Tamaño redondeado: 0x"+QString::number(connection->round16(sizeof(Connection::RPEP_SERVER_HANDSHAKE)));
+        if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=connection->round16(sizeof(Connection::RPEP_SERVER_HANDSHAKE)))
+        {
+            connection->readAll();
+            return;
+        }
 
         qDebug("     -Cabecera correcta");
         connection->setState(Connection::ReadingGreeting);
@@ -112,7 +119,7 @@ void MessageManager::readMessage()
         if(connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::Error) return;
 
         qDebug("    -Comprobando Tamaño");
-        if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=sizeof(Connection::RPEP_ERROR)) return;
+        if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=connection->round16(sizeof(Connection::RPEP_ERROR))) return;
 
         qDebug("    -Cabecera correcta");
         qDebug("Leyendo confirmación de handshake");
@@ -142,7 +149,7 @@ void MessageManager::readMessage()
         qDebug("Leyendo cabecera mensaje");
 
         if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
-        if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
+        if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=connection->round16(sizeof(Connection::RPEP_HEADER))) return;
 
         if(connection->NextBlockHeader.Size.bBlocks)
         {
