@@ -97,6 +97,7 @@ void MessageManager::readMessage()
         }
 
         connection->Data=connection->decrypt(connection->Data);
+        connection->NextBlockHeader.Size.Bytes=connection->Data.size();
 
         emit receivedHandshake(connection);
         return;
@@ -135,6 +136,7 @@ void MessageManager::readMessage()
         }
 
         connection->Data=connection->decrypt(connection->Data);
+        connection->NextBlockHeader.Size.Bytes=connection->Data.size();
 
         qDebug("Confirmación de handshake leída");
 
@@ -167,6 +169,7 @@ void MessageManager::readMessage()
             QByteArray msg=connection->read(connection->NextBlockHeader.Size.Bytes);
 
             msg=connection->decrypt(msg);
+            connection->NextBlockHeader.Size.Bytes=connection->Data.size();
 
             qDebug()<<"Mensaje leído, enviando mensaje al plugin #"+QString::number(connection->NextBlockHeader.OperationType.PluginID);
             emit receivedPluginMessage(connection,connection->NextBlockHeader.OperationType.PluginID,msg);
