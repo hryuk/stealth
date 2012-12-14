@@ -179,10 +179,15 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
         }else{
             //Si no hay datos suficientes salimos
             if((in.size-bytesRead)<header->Size.Bytes)break;
+            //Compruevo que lo recibido sea acorde con lo esperado
+            if(header->Size.Bytes > in.size){
+                bytesRead = -1;
+                break;
+            }
             ///////////////////////////////////////////////////////
             //mensages de depuracion
             printf("procesPkg \n");
-            printf("header \n\tbBlocks %x\n\tOperation %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation);
+            printf("header \n\tbBlocks %x\n\tOperation %x\n\n\tSize %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation,header->Size.Bytes);
             /////////////////////////////////////////////////////////
 
             //Se procesa el comando
@@ -193,7 +198,7 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
         }
     }
     //limpio el buffer
-    if(in.size == bytesRead){
+    if(in.size <= bytesRead){
         in.Vaciar();
     }else{
         in.DelData(0,bytesRead);
