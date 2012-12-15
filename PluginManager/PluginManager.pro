@@ -22,7 +22,8 @@ SOURCES +=	main.cpp \
 			RPEP.cpp \
 			PluginManager.cpp \
 	serializable.cpp \
-	objectstream.cpp
+	objectstream.cpp \
+    darray.cpp
 
 HEADERS +=	main.h  \
 			RPEP.h \
@@ -30,4 +31,6 @@ HEADERS +=	main.h  \
 			PluginManager.h \
 	serializable.h \
 	objectstream.h \
-	plugininterface.h
+	plugininterface.h \
+    basicTypes.h \
+    darray.h
