@@ -1,7 +1,7 @@
 #ifndef PLUGININTERFACE_H
 #define PLUGININTERFACE_H
 
-#include "../ArkLib/src/datatypes.h"
+#include "basicTypes.h"
 
 class pluginManagerInterface{
     protected:

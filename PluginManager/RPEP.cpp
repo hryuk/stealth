@@ -15,7 +15,6 @@ RPEP::RPEP(SOCKET hConexion,HCRYPTKEY hKey){
     ver.Low = 0;
     this->hKey = hKey;
 
-    conexion.setSocketDescriptor(hConexion);
     this->hConexion = hConexion;
 
 }
@@ -25,10 +24,12 @@ ulong RPEP::clientLoop(){
     return 0;
 }
 ulong RPEP::serverLoop(){
+    printf("serverLoop\n");
     DArray readBuff,writeBuff,workBuff;
     char buff[4096];
 
     MakeServerHello(writeBuff);
+    printf("MakeServerHello");
     //encript(writeBuff);
     //conexion.write(writeBuff);
 
@@ -75,7 +76,6 @@ uint RPEP::MakePacket(DArray &outBuff, ushort pluginID, const void *data, ulong 
 uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, const void *data, ulong size){
     RPEP_HEADER header;
     DArray encriptBuff;
-    //printf("sizeof(header) = %u size %u\n",sizeof(header),(uint)size);
 
     encriptBuff.addData(data,size);
     //Compresion

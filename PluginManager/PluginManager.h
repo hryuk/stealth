@@ -1,9 +1,11 @@
 #ifndef PLUGINMANAGER_H_INCLUDED
 #define PLUGINMANAGER_H_INCLUDED
 
+#include <stdlib.h>
+
 #include "main.h"
-#include "../ArkLib/src/datatypes.h"
-#include "../ArkLib/src/CCrypt.h"
+#include "basicTypes.h"
+#include "darray.h"
 
 #include "RPEP.h"
 

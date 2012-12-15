@@ -1,11 +1,13 @@
 #ifndef RPEP_H
 #define RPEP_H
-//#include "../ArkLib/src/Network/AbtractSocket.h"
-#include "../ArkLib/src/Network/TCPSocket.h"
-#include "../ArkLib/src/CCrypt.h"
+#include <winsock2.h>
+#include <wincrypt.h>
+
+#include "basicTypes.h"
 #include "RPEP_Struc.h"
 
 
+class DArray;
 class RPEP{
         friend class PluginManagerInterfacePrivate;
         typedef enum stateType{
@@ -15,7 +17,6 @@ class RPEP{
         //Indica el estado del protocolo
         stateType state;
         //Socket de la conexion
-        TCPSocket conexion;
         SOCKET hConexion;
         //Clave de cifrado
         HCRYPTKEY hKey;
