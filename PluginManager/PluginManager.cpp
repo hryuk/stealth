@@ -88,7 +88,9 @@ plugin* PluginManagerInterfacePrivate::getPlugInformation(){
 
 int PluginManagerInterfacePrivate::sendData(const char *data, uint size){
     DArray buff;
-    buff.addData(data,size);
+
+    this->mgr->getProtocol()->MakePacket(buff,this->p->ID,data,size);
+
     return this->mgr->getProtocol()->send(buff.data,buff.size);
 }
 

@@ -7,6 +7,7 @@
 
 
 class RPEP{
+        friend class PluginManagerInterfacePrivate;
         typedef enum stateType{
             noConfigured,
             ready
