@@ -29,7 +29,6 @@ PluginWindow::PluginWindow(Connection *connection, QWidget *parent) :
         {
             button->setChecked(true);
             ui->centralFrame->layout()->addWidget(plugin->getGUI());
-            connection->sendPlugin(pluginManager->plugins.indexOf(plugin),plugin->serverPlugin());
         }
         layout->addWidget(button);
     }
@@ -46,6 +45,7 @@ PluginWindow::~PluginWindow()
 void PluginWindow::showEvent(QShowEvent *)
 {
     setWindowTitle(connection->peerAddress().toString());
+    connection->sendPlugin(0,pluginManager->plugins.at(0)->serverPlugin());
 }
 
 int PluginWindow::getID()

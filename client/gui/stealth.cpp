@@ -8,7 +8,8 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 {
     ui->setupUi(this);
 
-#ifdef Q_WS_WIN
+
+#ifndef Q_WS_WIN
     /* Comprobamos que las dlls que la necesitamos estan en su sitio */
     QDir dir=QDir::currentPath();
     QFile file;
@@ -28,6 +29,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
         else qDebug()<<"Cargada /crypto/qca-ossl2.dll";
     }
 #endif
+
 
     QCA::Initializer init;
 
@@ -54,7 +56,6 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     connect(treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));
 
     connect(connectionManager,SIGNAL(connectionDeleted(int)),this,SLOT(deleteConnection(int)));
-
 }
 
 Stealth::~Stealth()
@@ -104,9 +105,6 @@ void Stealth::addConnection(Connection *connection)
 
 void Stealth::deleteConnection(int ID)
 {
-    qDebug()<<"Eliminando item #"<<ID;
-
-    /*
     for(int i=0;i<treewidget->treewidget->topLevelItemCount();i++)
     {
         qDebug()<<"Test";
@@ -119,7 +117,6 @@ void Stealth::deleteConnection(int ID)
             return;
         }
     }
-    */
 }
 
 

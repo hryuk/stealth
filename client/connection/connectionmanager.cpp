@@ -192,7 +192,10 @@ void ConnectionManager::connection_timeout()
 
     qWarning()<<"Conexión #"+QString::number(connection->getID())+" ausente";
 
-    emit connectionDeleted(connection->getID());
+    if(connection->getState()>=Connection::Ready)
+    {
+        emit connectionDeleted(connection->getID());
+    }
 
     connection->deleteLater();
 }
@@ -203,7 +206,10 @@ void ConnectionManager::connectionError(QAbstractSocket::SocketError)
 
     qWarning()<<"Error en conexión #"+QString::number(connection->getID());
 
-    emit connectionDeleted(connection->getID());
+    if(connection->getState()>=Connection::Ready)
+    {
+        emit connectionDeleted(connection->getID());
+    };
 
     connection->deleteLater();
 }
@@ -214,7 +220,10 @@ void ConnectionManager::connection_disconnected()
 
     qWarning()<<"Conexión #"+QString::number(connection->getID())+" perdida";
 
-    emit connectionDeleted(connection->getID());
+    if(connection->getState()>=Connection::Ready)
+    {
+        emit connectionDeleted(connection->getID());
+    }
 
     connection->deleteLater();
 }

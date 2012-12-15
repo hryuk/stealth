@@ -150,6 +150,8 @@ void MessageManager::readMessage()
     {
         qDebug("Leyendo cabecera mensaje");
 
+        qDebug()<<"TEST1"<<connection->bytesAvailable();
+
         if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
         if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
 
