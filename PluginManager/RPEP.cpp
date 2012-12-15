@@ -75,7 +75,7 @@ uint RPEP::MakePacket(DArray &outBuff, ushort pluginID, const void *data, ulong 
 uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, const void *data, ulong size){
     RPEP_HEADER header;
     DArray encriptBuff;
-    printf("sizeof(header) = %u size %u\n",sizeof(header),(uint)size);
+    //printf("sizeof(header) = %u size %u\n",sizeof(header),(uint)size);
 
     encriptBuff.addData(data,size);
     //Compresion
@@ -110,7 +110,8 @@ uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, cons
         outBuff.addData(encriptBuff.data,encriptBuff.size);
     }
     //Mensajes de depuracion
-    printf("header.Size.Bytes %d \nheader.opType.bOperation %d \n",(int)header.Size.Bytes,(int)header.opType.bOperation);
+    //printf("header.Size.Bytes %d \nheader.opType.bOperation %d \n",(int)header.Size.Bytes,(int)header.opType.bOperation);
+    printf("mkPkg\n\tsize %x\n\toriginalSize %x\n\tbOperation %x\n\tcode %x\n",(int)header.Size.Bytes,size,(int)header.opType.bOperation,(int)header.opType.Operation);
     return 0;
 }
 
@@ -192,7 +193,11 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
 
             //Se procesa el comando
             decript(in,sizeof(RPEP_HEADER));
-            procesCMD(header->opType,header->Data,in.size-sizeof(header),out);
+            int szPad = ((char*)header->Data)[header->Size.Bytes-1];
+            //Relleno de zeros la zona de padding
+            ZeroMemory(((char*)header->Data)+header->Size.Bytes-szPad,szPad);
+
+            procesCMD(header->opType,header->Data,header->Size.Bytes-szPad,out);
             //Se aumenta el indicador de bytes procesados
             bytesRead += header->Size.Bytes+sizeof(RPEP_HEADER);
         }
