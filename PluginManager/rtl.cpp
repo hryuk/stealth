@@ -25,6 +25,8 @@ extern "C" bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvRe
 
 typedef int (__cdecl *GETMAINARGS)(int*, char***, char***, int, _startupinfo*);
 
+typedef int (*_vprintf)(char * s, const char * format, __gnuc_va_list arg );
+_vprintf vprintf;
 
 int STDCALL _start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
     int argc = 0; char **argv = 0; char **env = 0;
@@ -35,6 +37,7 @@ int STDCALL _start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
 
     getmainargs = (GETMAINARGS) GetProcAddress(hMsvcrt,"__getmainargs");
     controlfp = (_controlfp) GetProcAddress(hMsvcrt,"_controlfp");
+    vprintf = (_vprintf) GetProcAddress(hMsvcrt,"vprintf");
 
     controlfp(0x10000, 0x30000);
     //__set_app_type(__CONSOLE_APP);
@@ -192,9 +195,8 @@ extern "C" void _pei386_runtime_relocator (void){
 }
 extern "C" void __chkstk_ms(void){
 }//*
-int vfprintf (char * s, const char * format, __gnuc_va_list arg );
 extern "C" int __mingw_vprintf (char * s, const char * format, __gnuc_va_list arg ){
-    return 0/*vfprintf(s,format,arg)*/;
+    return /**/vprintf(s,format,arg)/**/;
 }
 //*/
 
