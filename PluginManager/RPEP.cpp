@@ -168,11 +168,13 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
                 workBuff.addData(header->Data,MaxPaquetSize);
                 header = (RPEP_HEADER*)workBuff.data;
 
-                if(workBuff.size == (header->Size.Blocks*MaxPaquetSize+sizeof(RPEP_HEADER))){
+                if(workBuff.size >= (header->Size.Blocks*MaxPaquetSize+sizeof(RPEP_HEADER))){
                     //Proceso el comando
-                    decript(workBuff,sizeof(RPEP_HEADER));
-                    procesCMD(header->opType,header->Data,workBuff.size-sizeof(header),out);
-                    workBuff.Vaciar();
+                    ulong dataSize = decript((byte*)header->Data,header->Size.Blocks*MaxPaquetSize);
+                    if(dataSize != -1){
+                        procesCMD(header->opType,header->Data,dataSize,out);
+                        workBuff.Vaciar();
+                    }
                 }
             }
             bytesRead += MaxPaquetSize+sizeof(RPEP_HEADER);
@@ -191,12 +193,10 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
             /////////////////////////////////////////////////////////
 
             //Se procesa el comando
-            decript(in,sizeof(RPEP_HEADER));
-            int szPad = ((char*)header->Data)[header->Size.Bytes-1];
-            //Relleno de zeros la zona de padding
-            ZeroMemory(((char*)header->Data)+header->Size.Bytes-szPad,szPad);
-
-            procesCMD(header->opType,header->Data,header->Size.Bytes-szPad,out);
+            ulong dataSize = decript((byte*)header->Data,header->Size.Bytes);
+            if(dataSize != -1){
+                procesCMD(header->opType,header->Data,dataSize,out);
+            }
             //Se aumenta el indicador de bytes procesados
             bytesRead += header->Size.Bytes+sizeof(RPEP_HEADER);
         }
@@ -348,12 +348,19 @@ bool RPEP::encript(DArray &data){
     return false;
 }
 
-bool RPEP::decript(DArray &data,ulong offset){
-    bool result = false;
-    if(data.size){
-        ulong szData = data.size-offset;
-        result = CryptDecrypt(hKey,0,true,0,((uchar*)data.data)+offset,&szData);
-        data.size = szData+offset;
+uint RPEP::decript(byte* data,ulong size){
+    uint newSize = -1;
+    if(size){
+        ulong szData = size;
+        if(CryptDecrypt(hKey,0,true,0,data,&szData)){
+            //Calculo el nuevo tamaño de los datos descifrados
+            /*
+             *El relleno del padding es el tamaño del mismo por lo que en el ultimo byte de los datos,
+             *se encuentra el tamaño del padding
+            **/
+            newSize = size - data[size-1];
+            ZeroMemory(data+newSize,data[size-1]);
+        }
     }
-    return result;
+    return newSize;
 }
