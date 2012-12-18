@@ -33,6 +33,7 @@ class PluginManager{
         bool initPlugin();
         bool stopPlugin();
         bool enumPluginLoad();
+        bool isPluginLoad(ushort ID);
         bool updateManager();
         bool updateServer(DArray& newServer);
         bool stopServer();
