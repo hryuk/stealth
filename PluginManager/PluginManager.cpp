@@ -85,7 +85,11 @@ RPEP *PluginManager::getProtocol(){
 }
 
 bool PluginManager::isPluginLoad(ushort ID){
-    return pluginList->getPlugInformation()->ID == ID;
+    bool result = false;
+    if(pluginList && pluginList->getPlugInformation()){
+        result = pluginList->getPlugInformation()->ID == ID;
+    }
+    return result;
 }
 
 PluginManagerInterfacePrivate::PluginManagerInterfacePrivate(PluginManager &mgr, plugin &p){
