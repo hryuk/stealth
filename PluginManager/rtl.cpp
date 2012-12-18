@@ -26,7 +26,7 @@ extern "C" bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvRe
 typedef int (__cdecl *GETMAINARGS)(int*, char***, char***, int, _startupinfo*);
 
 
-int _start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
+int STDCALL _start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
     int argc = 0; char **argv = 0; char **env = 0;
     _startupinfo start_info = {0};
     HINSTANCE  hMsvcrt = LoadLibrary("msvcrt");

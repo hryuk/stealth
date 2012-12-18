@@ -964,11 +964,16 @@ endl;Macro para las var locales
 	.detach:
 	and dword [ebx+LDR_MODULE.Flags],~LDR_PROCESS_ATTACHED
 	.attached:
-
+	;//Creo un nuevo marco de pila para proteger la pila al llamar al main
+	push ebp
+	mov ebp,esp
+	
 	push dword 0
 	push dword %$ATTACHED_Notiffy
 	push dword %$base
 	call eax	;//Ejecuto el main si no hay un dll main
+	
+	leave
 	jmp PEEntry_end
 .NoMain:
 
@@ -980,10 +985,16 @@ PUSH_RELOC_1:
 	and dword [ebx+LDR_MODULE.Flags],~LDR_LOAD_IN_PROGRESS;//Quito el flag de carga en proceso
 	test eax,eax
 	jz PEEntry_end
+	;//Creo un nuevo marco de pila para proteger la pila al llamar al dllmain
+	push ebp
+	mov ebp,esp
+	
 	push dword 0
 	push dword %$ATTACHED_Notiffy
 	push dword %$base
 	call eax	;//Ejecuto el dll main si lo hay
+	
+	leave
 	;Segun proceda pongo o quito la el flag de LDR_PROCESS_ATTACHED
 	test dword %$ATTACHED_Notiffy,1
 	jz .detach
