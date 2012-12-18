@@ -1,4 +1,3 @@
-#undef UNICODE
 #include "RPEP.h"
 #include "PluginManager.h"
 #include "plugininterface.h"
@@ -40,7 +39,7 @@ ulong RPEP::serverLoop(){
     int readBytes;
     do{
         for(readBytes = 0;(readBytes = recv(hConexion,buff,sizeof(buff),0))> 0;){
-            printf("recv readBytes = %d\n",readBytes);
+            //printf("recv readBytes = %d\n",readBytes);
             //Concateno los datos hasta que no quede mas por recibir
             readBuff.addData(buff,readBytes);
             if(((uint)readBytes)<sizeof(buff))break;
@@ -111,7 +110,7 @@ uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, cons
     }
     //Mensajes de depuracion
     //printf("header.Size.Bytes %d \nheader.opType.bOperation %d \n",(int)header.Size.Bytes,(int)header.opType.bOperation);
-    printf("mkPkg\n\tsize %x\n\toriginalSize %x\n\tbOperation %x\n\tcode %x\n",(int)header.Size.Bytes,size,(int)header.opType.bOperation,(int)header.opType.Operation);
+    printf("mkPkg\n\tsize %x\n\toriginalSize %x\n\tbOperation %x\n\tcode %x\n",(uint)header.Size.Bytes,(uint)size,(uint)header.opType.bOperation,(uint)header.opType.Operation);
     return 0;
 }
 
@@ -188,7 +187,7 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
             ///////////////////////////////////////////////////////
             //mensages de depuracion
             printf("procesPkg \n");
-            printf("header \n\tbBlocks %x\n\tOperation %x\n\n\tSize %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation,header->Size.Bytes);
+            printf("header \n\tbBlocks %x\n\tOperation %x\n\n\tSize %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation,(uint)header->Size.Bytes);
             /////////////////////////////////////////////////////////
 
             //Se procesa el comando

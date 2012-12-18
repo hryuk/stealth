@@ -89,4 +89,4 @@ uchar* DArray::Expand(ulong NewSize){
         cadena[NewSize-1]= 0;
     }
     return data;
-};
+}

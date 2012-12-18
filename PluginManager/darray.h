@@ -1,6 +1,7 @@
 #ifndef DARRAY_H
 #define DARRAY_H
 
+#undef __DECLSPEC_SUPPORTED
 #include <stdio.h>
 #include <string.h>
 #include "basicTypes.h"

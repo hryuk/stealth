@@ -1,8 +1,10 @@
 #ifndef OBJECTSTREAM_H
 #define OBJECTSTREAM_H
 
-#include "../ArkLib/src/datatypes.h"
+#undef __DECLSPEC_SUPPORTED
+#include "basicTypes.h"
 #include "serializable.h"
+#include "darray.h"
 
 class Serializable;
 class SerializeNode{

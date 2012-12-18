@@ -1,4 +1,5 @@
 #include "objectstream.h"
+#include "stdlib.h"
 
 SerializeNode::SerializeNode(){
     next = back = father = childs = NULL;

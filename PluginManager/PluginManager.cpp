@@ -1,8 +1,7 @@
+#include <stdio.h>
 
-#undef UNICODE
 #include "PluginManager.h"
 #include "plugininterface.h"
-#include <stdio.h>
 
 PluginManager PlugMgr;
 PluginManagerInterfacePrivate* PluginManager::pluginList;
