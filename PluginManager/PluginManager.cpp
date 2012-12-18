@@ -19,6 +19,12 @@ class PluginManagerInterfacePrivate :public pluginManagerInterface{
 PluginManager::PluginManager(){
 }
 
+PluginManager::~PluginManager(){
+    if(pluginList){
+        this->lFunc->FreeLibraryFromMemoy(pluginList->getPlugInformation()->hModule);
+    }
+}
+
 uint PluginManager::run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc){
     RPEP client(hConexion,hKey);
     protocol = &client;

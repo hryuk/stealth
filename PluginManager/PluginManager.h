@@ -26,6 +26,7 @@ class PluginManager{
         static PluginManagerInterfacePrivate* pluginList;
     public:
         PluginManager();
+        ~PluginManager();
 
         bool loadPlugin(RPEP_LOAD_PLUGIN *pluginModule);
         bool unload(ushort ID);
