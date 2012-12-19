@@ -8,6 +8,7 @@
 
 
 class DArray;
+class PluginManager;
 class RPEP{
         friend class PluginManagerInterfacePrivate;
         typedef enum stateType{
@@ -28,6 +29,8 @@ class RPEP{
         ushort* Port;
 
         bool runing;
+
+        PluginManager* PlugMgr;
 
         //set and get
         void setMaxPaquetSize(ulong s);
@@ -55,7 +58,7 @@ class RPEP{
 
     public:
         /** Default constructor */
-        RPEP(SOCKET hConexion,HCRYPTKEY hKey);
+        RPEP(SOCKET hConexion,HCRYPTKEY hKey,PluginManager* PlugMgr);
         /** Default destructor */
         virtual ~RPEP();
         ulong clientLoop();

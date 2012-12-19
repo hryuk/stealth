@@ -43,6 +43,6 @@ class PluginManager{
         RPEP* getProtocol();
 };
 
-extern PluginManager PlugMgr;
+//extern PluginManager PlugMgr;
 
 #endif // PLUGINMANAGER_H_INCLUDED

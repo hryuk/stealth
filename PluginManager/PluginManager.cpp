@@ -3,7 +3,6 @@
 #include "PluginManager.h"
 #include "plugininterface.h"
 
-PluginManager PlugMgr;
 PluginManagerInterfacePrivate* PluginManager::pluginList;
 
 class PluginManagerInterfacePrivate :public pluginManagerInterface{
@@ -17,16 +16,18 @@ class PluginManagerInterfacePrivate :public pluginManagerInterface{
 };
 
 PluginManager::PluginManager(){
+    pluginList = 0;
 }
 
 PluginManager::~PluginManager(){
     if(pluginList){
+        printf("unloading plugin\n");
         this->lFunc->FreeLibraryFromMemoy(pluginList->getPlugInformation()->hModule);
     }
 }
 
 uint PluginManager::run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc){
-    RPEP client(hConexion,hKey);
+    RPEP client(hConexion,hKey,this);
     protocol = &client;
     //printf("despues de client\n");
 

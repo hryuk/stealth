@@ -4,7 +4,7 @@
 
 #define MinBlockSize 1024
 
-RPEP::RPEP(SOCKET hConexion,HCRYPTKEY hKey){
+RPEP::RPEP(SOCKET hConexion, HCRYPTKEY hKey, PluginManager *PlugMgr){
     Port = NULL;
     CompresAlg = PortCount = 0;
     ver = (version){0,0};
@@ -15,6 +15,8 @@ RPEP::RPEP(SOCKET hConexion,HCRYPTKEY hKey){
     this->hKey = hKey;
 
     this->hConexion = hConexion;
+
+    this->PlugMgr = PlugMgr;
 
 }
 RPEP::~RPEP(){}
@@ -244,7 +246,7 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DAr
             //
             case RPEP_HEADER::Operation::LoadPlugin:
                 printf("LoadPlugin \n");
-                result = PlugMgr.loadPlugin((RPEP_LOAD_PLUGIN*)data);
+                result = PlugMgr->loadPlugin((RPEP_LOAD_PLUGIN*)data);
                 break;
             case RPEP_HEADER::Operation::CancelPluginLoad:
                 printf("CancelPluginLoad \n");
@@ -279,7 +281,7 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DAr
     }else{
         printf("comando para plugin\n");
         plugin* currentPlugin;
-        if((currentPlugin = PlugMgr.getPluginById(opType.PluginID))){
+        if((currentPlugin = PlugMgr->getPluginById(opType.PluginID))){
              char buff[size+1];
              ZeroMemory(buff,size+1);
              memcpy(buff,data,size);
@@ -295,7 +297,7 @@ bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello,DArray& respons
     bool result = false;
     int error = -1;
     if(clientHello){
-       MessageBox(0,"pause","pause",0);
+       //MessageBox(0,"pause","pause",0);
        printf("ClientHello \n\tMaxBlockSize %x\n\tPortCount %x\n\tCompressionALGM %x\n\tVersion %x.%x\n",
               clientHello->MaxBlockSize,
               (uint)clientHello->PortCount,
