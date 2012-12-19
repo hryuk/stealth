@@ -9,7 +9,7 @@ ItemInfo::ItemInfo(Connection *connection, QWidget *parent) :
 
     if(connection)
     {
-        ui->label_2->setText(connection->peerAddress().toString());
+        ui->label_4->setText(connection->peerAddress().toString());
     }
 }
 

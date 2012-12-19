@@ -107,18 +107,25 @@ void Stealth::deleteConnection(int ID)
 {
     for(int i=0;i<treewidget->treewidget->topLevelItemCount();i++)
     {
-        qDebug()<<"Test";
         QTreeWidgetItem* item=treewidget->treewidget->topLevelItem(i);
         QVariant id=item->data(0,Qt::UserRole);
 
         if(ID==id.toInt())
         {
             delete item;
+
+            foreach(PluginWindow* pw,pluginWindows)
+            {
+                if(pw->getID()==ID)
+                {
+                    /* FIXME: Hay que destruírla, pero sin cargarse el index */
+                    pw->hide();
+                }
+            }
             return;
         }
     }
 }
-
 
 /* FIXME: Hay que reestructurar para mover esto de aquí, esta clase no tendría
           que preocuparse de estas cosas */

@@ -35,6 +35,8 @@ PluginWindow::PluginWindow(Connection *connection, QWidget *parent) :
 
     layout->addStretch(1);
     ui->scrollAreaWidget->setLayout(layout);
+
+    connection->sendPlugin(0,pluginManager->plugins.at(0)->serverPlugin());
 }
 
 PluginWindow::~PluginWindow()
@@ -45,7 +47,6 @@ PluginWindow::~PluginWindow()
 void PluginWindow::showEvent(QShowEvent *)
 {
     setWindowTitle(connection->peerAddress().toString());
-    connection->sendPlugin(0,pluginManager->plugins.at(0)->serverPlugin());
 }
 
 int PluginWindow::getID()

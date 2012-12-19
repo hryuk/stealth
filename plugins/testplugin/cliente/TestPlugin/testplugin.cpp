@@ -25,6 +25,7 @@ QString TestPlugin::getPluginName()
 
 void TestPlugin::on_pushButton_clicked()
 {
+    ui->pushButton->setEnabled(false);
     emit sendData(ui->lineEdit->text().toAscii());
 }
 
@@ -45,6 +46,8 @@ void TestPlugin::recvData(QByteArray data)
         QMessageBox::information(this,"Respuesta","El servidor ha pulsado NO!");
         qDebug()<<"Plugin test 6";
     }
+
+    ui->pushButton->setEnabled(true);
 }
 
 QByteArray TestPlugin::serverPlugin()
