@@ -192,11 +192,6 @@ void ConnectionManager::connection_timeout()
 
     qWarning()<<"Conexión #"+QString::number(connection->getID())+" ausente";
 
-    if(connection->getState()>=Connection::Ready)
-    {
-        emit connectionDeleted(connection->getID());
-    }
-
     connection->disconnect();
 }
 
@@ -205,11 +200,6 @@ void ConnectionManager::connectionError(QAbstractSocket::SocketError)
     Connection* connection=qobject_cast<Connection*>(sender());
 
     qWarning()<<"Error en conexión #"+QString::number(connection->getID());
-
-    if(connection->getState()>=Connection::Ready)
-    {
-        emit connectionDeleted(connection->getID());
-    };
 
     connection->disconnect();
 }
