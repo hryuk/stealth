@@ -192,7 +192,7 @@ void ConnectionManager::connection_timeout()
 
     qWarning()<<"Conexión #"+QString::number(connection->getID())+" ausente";
 
-    connection->disconnect();
+    connection->disconnectFromHost();
 }
 
 void ConnectionManager::connectionError(QAbstractSocket::SocketError)
@@ -201,7 +201,7 @@ void ConnectionManager::connectionError(QAbstractSocket::SocketError)
 
     qWarning()<<"Error en conexión #"+QString::number(connection->getID());
 
-    connection->disconnect();
+    connection->disconnectFromHost();
 }
 
 void ConnectionManager::connection_disconnected()
