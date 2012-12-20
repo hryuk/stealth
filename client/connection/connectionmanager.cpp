@@ -197,7 +197,7 @@ void ConnectionManager::connection_timeout()
         emit connectionDeleted(connection->getID());
     }
 
-    connection->deleteLater();
+    connection->disconnect();
 }
 
 void ConnectionManager::connectionError(QAbstractSocket::SocketError)
@@ -211,7 +211,7 @@ void ConnectionManager::connectionError(QAbstractSocket::SocketError)
         emit connectionDeleted(connection->getID());
     };
 
-    connection->deleteLater();
+    connection->disconnect();
 }
 
 void ConnectionManager::connection_disconnected()
