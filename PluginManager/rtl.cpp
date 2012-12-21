@@ -12,6 +12,7 @@
 #define __GUI_APP        2
 void __set_app_type(int);
 typedef int (*_controlfp)(unsigned a, unsigned b);
+bool disablePrintf = true;
 
 typedef struct
 {
@@ -196,7 +197,7 @@ extern "C" void _pei386_runtime_relocator (void){
 extern "C" void __chkstk_ms(void){
 }//*
 extern "C" int __mingw_vprintf (char * s, const char * format, __gnuc_va_list arg ){
-    return /**/vprintf(s,format,arg)/**/;
+    return !disablePrintf?vprintf(s,format,arg):0;
 }
 //*/
 
