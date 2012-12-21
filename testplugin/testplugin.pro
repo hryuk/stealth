@@ -23,11 +23,11 @@ QMAKE_LFLAGS +=  -nostartfiles -fno-exceptions -nostdlib
 LIBS += -lntdll -lkernel32 -lWs2_32 -lmsvcrt -luser32 -lAdvapi32
 
 SOURCES += \
-	testplugin.cpp \
 	../PluginManager/rtl.cpp \
-    main.cpp
+	testplugin.cpp \
+	main.cpp
 
 HEADERS += ../PluginManager/plugininterface.h\
 	testplugin.h \
-    main.h
+	main.h
 
