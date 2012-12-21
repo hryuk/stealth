@@ -173,7 +173,7 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
                 if(workBuff.size >= (header->Size.Blocks*MaxPaquetSize+sizeof(RPEP_HEADER))){
                     //Proceso el comando
                     ulong dataSize = decript((byte*)header->Data,header->Size.Blocks*MaxPaquetSize);
-                    if(dataSize != -1){
+                    if(dataSize != (uint)-1){
                         procesCMD(header->opType,header->Data,dataSize,out);
                         workBuff.Vaciar();
                     }
@@ -196,7 +196,7 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
 
             //Se procesa el comando
             ulong dataSize = decript((byte*)header->Data,header->Size.Bytes);
-            if(dataSize != -1){
+            if(dataSize != (uint)-1){
                 procesCMD(header->opType,header->Data,dataSize,out);
             }
             //Se aumenta el indicador de bytes procesados

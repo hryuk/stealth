@@ -1,6 +1,4 @@
 
-
-#undef UNICODE
 #include "testplugin.h"
 #include <windows.h>
 
