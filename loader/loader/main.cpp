@@ -693,11 +693,14 @@ void __declspec(naked)PEEntry(){
     _detach:
         and	dword ptr [ebx+34h], 0FFF7FFFFh
 
-    _attached:
+_attached:
+        push    ebp        
+        mov     ebp, esp
         push	0
         push	[ebp+0x14]
         push	[ebp+0x08]
         call	eax
+        leave
         jmp	short PEEntry_end
 
     _NoMain:
@@ -711,10 +714,13 @@ void __declspec(naked)PEEntry(){
         and	dword ptr [ebx+34h], 0FFFFEFFFh
         test	eax, eax
         jz	short PEEntry_end
+        push    ebp        
+        mov     ebp, esp
         push	0
         push	[ebp+0x14]
         push	[ebp+0x08]
         call	eax
+        leave
         test	[ebp+0x14], 1
         jz	short loc_943
         or	dword ptr [ebx+34h], 80000h
