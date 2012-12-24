@@ -9,6 +9,18 @@ QT+=core gui network crypto
 TARGET=Stealth
 TEMPLATE=app
 
+Release:DESTDIR = ../release
+Release:OBJECTS_DIR = ../release/.obj-cliente
+Release:MOC_DIR = ../release/.moc-cliente
+Release:RCC_DIR = ../release/.rcc-cliente
+Release:UI_DIR = ../release/.ui-cliente
+
+Debug:DESTDIR = ../debug
+Debug:OBJECTS_DIR = ../debug/.obj-cliente
+Debug:MOC_DIR = ../debug/.moc-cliente
+Debug:RCC_DIR = ../debug/.rcc-cliente
+Debug:UI_DIR = ../debug/.ui-cliente
+
 SOURCES += main.cpp\
         gui/stealth.cpp \
     connection/connectionmanager.cpp \
