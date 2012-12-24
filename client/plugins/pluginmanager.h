@@ -4,22 +4,31 @@
 #include <QObject>
 #include <QApplication>
 #include <QPluginLoader>
+#include <QDebug>
 #include <QDir>
 #include <QList>
 
 #include "plugininterface.h"
 
-class pluginmanager : public QObject
+class PluginManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit pluginmanager(QObject *parent = 0);
+    explicit PluginManager(QObject *parent = 0);
 
-    QList<PluginInterface> plugins;
+    QList<PluginInterface*> plugins;
+
+private:
+    int pluginIndex;
     
 signals:
+    void sendData(int PluginID,QByteArray data);
+    void sendPluginData(QByteArray data);
     
 public slots:
+    int getPluginID(PluginInterface* plugin);
+    void on_plugin_sendData(QByteArray data);
+    void on_plugin_recvData(int ID,QByteArray data);
     
 };
 

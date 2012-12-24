@@ -4,7 +4,7 @@
 #
 #-------------------------------------------------
 
-QT+=core gui network
+QT+=core gui network crypto
 
 TARGET=Stealth
 TEMPLATE=app
@@ -18,7 +18,10 @@ SOURCES += main.cpp\
     connection/datastream/crypto.cpp \
     gui/grouptreewidget.cpp \
     gui/customtreewidget.cpp \
-    plugins/pluginmanager.cpp
+    plugins/pluginmanager.cpp \
+    gui/iteminfo.cpp \
+    gui/pluginwindow.cpp \
+    gui/debugshell.cpp
 
 HEADERS  += gui/stealth.h \
     connection/connectionmanager.h \
@@ -29,9 +32,15 @@ HEADERS  += gui/stealth.h \
     gui/grouptreewidget.h \
     gui/customtreewidget.h \
     plugins/pluginmanager.h \
-    plugins/plugininterface.h
+    plugins/plugininterface.h \
+    gui/iteminfo.h \
+    gui/pluginwindow.h \
+    gui/debugshell.h
 
-FORMS+= stealth.ui
+FORMS+= stealth.ui \
+    gui/iteminfo.ui \
+    gui/pluginwindow.ui \
+    gui/debugshell.ui
 
 RESOURCES += \
     Resource.qrc

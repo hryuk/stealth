@@ -1,13 +1,20 @@
 #include "pluginmanager.h"
 
-pluginmanager::pluginmanager(QObject *parent) :
+#include <QMessageBox>
+
+PluginManager::PluginManager(QObject *parent) :
     QObject(parent)
 {
     /* Cargamos todos los plugins */
 
-
     QDir pluginsDir=QDir(qApp->applicationDirPath());
-    pluginsDir.cd("plugins");
+    if(!pluginsDir.cd("plugins"))
+    {
+        qWarning()<<"No encontrado directorio /plugins";
+        return;
+    }
+
+    pluginIndex=0;
 
     foreach(QString fileName,pluginsDir.entryList(QDir::Files))
     {
@@ -18,13 +25,33 @@ pluginmanager::pluginmanager(QObject *parent) :
             PluginInterface* stealthPlugin=qobject_cast<PluginInterface*>(plugin);
             if(stealthPlugin)
             {
-               // plugins<<stealthPlugin;
+                connect(plugin,SIGNAL(sendData(QByteArray)),this,SLOT(on_plugin_sendData(QByteArray)));
+                plugins<<stealthPlugin;
+                qDebug()<<"Cargado plugin #"+plugins.count()-1+stealthPlugin->getPluginName();
             }
             else
             {
-                /** ERROR **/
+                qWarning()<<"Error al cargar plugin inválido \""+fileName+"\"";
             }
         }
-        else /** ERROR **/ ;
+        else { qWarning()<<"Error al cargar plugin inválido \""+fileName+"\""; }
     }
+}
+
+int PluginManager::getPluginID(PluginInterface *plugin)
+{
+    return plugins.indexOf(plugin);
+}
+
+void PluginManager::on_plugin_sendData(QByteArray data)
+{
+    PluginInterface* plugin=qobject_cast<PluginInterface*>(sender());
+    qDebug()<<"Plugin #"+QString::number(plugins.indexOf(plugin))+" envía un mensaje";
+    emit sendData(plugins.indexOf(plugin),data);
+}
+
+void PluginManager::on_plugin_recvData(int ID, QByteArray data)
+{
+    qDebug()<<"Transfiriendo mensaje al plugin #"+QString::number(ID);
+    plugins.at(ID)->recvData(data);
 }

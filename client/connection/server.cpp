@@ -2,16 +2,20 @@
 
 Server::Server()
 {
-    this->listen(QHostAddress::Any,2000);
+    this->listen(QHostAddress::Any,11155);
+
+    qDebug()<<"Escuchando por el puerto "+QString::number(11155)+"...";
 }
 
-//Si hay una conexión prendiente, creamos un nuevo socket
-//y decimos que la conexión está lista para inicializar
+//Si hay una conexiÃ³n prendiente, creamos un nuevo socket
+//y decimos que la conexiÃ³n estÃ¡ lista para inicializar
 void Server::incomingConnection(int socketDescriptor)
 {
     Connection* connection=new Connection();
     connection->setState(Connection::JustConnected);
     connection->setSocketDescriptor(socketDescriptor);
+
+    qDebug()<<tr("Recibida conexion");
 
     emit newConnection(connection);
 }

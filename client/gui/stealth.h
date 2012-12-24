@@ -6,16 +6,23 @@
 #include <QMouseEvent>
 #include <QGraphicsView>
 #include <QTreeWidget>
+#include <QFontDatabase>
+#include <QTextCodec>
 #include <QFile>
 #include <QDir>
+#include <QList>
+#include <QShowEvent>
 
 #include "server.h"
 #include "connectionmanager.h"
 #include "messagemanager.h"
 #include "grouptreewidget.h"
+#include "pluginmanager.h"
+#include "pluginwindow.h"
+#include "debugshell.h"
 
-class ConnectionManager;
 class MessageManager;
+class ConnectionManager;
 
 namespace Ui {
     class Stealth;
@@ -29,19 +36,28 @@ class Stealth : public QMainWindow
 public:
     explicit Stealth(QWidget *parent = 0);
     ~Stealth();
+    void showEvent(QShowEvent*);
 
 private:
-    Ui::Stealth *ui;
+    QList<PluginWindow*> pluginWindows;
     Server* server;
-    ConnectionManager* mngConnection;
-    MessageManager* mngMessage;
-    QList<GroupTreeWidget*> lstGroupWidgets;
-    GroupTreeWidget* expandedGroup;
+    ConnectionManager* connectionManager;
+    MessageManager* messageManager;
+    PluginManager* pluginManager;
+    GroupTreeWidget* treewidget;
+    Ui::Stealth *ui;
+    bool bdebugShell;
 
 public slots:
     void addConnection(Connection* connection);
+
 private slots:
     void closeCurrentExpanded(GroupTreeWidget*);
+    void itemDoubleClicked(QTreeWidgetItem*,int);
+    void on_btnDebug_clicked();
+    void processPluginMessage(Connection*,int PluginID,QByteArray data);
+    void debugSheell_destroyed();
+    void deleteConnection(int ID);
 };
 
 #endif // STEALTH_H

@@ -17,13 +17,15 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
     frame->setLayout(frameLayout);
     /* frame->setStyleSheet("QFrame{border-radius: 10px; border: 1px solid grey; padding: 8 8px;}");*/
     mainLayout->addWidget(frame);
-
+/*
     QPushButton* btnExpand=new QPushButton();
     btnExpand->setFlat(true);
     frameLayout->addWidget(btnExpand);
     connect(btnExpand,SIGNAL(clicked()),SLOT(on_btnExpand_clicked()));
-
+*/
     treewidget=new CustomTreeWidget();
+    treewidget->setFocusPolicy(Qt::NoFocus);
+    treewidget->setSelectionBehavior(QAbstractItemView::SelectRows);
     treewidget->setRootIsDecorated(false);
     treewidget->setHeaderHidden(true);
     treewidget->setColumnCount(2);
@@ -38,7 +40,7 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
     if(!expanded) treewidget->hide();
     frameLayout->addWidget(treewidget);
 
-
+/*
     QHBoxLayout* nl=new QHBoxLayout();
     nl->setMargin(0);
     nl->setSpacing(4);
@@ -58,29 +60,86 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget* parent)
     nl->addWidget(numItemsLabel);
     nl->addSpacerItem(new QSpacerItem(4,1,QSizePolicy::Fixed,QSizePolicy::Fixed));
     btnExpand->setLayout(nl);
-
+*/
     this->setLayout(mainLayout);
-    for(int i=0;i<3;i++)
-    {
-        QTreeWidgetItem* item=new QTreeWidgetItem();
-        item->setIcon(0,QIcon(":/res/img/the-dark-knight-the-joker-02.png"));
-        QGraphicsView* gvSpeed=new QGraphicsView();
-        gvSpeed->setFixedHeight(50);
-        gvSpeed->setFixedWidth(200);
-        treewidget->addTopLevelItem(item);
-        treewidget->setItemWidget(treewidget->topLevelItem(i),1,gvSpeed);
-
-
-        QGraphicsScene* scene=new QGraphicsScene();
-        scene->addText("To Do");
-        gvSpeed->setScene(scene);
-    }
-
-    this->setStyleSheet("QTreeWidget{border-radius: 10px; border: 1px solid grey; padding: 8 8px;}");
 }
 
 GroupTreeWidget::~GroupTreeWidget()
 {
+}
+
+void GroupTreeWidget::addItem(Connection *connection)
+{
+
+    qDebug()<<"Añadiendo item, id="+QString::number(connection->getID());
+    QTreeWidgetItem* item=new QTreeWidgetItem();
+    item->setIcon(0,QIcon(":/res/img/the-dark-knight-the-joker-02.png"));
+
+    item->setData(0,Qt::UserRole,QVariant(connection->getID()));
+
+    treewidget->addTopLevelItem(item);
+
+    ItemInfo* info=new ItemInfo(connection,this);
+    treewidget->setItemWidget(treewidget->topLevelItem(treewidget->topLevelItemCount()-1),0,info);
+    QGraphicsView* gvSpeed=new QGraphicsView();
+    gvSpeed->setRenderHints(QPainter::Antialiasing|QPainter::SmoothPixmapTransform);
+    gvSpeed->setFocusPolicy(Qt::NoFocus);
+    gvSpeed->setStyleSheet("border: 1px solid grey");
+    gvSpeed->setFixedHeight(50);
+    gvSpeed->setFixedWidth(200);
+
+    treewidget->setItemWidget(treewidget->topLevelItem(treewidget->topLevelItemCount()-1),1,gvSpeed);
+
+
+    /* DEMO */
+    QGraphicsScene* scene=new QGraphicsScene();
+    scene->setSceneRect(gvSpeed->rect());
+
+    QTime time = QTime::currentTime();
+    qsrand((uint)time.msec());
+
+    for(int i=0;i<3;i++)
+    {
+        QColor color;
+
+        switch(i)
+        {
+            case 0:
+                color=Qt::darkGreen;
+            break;
+            case 1:
+                color=Qt::darkRed;
+            break;
+            case 2:
+                color=Qt::darkBlue;
+            break;
+        }
+
+        QPen pen;
+        pen.setColor(color);
+        pen.setWidth(2);
+        pen.setCapStyle(Qt::RoundCap);
+        pen.setJoinStyle(Qt::RoundJoin);
+        int lastX=0,lastY=0;
+
+        for(int i=0;i<20;i++)
+        {
+            int newHeight=qrand()%48;
+            scene->addLine(lastX,lastY,lastX+10,newHeight,pen);
+            lastX+=10;
+            lastY=newHeight;
+        }
+    }
+
+    QGraphicsTextItem* textItem = new QGraphicsTextItem();
+    textItem->setPos(60,0);
+    textItem->setHtml("<font size=\"14\"><b>DEMO</b></font>");
+    //textItem->setOpacity(0.6);
+    scene->addItem(textItem);
+
+    gvSpeed->setScene(scene);
+    gvSpeed->fitInView(scene->sceneRect());
+    /* /DEMO */
 }
 
 void GroupTreeWidget::setExpanded(bool expanded)

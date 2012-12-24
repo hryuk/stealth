@@ -8,8 +8,12 @@
 #include <QHeaderView>
 #include <QGraphicsView>
 #include <QGraphicsScene>
+#include <QGraphicsTextItem>
+#include <QTime>
 
 #include "customtreewidget.h"
+#include "iteminfo.h"
+#include "connection.h"
 
 class GroupTreeWidget : public QWidget
 {
@@ -18,13 +22,13 @@ class GroupTreeWidget : public QWidget
 public:
     explicit GroupTreeWidget(bool expanded,QWidget *parent = 0);
     ~GroupTreeWidget();
+    CustomTreeWidget* treewidget;
 
 private:
     bool expanded;
     QTimer* timer;
     QRect lastFrameSize;
-    int AnimationSteps;
-    CustomTreeWidget* treewidget;
+    int AnimationSteps;   
     QFrame* frame;
     QLabel* iconLabel;
 
@@ -35,6 +39,7 @@ private slots:
 public slots:
     void setExpanded(bool expanded);
     bool isExpanded();
+    void addItem(Connection*);
 
 signals:
     void expandedChanged(GroupTreeWidget* newExpanded);

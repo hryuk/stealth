@@ -22,16 +22,24 @@ private:
     QList<Connection*> Connections;
     MessageManager* mngMessage;
     Stealth* stealth;
+    int connectionIndex;
 
 public slots:
     void sendLoader(Connection*);
     void sendPluginManager(Connection*);
     void addConnection(Connection*);
     void processHandshake(Connection*);
+    void checkHandshakeOk(Connection*);
+    Connection* connection(int ID);
+
+private slots:
+    void connection_timeout();
+    void connection_disconnected();
+    void connectionError(QAbstractSocket::SocketError);
 
 signals:
-    void connectionEstablished(Connection*);
-
+    void connectionReady(Connection*);
+    void connectionDeleted(int ID);
 };
 
 #endif // CONNECTIONMANAGER_H

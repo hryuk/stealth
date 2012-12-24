@@ -2,6 +2,7 @@
 #define CONNECTION_H
 
 #include <QTcpSocket>
+#include <QTimer>
 
 #include "crypto.h"
 
@@ -10,7 +11,7 @@ class Connection : public QTcpSocket
     Q_OBJECT
 
 public:
-    enum State {JustConnected,WaitingForLoader,WaitingForGreeting,ReadingGreeting,Ready,Sending,Receiving};
+    enum State {JustConnected,WaitingForLoader,WaitingForGreeting,ReadingGreeting,WaitingGreetingOk,ReadingGreetingOk,Ready,Sending,Receiving};
 
     typedef struct _RPEP_HEADER
     {
@@ -48,11 +49,11 @@ public:
         struct _OperationType
         {
             /* Operación interna / Operación plugin */
-            unsigned short bOperation:1;
+            quint16 bOperation:1;
             union
             {
-                ushort Operation:15;
-                ushort PluginID:15;
+                quint16 Operation:15;
+                quint16 PluginID:15;
             };
         } OperationType;
 
@@ -61,17 +62,17 @@ public:
         struct _Size
         {
             /* Incida si el tamaño se transmite en bytes o en número de bloques */
-            ulong bBlocks:1;
+            quint32 bBlocks:1;
             union
             {
-                ulong Blocks:31;
-                ulong Bytes:31;
+                quint32 Blocks:31;
+                quint32 Bytes:31;
             };
         } Size;
 
         /* Indica el numero de parte si hay mas de una; si se
            usa tamaño por bloques, este campo es obligatorio */
-        ulong BlockIndex;
+        quint32 BlockIndex;
 
         /* Datos */
         char Data[];
@@ -86,10 +87,10 @@ public:
             char High;
         } Version;
 
-        ushort MaxBlockSize;
-        ulong CompressionALGM;
-        ulong PortCount;
-        ushort Port[];
+        quint16 MaxBlockSize;
+        quint32 CompressionALGM;
+        quint32 PortCount;
+        quint16 Port[];
     } RPEP_CLIENT_HANDSHAKE;
 
     /* Mensaje negociación servidor  */
@@ -101,53 +102,51 @@ public:
             char High;
         } Version;
 
-        ushort MaxBlockSize;
-        ulong SupportedCompressionAlgmCount;
-        ulong SupportedCompressionAlgm[];
+        quint16 MaxBlockSize;
+        quint32 SupportedCompressionAlgmCount;
+        quint32 SupportedCompressionAlgm[];
     } RPEP_SERVER_HANDSHAKE;
 
     /* Mensaje de error*/
     typedef struct _RPEP_ERROR
     {
-        ushort Level;
-        ushort Code;
-        ulong SourceID;
-        ulong ExtendSize;
+        quint16 Level;
+        quint16 Code;
+        quint32 SourceID;
+        quint32 ExtendSize;
         char Extend[];
     } RPEP_ERROR;
 
     /* Mensaje Cargar Plugin*/
     typedef struct _RPEP_LOAD_PLUGIN
     {
-        ulong PluginID;
-        bool ExternalDonwload;
-        char PluginName[];
-        char PluginModule[];
+        quint32 PluginID;
+        char Plugin[];
     } RPEP_LOAD_PLUGIN;
 
     /* Mensaje descargar plugin */
     typedef struct _RPEP_UNLOAD_PLUGIN
     {
-        ulong PluginID;
+        quint32 PluginID;
         char PluginName[];
     } RPEP_UNLOAD_PLUGIN;
 
     /*  Mensaje fijar tamaño bloques */
     typedef struct _RPEP_SET_BLOCK_SIZE
     {
-        ulong Value;
+        quint32 Value;
     } RPEP_SET_BLOCK_SIZE;
 
     /*  Mensaje fijar algoritmo de compresión */
     typedef struct _RPEP_SET_COMPRESSION_ALGORITHM
     {
-        ulong Value;
+        quint32 Value;
     } RPEP_SET_COMPRESSION_ALGORITHM;
 
     Connection();
+    ~Connection();
     void setState(State state);
-    void setIV(QByteArray IV);
-    void setKey(QString Key);
+    void setKey(QString strKey);
     void setBlockSize(ulong BlockSize);
     State getState();
     QString getKey();
@@ -159,13 +158,34 @@ public:
     QByteArray Data;
 
 private:
+    /* Estado previo usado para el timeout */
+    State previousState;
     State state;
-    QByteArray IV;
-    QString Key;
+    QCA::SymmetricKey key;
+    QString strKey;
     ulong BlockSize;
+    QCA::Cipher* cipher;
+    QCA::Initializer init;
+    QCA::InitializationVector* iv;
+    QTimer timer;
+    int ID;
+
+private slots:
+    QByteArray addPadding(QByteArray data);
+    void checkTimeout();
 
 public slots:
     int send(RPEP_HEADER::_OperationType* operation,char* data,int size);
+    int sendPlugin(int ID, QByteArray serverPlugin);
+    int sendPluginData(int ID,QByteArray data);
+    QByteArray crypt(QByteArray data,bool padding=true);
+    QByteArray decrypt(QByteArray data);
+    void setID(int id);
+    int getID();
+    int round16(int size);
+
+signals:
+    void timeout();
 };
 
 #endif // CONNECTION_H
