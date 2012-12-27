@@ -26,7 +26,7 @@
 **    }
 *###############################################################################*/
 #define MELT
-#undef MELT
+//#undef MELT
 
 /*###############################################################################
 ** Error_Check:
@@ -37,7 +37,7 @@
 **    }
 *###############################################################################*/
 #define ERR_CHECK
-//#undef ERR_CHECK
+#undef ERR_CHECK
 
 /*###############################################################################
 ** Control de errores:
@@ -68,8 +68,8 @@
 *###############################################################################*/
 #define SC_DELTA
 #define SC_NULL
-//#undef SC_NULL
-//#undef SC_DELTA
+#undef SC_NULL
+#undef SC_DELTA
 
 #pragma message("[i] COMPILANDO CON LAS SIGUIENTES FLAGS ACTIVADAS:")
 
@@ -108,20 +108,22 @@
 #define EMIT_WORD(d) EMIT_BYTE(((d) >> 0)) EMIT_BYTE(((d) >> 8))
 #define EMIT_DWORD(d)EMIT_WORD(((d) >> 0)) EMIT_WORD(((d) >> 16))
 
+
+#define STACK_OFFSET 0x40
 /*###############################################################################
 ** API_DEFINE:
 **    Macro que genera el offset de la función en el stack de APIs y calcula su
 **    hash.
 *###############################################################################*/
 #define API_DEFINE(name, SEQ)\
-    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)-0x40};\
+    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)-STACK_OFFSET};\
     HASH_AND_EMIT(SEQ)
 /*###############################################################################
 ** VAR_DEFINE:
 **    Macro que genera el offset de una variable en el stack de APIs.
 *###############################################################################*/
 #define VAR_DEFINE(name)\
-    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)-0x40};
+    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)-STACK_OFFSET};
 
 /*###############################################################################
 ** CALC_STACKSIZE:

