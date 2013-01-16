@@ -147,7 +147,9 @@ load_next_target:
         repne scasb                     // Buscamos el final de la cadena
         mov  esi, edi                   //ESI = EDI
         lodsw                           //EAX = AX = PORT(n+1); ESI = &HOST(n+1)
-        mov  [ebp+_PORT], eax           //
+        shl  eax, 16                    //v
+        mov  al, AF_INET                //v
+        mov  [ebp+_PORT], eax           //> Formateamos el puerto y guardamos
         mov  [ebp+_pHOST], esi          //
         test eax, eax                   //Comprobamos si es el último target
         jnz  get_out                    //Si no es el último devolvemos
@@ -589,10 +591,7 @@ connect_loop:
 
         //Construimos la sockaddr_in en la pila
         push eax                        //push IP
-        mov  eax, [ebp+_PORT]           //v
-        shl  eax, 0x8                   //v
-        mov  al, 2                      //v
-        push eax                        //>push PORT
+        push [ebp+_PORT]                //>push PORT
         mov  ebx, esp                   //EBX = &sockaddr_in
 
         push 0x10                       //v size(sockaddr_in)
