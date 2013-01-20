@@ -545,7 +545,7 @@ void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYP
         leave 
         ret 0x10
     }
-    return;
+    //return;
 }
 
 //Valor escrito por el PM en caso de haber sido guardado offline

