@@ -151,6 +151,7 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
 
 int Connection::sendPlugin(int ID,QByteArray serverPlugin)
 {
+    qWarning()<<"Tamaño plugin: "<<serverPlugin.size();
     qDebug("Enviando plugin");
     Connection::RPEP_HEADER::_OperationType* opType=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType));
     opType->bOperation=true;

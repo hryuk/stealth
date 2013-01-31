@@ -66,6 +66,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
         <widget class="QPushButton" name="pushButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="toolTip">
           <string/>
          </property>
@@ -86,6 +89,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
        </item>
        <item row="0" column="1">
         <widget class="QPushButton" name="pushButton_2">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="toolTip">
           <string/>
          </property>
@@ -119,6 +125,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
        </item>
        <item row="0" column="3">
         <widget class="QPushButton" name="pushButton_4">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -216,8 +225,43 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
       <property name="styleSheet">
        <string notr="true">#centralFrame {
 border: none;
-background: white;
-}</string>
+	background-color: white;
+}
+
+#centralFrame QPushButton {
+color: #efefef;
+border: 1px solid #222222;
+border-radius: 8px;
+padding: 6px;
+background: qradialgradient(cx: 0.3, cy: -0.4,
+fx: 0.3, fy: -0.4,
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
+min-width: 80px;
+}
+
+#centralFrame QPushButton:pressed {
+background: qradialgradient(cx: 0.4, cy: -0.1,
+fx: 0.4, fy: -0.1,
+radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
+}
+
+#centralFrame QPushButton:disabled
+{
+background: qradialgradient(cx: 0.4, cy: -0.1,
+fx: 0.4, fy: -0.1,
+radius: 1.35, stop: 0 #ddd, stop: 1 #999)
+}
+
+#centralFrame QHeaderView::section {
+background: qradialgradient(cx: 0.3, cy: -0.4,
+fx: 0.3, fy: -0.4,
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
+     color: #efefef;
+     padding: 4px;
+     border:0.5px solid black;
+border-radius: 2px;
+border-style: outset;
+ }</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>

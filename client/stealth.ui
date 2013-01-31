@@ -176,7 +176,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
          <item>
           <widget class="QPushButton" name="btnPlugins">
            <property name="enabled">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -217,7 +217,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
          <item>
           <widget class="QPushButton" name="btnServer">
            <property name="enabled">
-            <bool>true</bool>
+            <bool>false</bool>
            </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -296,6 +296,13 @@ min-width: 80px;
 background: qradialgradient(cx: 0.4, cy: -0.1,
 fx: 0.4, fy: -0.1,
 radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
+}
+
+#centralFrame QPushButton:disabled
+{
+background: qradialgradient(cx: 0.4, cy: -0.1,
+fx: 0.4, fy: -0.1,
+radius: 1.35, stop: 0 #ddd, stop: 1 #999)
 }
 
 #centralFrame QHeaderView::section {

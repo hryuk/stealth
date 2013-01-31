@@ -47,7 +47,6 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     slidingStackedWidget->addWidget(stab3);
     slidingStackedWidget->addWidget(stab4);
     slidingStackedWidget->setSpeed(250);
-    slidingStackedWidget->setVerticalMode(true);
 
     ui->centralFrameLayout->addWidget(slidingStackedWidget);
 
@@ -119,10 +118,10 @@ void Stealth::closeCurrentExpanded(GroupTreeWidget* newExpanded)
 
 void Stealth::addConnection(Connection *connection)
 {
+    stab1->treewidget->addItem(connection);
+
     PluginWindow* pluginWindow=new PluginWindow(connection,this);
     this->pluginWindows.append(pluginWindow);
-
-    stab1->treewidget->addItem(connection);
 }
 
 void Stealth::deleteConnection(int ID)
