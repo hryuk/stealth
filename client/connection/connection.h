@@ -153,8 +153,8 @@ public:
     QByteArray getIV();
     ulong getBlockSize();
 
-    Connection::RPEP_HEADER NextBlockHeader;
-    Connection::RPEP_SERVER_HANDSHAKE HandShake;
+    Connection::RPEP_HEADER* NextBlockHeader;
+    Connection::RPEP_SERVER_HANDSHAKE* HandShake;
     QByteArray Data;
 
 private:

@@ -20,6 +20,11 @@
 #include "pluginmanager.h"
 #include "pluginwindow.h"
 #include "debugshell.h"
+#include "stealthtab1.h"
+#include "stealthtab2.h"
+#include "stealthtab3.h"
+#include "stealthtab4.h"
+#include "slidingstackedwidget.h"
 
 class MessageManager;
 class ConnectionManager;
@@ -39,13 +44,17 @@ public:
     void showEvent(QShowEvent*);
 
 private:
-    QList<PluginWindow*> pluginWindows;
     Server* server;
     ConnectionManager* connectionManager;
     MessageManager* messageManager;
     PluginManager* pluginManager;
-    GroupTreeWidget* treewidget;
     Ui::Stealth *ui;
+    StealthTab1* stab1;
+    StealthTab2* stab2;
+    StealthTab3* stab3;
+    StealthTab4* stab4;
+    SlidingStackedWidget* slidingStackedWidget;
+    QList<PluginWindow*> pluginWindows;
     bool bdebugShell;
 
 public slots:
@@ -58,6 +67,10 @@ private slots:
     void processPluginMessage(Connection*,int PluginID,QByteArray data);
     void debugSheell_destroyed();
     void deleteConnection(int ID);
+    void on_btnConnections_toggled(bool checked);
+    void on_btnConfiguration_toggled(bool checked);
+    void on_btnPlugins_toggled(bool checked);
+    void on_btnServer_toggled(bool checked);
 };
 
 #endif // STEALTH_H

@@ -20,25 +20,6 @@ void MessageManager::readMessage()
         qDebug("Leyendo OK");
         if(connection->bytesAvailable()<16) return;
 
-        /*
-        char ok;
-        connection->read(&ok,1);
-
-        qDebug("OK leido, comprobando OK");
-        if(ok==0x01)
-        {
-            qDebug("OK correcto");
-            emit receivedLoaderOk(connection);
-        }
-        else
-        {
-            qDebug("OK incorrecto");
-            connection->readAll();
-        }
-        return;
-
-        */
-
         QByteArray cmsgOk=connection->read(16);
 
         QByteArray msgOk=connection->decrypt(cmsgOk);
@@ -64,19 +45,19 @@ void MessageManager::readMessage()
         if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
 
         qDebug("     -Leyendo cabecera del handshake");
-        if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
+        if(in.readRawData((char*)connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
 
         qDebug("     -Comprobando bOperation");
-        if(!connection->NextBlockHeader.OperationType.bOperation) return;
+        if(!connection->NextBlockHeader->OperationType.bOperation) return;
 
         qDebug("     -Comprobando Operation");
-        if(connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::ServerHandshake) return;
+        if(connection->NextBlockHeader->OperationType.Operation!=Connection::RPEP_HEADER::ServerHandshake) return;
 
         qDebug("     -Comprobando Tamaño");
-        qDebug()<<"    -Tamaño recibido: 0x"+QString::number(connection->NextBlockHeader.Size.Bytes);
+        qDebug()<<"    -Tamaño recibido: 0x"+QString::number(connection->NextBlockHeader->Size.Bytes);
         qDebug()<<"    -Tamaño esperado: 0x"+QString::number(sizeof(Connection::RPEP_SERVER_HANDSHAKE));
         qDebug()<<"    -Tamaño redondeado: 0x"+QString::number(connection->round16(sizeof(Connection::RPEP_SERVER_HANDSHAKE)));
-        if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=connection->round16(sizeof(Connection::RPEP_SERVER_HANDSHAKE)))
+        if(connection->NextBlockHeader->Size.bBlocks || connection->NextBlockHeader->Size.Bytes!=connection->round16(sizeof(Connection::RPEP_SERVER_HANDSHAKE)))
         {
             connection->readAll();
             return;
@@ -87,17 +68,17 @@ void MessageManager::readMessage()
 
         qDebug("Leyendo Handshake");
 
-        if(connection->bytesAvailable()<connection->NextBlockHeader.Size.Bytes) return;
+        if(connection->bytesAvailable()<connection->NextBlockHeader->Size.Bytes) return;
 
-        connection->Data.resize(connection->NextBlockHeader.Size.Bytes);
-        if(in.readRawData(connection->Data.data(),connection->NextBlockHeader.Size.Bytes)!=connection->NextBlockHeader.Size.Bytes)
+        connection->Data.resize(connection->NextBlockHeader->Size.Bytes);
+        if(in.readRawData(connection->Data.data(),connection->NextBlockHeader->Size.Bytes)!=connection->NextBlockHeader->Size.Bytes)
         {
             connection->setState(Connection::WaitingForGreeting);
             return;
         }
 
         connection->Data=connection->decrypt(connection->Data);
-        connection->NextBlockHeader.Size.Bytes=connection->Data.size();
+        connection->NextBlockHeader->Size.Bytes=connection->Data.size();
 
         emit receivedHandshake(connection);
         return;
@@ -111,24 +92,24 @@ void MessageManager::readMessage()
 
         qDebug("    -Leyendo cabecera");
 
-        if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
+        if(in.readRawData((char*)connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
 
         qDebug("    -Comprobando bOperation");
-        if(!connection->NextBlockHeader.OperationType.bOperation) return;
+        if(!connection->NextBlockHeader->OperationType.bOperation) return;
 
         qDebug("    -Comprobando Operation");
-        if(connection->NextBlockHeader.OperationType.Operation!=Connection::RPEP_HEADER::Error) return;
+        if(connection->NextBlockHeader->OperationType.Operation!=Connection::RPEP_HEADER::Error) return;
 
         qDebug("    -Comprobando Tamaño");
-        if(connection->NextBlockHeader.Size.bBlocks || connection->NextBlockHeader.Size.Bytes!=connection->round16(sizeof(Connection::RPEP_ERROR))) return;
+        if(connection->NextBlockHeader->Size.bBlocks || connection->NextBlockHeader->Size.Bytes!=connection->round16(sizeof(Connection::RPEP_ERROR))) return;
 
         qDebug("    -Cabecera correcta");
         qDebug("Leyendo confirmación de handshake");
 
-        if(connection->bytesAvailable()<connection->NextBlockHeader.Size.Bytes) return;
+        if(connection->bytesAvailable()<connection->NextBlockHeader->Size.Bytes) return;
 
-        connection->Data.resize(connection->NextBlockHeader.Size.Bytes);
-        if(in.readRawData(connection->Data.data(),connection->NextBlockHeader.Size.Bytes)!=connection->NextBlockHeader.Size.Bytes)
+        connection->Data.resize(connection->NextBlockHeader->Size.Bytes);
+        if(in.readRawData(connection->Data.data(),connection->NextBlockHeader->Size.Bytes)!=connection->NextBlockHeader->Size.Bytes)
         {
             connection->readAll();
             connection->setState(Connection::WaitingForGreeting);
@@ -136,7 +117,7 @@ void MessageManager::readMessage()
         }
 
         connection->Data=connection->decrypt(connection->Data);
-        connection->NextBlockHeader.Size.Bytes=connection->Data.size();
+        connection->NextBlockHeader->Size.Bytes=connection->Data.size();
 
         qDebug("Confirmación de handshake leída");
 
@@ -153,9 +134,9 @@ void MessageManager::readMessage()
         qDebug()<<"TEST1"<<connection->bytesAvailable();
 
         if(connection->bytesAvailable()<(uint)sizeof(Connection::RPEP_HEADER)) return;
-        if(in.readRawData((char*)&connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
+        if(in.readRawData((char*)connection->NextBlockHeader,sizeof(Connection::RPEP_HEADER))!=sizeof(Connection::RPEP_HEADER)) return;
 
-        if(connection->NextBlockHeader.Size.bBlocks)
+        if(connection->NextBlockHeader->Size.bBlocks)
         {
             qWarning()<<"Mensaje por bloques no implementado aún, descartado";
             connection->readAll();
@@ -164,17 +145,17 @@ void MessageManager::readMessage()
 
         qDebug("Cabecera leída, identificando mensaje");
 
-        if(!connection->NextBlockHeader.OperationType.bOperation)
+        if(!connection->NextBlockHeader->OperationType.bOperation)
         {
-            qDebug()<<"Mensaje para el plugin #"+QString::number(connection->NextBlockHeader.OperationType.PluginID);
+            qDebug()<<"Mensaje para el plugin #"+QString::number(connection->NextBlockHeader->OperationType.PluginID);
 
-            QByteArray msg=connection->read(connection->NextBlockHeader.Size.Bytes);
+            QByteArray msg=connection->read(connection->NextBlockHeader->Size.Bytes);
 
             msg=connection->decrypt(msg);
-            connection->NextBlockHeader.Size.Bytes=connection->Data.size();
+            connection->NextBlockHeader->Size.Bytes=connection->Data.size();
 
-            qDebug()<<"Mensaje leído, enviando mensaje al plugin #"+QString::number(connection->NextBlockHeader.OperationType.PluginID);
-            emit receivedPluginMessage(connection,connection->NextBlockHeader.OperationType.PluginID,msg);
+            qDebug()<<"Mensaje leído, enviando mensaje al plugin #"+QString::number(connection->NextBlockHeader->OperationType.PluginID);
+            emit receivedPluginMessage(connection,connection->NextBlockHeader->OperationType.PluginID,msg);
         }
     }
 }

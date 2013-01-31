@@ -5,8 +5,10 @@ Connection::Connection()
     this->previousState=JustConnected;
     this->state=JustConnected;
     this->ID=0;
-    this->NextBlockHeader.Size.Bytes=0;
-    this->NextBlockHeader.Size.Blocks=0;
+    this->HandShake=0;
+    this->NextBlockHeader=(Connection::RPEP_HEADER*)malloc(sizeof(Connection::RPEP_HEADER));
+    this->NextBlockHeader->Size.Bytes=0;
+    this->NextBlockHeader->Size.Blocks=0;
     //FIXME: Cambiar por contraseña de conexión
     this->strKey=QString("karcrack:1234");
 
@@ -35,6 +37,9 @@ Connection::~Connection()
 
     //FIXME: Comprobar por que no puedo eliminar el objeto cipher
     //delete this->cipher;
+
+    if(HandShake) free(HandShake);
+    free(NextBlockHeader);
 
     qWarning()<<"Conexion eliminada";
 }
@@ -93,16 +98,16 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
 
     qDebug()<<"    -Tamaño mensaje: 0x"+QString::number(size,16);
 
-    uint headerSize=size/HandShake.MaxBlockSize?sizeof(RPEP_HEADER)+HandShake.MaxBlockSize:sizeof(RPEP_HEADER)+size;
+    uint headerSize=size/HandShake->MaxBlockSize?sizeof(RPEP_HEADER)+HandShake->MaxBlockSize:sizeof(RPEP_HEADER)+size;
     RPEP_HEADER* Header=(RPEP_HEADER*)malloc(headerSize);
 
     Header->OperationType=*operation;
     Header->BlockIndex=0;
-    Header->Size.bBlocks=size/HandShake.MaxBlockSize?true:false;
+    Header->Size.bBlocks=size/HandShake->MaxBlockSize?true:false;
 
     if(Header->Size.bBlocks)
     {
-        Header->Size.Blocks=size/HandShake.MaxBlockSize+(size%HandShake.MaxBlockSize?1:0);
+        Header->Size.Blocks=size/HandShake->MaxBlockSize+(size%HandShake->MaxBlockSize?1:0);
         qDebug()<<"    -Envío en varios bloques";
     }
     else
@@ -111,13 +116,13 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
         qDebug()<<"    -Envío en un solo bloque";
     }
 
-    if(size/HandShake.MaxBlockSize)
+    if(size/HandShake->MaxBlockSize)
     {
-        for(int i=0;i<(size/HandShake.MaxBlockSize);i++)
+        for(int i=0;i<(size/HandShake->MaxBlockSize);i++)
         {
-            memcpy(Header->Data,&data[Header->BlockIndex*HandShake.MaxBlockSize],HandShake.MaxBlockSize);
+            memcpy(Header->Data,&data[Header->BlockIndex*HandShake->MaxBlockSize],HandShake->MaxBlockSize);
 
-            if(write((char*)Header,sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+HandShake.MaxBlockSize)
+            if(write((char*)Header,sizeof(RPEP_HEADER)+HandShake->MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+HandShake->MaxBlockSize)
             {
                 qWarning()<<"No se pudo enviar el mensaje #1";
                 return 0;
@@ -129,9 +134,9 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
         }
     }
 
-    memcpy(Header->Data,&data[Header->BlockIndex*HandShake.MaxBlockSize],size%HandShake.MaxBlockSize);
+    memcpy(Header->Data,&data[Header->BlockIndex*HandShake->MaxBlockSize],size%HandShake->MaxBlockSize);
 
-    if(write((char*)Header,sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+size%HandShake.MaxBlockSize)
+    if(write((char*)Header,sizeof(RPEP_HEADER)+size%HandShake->MaxBlockSize)!=(uint)sizeof(RPEP_HEADER)+size%HandShake->MaxBlockSize)
     {
         qWarning()<<"No se pudo enviar el mensaje #2";
         return 0;

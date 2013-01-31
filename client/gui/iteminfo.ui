@@ -54,7 +54,7 @@
         <string notr="true"/>
        </property>
        <property name="text">
-        <string>Zero</string>
+        <string>Usuario</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>
@@ -64,7 +64,7 @@
      <item row="0" column="2">
       <widget class="QLabel" name="label_3">
        <property name="text">
-        <string>Windows XP</string>
+        <string>Windows 7</string>
        </property>
        <property name="alignment">
         <set>Qt::AlignCenter</set>

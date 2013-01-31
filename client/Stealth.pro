@@ -21,7 +21,12 @@ SOURCES += main.cpp\
     plugins/pluginmanager.cpp \
     gui/iteminfo.cpp \
     gui/pluginwindow.cpp \
-    gui/debugshell.cpp
+    gui/debugshell.cpp \
+    gui/stealthtab1.cpp \
+    gui/stealthtab2.cpp \
+    gui/stealthtab3.cpp \
+    gui/stealthtab4.cpp \
+    gui/slidingstackedwidget.cpp
 
 HEADERS  += gui/stealth.h \
     connection/connectionmanager.h \
@@ -35,12 +40,21 @@ HEADERS  += gui/stealth.h \
     plugins/plugininterface.h \
     gui/iteminfo.h \
     gui/pluginwindow.h \
-    gui/debugshell.h
+    gui/debugshell.h \
+    gui/stealthtab1.h \
+    gui/stealthtab2.h \
+    gui/stealthtab3.h \
+    gui/stealthtab4.h \
+    gui/slidingstackedwidget.h
 
 FORMS+= stealth.ui \
     gui/iteminfo.ui \
     gui/pluginwindow.ui \
-    gui/debugshell.ui
+    gui/debugshell.ui \
+    gui/stealthtab1.ui \
+    gui/stealthtab2.ui \
+    gui/stealthtab3.ui \
+    gui/stealthtab4.ui
 
 RESOURCES += \
     Resource.qrc

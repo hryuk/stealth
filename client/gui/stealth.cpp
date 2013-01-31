@@ -33,6 +33,36 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 
     QCA::Initializer init;
 
+    /** TEST **/
+
+
+    stab1=new StealthTab1();
+    stab2=new StealthTab2();
+    stab3=new StealthTab3();
+    stab4=new StealthTab4();
+
+    slidingStackedWidget=new SlidingStackedWidget(this);
+    slidingStackedWidget->addWidget(stab1);
+    slidingStackedWidget->addWidget(stab2);
+    slidingStackedWidget->addWidget(stab3);
+    slidingStackedWidget->addWidget(stab4);
+    slidingStackedWidget->setSpeed(250);
+    slidingStackedWidget->setVerticalMode(true);
+
+    ui->centralFrameLayout->addWidget(slidingStackedWidget);
+
+    /** /TEST **/
+
+    //connect(this,SIGNAL(destroyed()),treewidget,SLOT(deleteLater()));
+    //connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
+
+
+    connect(stab1->treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));
+
+
+    this->bdebugShell=false;
+
+
     //TODO: Mover a main.cpp?
     server=new Server();
     qDebug()<<"Creado Server()";
@@ -47,14 +77,6 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 
     //FIXME: Mover esto a otra parte más adecuada
     connect(messageManager,SIGNAL(receivedPluginMessage(Connection*,int,QByteArray)),this,SLOT(processPluginMessage(Connection*,int,QByteArray)));
-
-    treewidget=new GroupTreeWidget(true);
-    ui->centralFrameLayout->addWidget(treewidget);
-    connect(this,SIGNAL(destroyed()),treewidget,SLOT(deleteLater()));
-    //connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
-
-    connect(treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));
-
     connect(connectionManager,SIGNAL(connectionDeleted(int)),this,SLOT(deleteConnection(int)));
 }
 
@@ -65,7 +87,7 @@ Stealth::~Stealth()
 
 void Stealth::showEvent(QShowEvent *)
 {
-    this->bdebugShell=false;
+
 }
 
 void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int)
@@ -100,14 +122,14 @@ void Stealth::addConnection(Connection *connection)
     PluginWindow* pluginWindow=new PluginWindow(connection,this);
     this->pluginWindows.append(pluginWindow);
 
-    this->treewidget->addItem(connection);
+    stab1->treewidget->addItem(connection);
 }
 
 void Stealth::deleteConnection(int ID)
 {
-    for(int i=0;i<treewidget->treewidget->topLevelItemCount();i++)
+    for(int i=0;i<stab1->treewidget->treewidget->topLevelItemCount();i++)
     {
-        QTreeWidgetItem* item=treewidget->treewidget->topLevelItem(i);
+        QTreeWidgetItem* item=stab1->treewidget->treewidget->topLevelItem(i);
         QVariant id=item->data(0,Qt::UserRole);
 
         if(ID==id.toInt())
@@ -156,4 +178,24 @@ void Stealth::on_btnDebug_clicked()
 void Stealth::debugSheell_destroyed()
 {
     this->bdebugShell=false;
+}
+
+void Stealth::on_btnConnections_toggled(bool checked)
+{
+    if(checked) slidingStackedWidget->slideInIdx(0);
+}
+
+void Stealth::on_btnConfiguration_toggled(bool checked)
+{
+    if(checked) slidingStackedWidget->slideInIdx(1);
+}
+
+void Stealth::on_btnPlugins_toggled(bool checked)
+{
+    if(checked) slidingStackedWidget->slideInIdx(2);
+}
+
+void Stealth::on_btnServer_toggled(bool checked)
+{
+    if(checked) slidingStackedWidget->slideInIdx(3);
 }

@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Stealth - Demo</string>
+   <string>Demo</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -40,19 +40,21 @@
       <property name="styleSheet">
        <string notr="true">#leftFrame
 {
-	background-color:#626262;
+	background-color:#2d2d30;
 }
 
 QPushButton {
 
 text-align: left;
-color: #ddd;
+color: #999999;
 border: 0px solid #555;
 padding: 5px;
 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-stop: 0 #a6a6a6, stop: 0.08 #7f7f7f,
-stop: 0.39999 #717171, stop: 0.4 #626262,
-stop: 0.9 #4c4c4c, stop: 1 #333333);
+stop: 0 #707070, 
+stop: 0.08 #555555,
+stop: 0.4 #2d2d30,
+stop: 0.97 #333333
+ stop: 1 #000000);
 min-width: 80px;
 }
 
@@ -90,7 +92,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
           <enum>QLayout::SetFixedSize</enum>
          </property>
          <item>
-          <widget class="QPushButton" name="pushButton_3">
+          <widget class="QPushButton" name="btnConnections">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
              <horstretch>0</horstretch>
@@ -111,7 +113,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
-             <normaloff>:/res/img/connection_2.png</normaloff>:/res/img/connection_2.png</iconset>
+             <normaloff>:/res/img/blue-iconset/eye.png</normaloff>:/res/img/blue-iconset/eye.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -131,9 +133,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_5">
+          <widget class="QPushButton" name="btnConfiguration">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -155,7 +157,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
-             <normaloff>:/res/img/settings_1.png</normaloff>:/res/img/settings_1.png</iconset>
+             <normaloff>:/res/img/blue-iconset/config.png</normaloff>:/res/img/blue-iconset/config.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -164,7 +166,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             </size>
            </property>
            <property name="checkable">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="autoExclusive">
             <bool>true</bool>
@@ -172,9 +174,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_4">
+          <widget class="QPushButton" name="btnPlugins">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -196,7 +198,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
-             <normaloff>:/res/img/plugin.png</normaloff>:/res/img/plugin.png</iconset>
+             <normaloff>:/res/img/blue-iconset/adressbook.png</normaloff>:/res/img/blue-iconset/adressbook.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -205,7 +207,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             </size>
            </property>
            <property name="checkable">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="autoExclusive">
             <bool>true</bool>
@@ -213,9 +215,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_2">
+          <widget class="QPushButton" name="btnServer">
            <property name="enabled">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -237,7 +239,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
-             <normaloff>:/res/img/server_add.png</normaloff>:/res/img/server_add.png</iconset>
+             <normaloff>:/res/img/blue-iconset/newfile.png</normaloff>:/res/img/blue-iconset/newfile.png</iconset>
            </property>
            <property name="iconSize">
             <size>
@@ -246,7 +248,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             </size>
            </property>
            <property name="checkable">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="autoExclusive">
             <bool>true</bool>
@@ -276,8 +278,36 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
       <property name="styleSheet">
        <string notr="true">#centralFrame {
 border: none;
-background: white;
-}</string>
+	background-color: white;
+}
+
+#centralFrame QPushButton {
+color: #efefef;
+border: 1px solid #222222;
+border-radius: 8px;
+padding: 6px;
+background: qradialgradient(cx: 0.3, cy: -0.4,
+fx: 0.3, fy: -0.4,
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
+min-width: 80px;
+}
+
+#centralFrame QPushButton:pressed {
+background: qradialgradient(cx: 0.4, cy: -0.1,
+fx: 0.4, fy: -0.1,
+radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
+}
+
+#centralFrame QHeaderView::section {
+background: qradialgradient(cx: 0.3, cy: -0.4,
+fx: 0.3, fy: -0.4,
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
+     color: #efefef;
+     padding: 4px;
+     border:0.5px solid black;
+border-radius: 2px;
+border-style: outset;
+ }</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
@@ -307,19 +337,21 @@ background: white;
        <string notr="true">#topFrame {
 border: none;
 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-stop: 0 #a6a6a6, stop: 0.08 #7f7f7f,
-stop: 0.39999 #717171, stop: 0.4 #626262,
-stop: 0.9 #4c4c4c, stop: 1 #333333);
+stop: 0 #707070, 
+stop: 0.08 #555555,
+stop: 0.4 #2d2d30,
+stop: 0.97 #333333,
+ stop: 1 #000000);
 }
 
 #topFrame QPushButton {
-color: #333;
-border: 2px solid #555;
+color: #999999;
+border: 1px solid #222222;
 border-radius: 11px;
 padding: 5px;
 background: qradialgradient(cx: 0.3, cy: -0.4,
 fx: 0.3, fy: -0.4,
-radius: 1.35, stop: 0 #fff, stop: 1 #888);
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
 min-width: 80px;
 }
 

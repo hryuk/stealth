@@ -92,13 +92,15 @@ void ConnectionManager::processHandshake(Connection* connection)
 {
     qDebug()<<"Procesando Handshake";
     if(connection->getState()!=Connection::ReadingGreeting) return;
-    if(connection->Data.size()!=connection->NextBlockHeader.Size.Bytes) return;
+    if(connection->Data.size()!=connection->NextBlockHeader->Size.Bytes) return;
 
     //Guardamos el HandShake
-    connection->HandShake=*(Connection::RPEP_SERVER_HANDSHAKE*)connection->Data.data();
+    connection->HandShake=(Connection::RPEP_SERVER_HANDSHAKE*)malloc(sizeof(Connection::RPEP_SERVER_HANDSHAKE));
+    memcpy(connection->HandShake,connection->Data.data(),sizeof(Connection::RPEP_SERVER_HANDSHAKE));
+    //connection->HandShake=(Connection::RPEP_SERVER_HANDSHAKE*)connection->Data.data();
 
     /* Nos aseguramos de que el tamaño maximo cumple con un mínimo */
-    if(connection->HandShake.MaxBlockSize<0x400)
+    if(connection->HandShake->MaxBlockSize<0x400)
     {
         qWarning("ClientHandShake.MaxBlockSize inválido");
         return;
@@ -116,7 +118,7 @@ void ConnectionManager::processHandshake(Connection* connection)
     ClientHandShake=(Connection::RPEP_CLIENT_HANDSHAKE*)malloc(sizeof(Connection::RPEP_CLIENT_HANDSHAKE)+sizeof(ushort)*NUM_PORTS);
 
     ClientHandShake->CompressionALGM=0;
-    ClientHandShake->MaxBlockSize=connection->HandShake.MaxBlockSize;
+    ClientHandShake->MaxBlockSize=connection->HandShake->MaxBlockSize;
     //ClientHandShake->Port[0]=2000;
     ClientHandShake->PortCount=NUM_PORTS;
     ClientHandShake->Version.High=1;
@@ -146,7 +148,7 @@ void ConnectionManager::checkHandshakeOk(Connection* connection)
 {
     qDebug("Comprobando confirmación de handshake");
     if(connection->getState()!=Connection::ReadingGreetingOk) return;
-    if(connection->Data.size()!=connection->NextBlockHeader.Size.Bytes) return;
+    if(connection->Data.size()!=connection->NextBlockHeader->Size.Bytes) return;
 
     Connection::RPEP_ERROR ok=*(Connection::RPEP_ERROR*)connection->Data.data();
 
