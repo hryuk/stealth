@@ -12,6 +12,9 @@
 //No queremos el warning de EMMS, sabemos que estamos haciendo.
 #pragma warning(disable:4799)
 
+#define WINVER 0x0501
+#define _WIN32_WINNT 0x0501
+
 #include <Windows.h>
 #include <stdio.h>
 #include "macros.h"

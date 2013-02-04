@@ -17,7 +17,7 @@
     <UseDebugLibraries>false</UseDebugLibraries>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v110</PlatformToolset>
+    <PlatformToolset>v110_xp</PlatformToolset>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
@@ -57,8 +57,7 @@
       <SetChecksum>true</SetChecksum>
       <SectionAlignment>
       </SectionAlignment>
-      <MinimumRequiredVersion>
-      </MinimumRequiredVersion>
+      <MinimumRequiredVersion>5.1</MinimumRequiredVersion>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
