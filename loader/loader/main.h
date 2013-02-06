@@ -105,6 +105,7 @@ typedef struct SHELLCODE_CONTEXT{
     HCRYPTKEY                       hKey;
     /*LoadLibraryFromMemory_*/PVOID LLFM;
     /*FreeLibraryFromMemory_*/PVOID FLFM;
+    DWORD                           delta;
 }SHELLCODE_CONTEXT,*PSHELLCODE_CONTEXT;
 
 typedef int (WINAPI *InitPluginLoader)(PSHELLCODE_CONTEXT pSCC);

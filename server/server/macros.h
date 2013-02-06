@@ -62,7 +62,7 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 **    }
 *###############################################################################*/
 #define MELT
-//#undef MELT
+#undef MELT
 
 /*###############################################################################
 ** Error_Check:
@@ -73,7 +73,7 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 **    }
 *###############################################################################*/
 #define ERR_CHECK
-//#undef ERR_CHECK
+#undef ERR_CHECK
 
 /*###############################################################################
 ** Control de errores:
@@ -104,8 +104,8 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 *###############################################################################*/
 #define SC_DELTA
 #define SC_NULL
-//#undef SC_NULL
-//#undef SC_DELTA
+#undef SC_NULL
+#undef SC_DELTA
 
 #pragma message("[i] COMPILANDO CON LAS SIGUIENTES FLAGS ACTIVADAS:")
 

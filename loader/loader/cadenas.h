@@ -8,8 +8,7 @@
 		__emit 'D'
 		__emit 'L'
 		__emit 'L'
-		__emit 0
-
+		__emit 0
 
 #define smemset (LPCSTR)((PBYTE)Strings + 6)
 		__emit 'm'
@@ -18,8 +17,7 @@
 		__emit 's'
 		__emit 'e'
 		__emit 't'
-		__emit 0
-
+		__emit 0
 
 #define smemcpy (LPCSTR)((PBYTE)Strings + 13)
 		__emit 'm'
@@ -28,8 +26,7 @@
 		__emit 'c'
 		__emit 'p'
 		__emit 'y'
-		__emit 0
-
+		__emit 0
 
 #define sRtlAllocateHeap (LPCSTR)((PBYTE)Strings + 20)
 		__emit 'R'
@@ -47,8 +44,7 @@
 		__emit 'e'
 		__emit 'a'
 		__emit 'p'
-		__emit 0
-
+		__emit 0
 
 #define sRtlReAllocateHeap (LPCSTR)((PBYTE)Strings + 36)
 		__emit 'R'
@@ -68,10 +64,23 @@
 		__emit 'e'
 		__emit 'a'
 		__emit 'p'
-		__emit 0
+		__emit 0
 
+#define sRtlFreeHeap (LPCSTR)((PBYTE)Strings + 54)
+		__emit 'R'
+		__emit 't'
+		__emit 'l'
+		__emit 'F'
+		__emit 'r'
+		__emit 'e'
+		__emit 'e'
+		__emit 'H'
+		__emit 'e'
+		__emit 'a'
+		__emit 'p'
+		__emit 0
 
-#define sKERNEL32 (LPCSTR)((PBYTE)Strings + 54)
+#define sKERNEL32 (LPCSTR)((PBYTE)Strings + 66)
 		__emit 'K'
 		__emit 'E'
 		__emit 'R'
@@ -80,10 +89,9 @@
 		__emit 'L'
 		__emit '3'
 		__emit '2'
-		__emit 0
+		__emit 0
 
-
-#define sFreeLibrary (LPCSTR)((PBYTE)Strings + 63)
+#define sFreeLibrary (LPCSTR)((PBYTE)Strings + 75)
 		__emit 'F'
 		__emit 'r'
 		__emit 'e'
@@ -95,10 +103,9 @@
 		__emit 'a'
 		__emit 'r'
 		__emit 'y'
-		__emit 0
+		__emit 0
 
-
-#define sTlsAlloc (LPCSTR)((PBYTE)Strings + 75)
+#define sTlsAlloc (LPCSTR)((PBYTE)Strings + 87)
 		__emit 'T'
 		__emit 'l'
 		__emit 's'
@@ -107,10 +114,9 @@
 		__emit 'l'
 		__emit 'o'
 		__emit 'c'
-		__emit 0
+		__emit 0
 
-
-#define sTlsFree (LPCSTR)((PBYTE)Strings + 84)
+#define sTlsFree (LPCSTR)((PBYTE)Strings + 96)
 		__emit 'T'
 		__emit 'l'
 		__emit 's'
@@ -118,10 +124,9 @@
 		__emit 'r'
 		__emit 'e'
 		__emit 'e'
-		__emit 0
+		__emit 0
 
-
-#define sTlsSetValue (LPCSTR)((PBYTE)Strings + 92)
+#define sTlsSetValue (LPCSTR)((PBYTE)Strings + 104)
 		__emit 'T'
 		__emit 'l'
 		__emit 's'
@@ -133,10 +138,9 @@
 		__emit 'l'
 		__emit 'u'
 		__emit 'e'
-		__emit 0
+		__emit 0
 
-
-#define sTlsGetValue (LPCSTR)((PBYTE)Strings + 104)
+#define sTlsGetValue (LPCSTR)((PBYTE)Strings + 116)
 		__emit 'T'
 		__emit 'l'
 		__emit 's'
@@ -148,10 +152,9 @@
 		__emit 'l'
 		__emit 'u'
 		__emit 'e'
-		__emit 0
+		__emit 0
 
-
-#define sVirtualAlloc (LPCSTR)((PBYTE)Strings + 116)
+#define sVirtualAlloc (LPCSTR)((PBYTE)Strings + 128)
 		__emit 'V'
 		__emit 'i'
 		__emit 'r'
@@ -164,10 +167,9 @@
 		__emit 'l'
 		__emit 'o'
 		__emit 'c'
-		__emit 0
+		__emit 0
 
-
-#define sVirtualFree (LPCSTR)((PBYTE)Strings + 129)
+#define sVirtualFree (LPCSTR)((PBYTE)Strings + 141)
 		__emit 'V'
 		__emit 'i'
 		__emit 'r'
@@ -179,10 +181,9 @@
 		__emit 'r'
 		__emit 'e'
 		__emit 'e'
-		__emit 0
+		__emit 0
 
-
-#define sVirtualProtect (LPCSTR)((PBYTE)Strings + 141)
+#define sVirtualProtect (LPCSTR)((PBYTE)Strings + 153)
 		__emit 'V'
 		__emit 'i'
 		__emit 'r'
@@ -197,10 +198,9 @@
 		__emit 'e'
 		__emit 'c'
 		__emit 't'
-		__emit 0
+		__emit 0
 
-
-#define sGetProcessHeap (LPCSTR)((PBYTE)Strings + 156)
+#define sGetProcessHeap (LPCSTR)((PBYTE)Strings + 168)
 		__emit 'G'
 		__emit 'e'
 		__emit 't'
@@ -215,10 +215,9 @@
 		__emit 'e'
 		__emit 'a'
 		__emit 'p'
-		__emit 0
+		__emit 0
 
-
-#define sIsBadReadPtr (LPCSTR)((PBYTE)Strings + 171)
+#define sIsBadReadPtr (LPCSTR)((PBYTE)Strings + 183)
 		__emit 'I'
 		__emit 's'
 		__emit 'B'
@@ -231,36 +230,32 @@
 		__emit 'P'
 		__emit 't'
 		__emit 'r'
-		__emit 0
+		__emit 0
 
-
-#define sWS2_32 (LPCSTR)((PBYTE)Strings + 184)
+#define sWS2_32 (LPCSTR)((PBYTE)Strings + 196)
 		__emit 'W'
 		__emit 'S'
 		__emit '2'
 		__emit '_'
 		__emit '3'
 		__emit '2'
-		__emit 0
+		__emit 0
 
-
-#define ssend (LPCSTR)((PBYTE)Strings + 191)
+#define ssend (LPCSTR)((PBYTE)Strings + 203)
 		__emit 's'
 		__emit 'e'
 		__emit 'n'
 		__emit 'd'
-		__emit 0
+		__emit 0
 
-
-#define srecv (LPCSTR)((PBYTE)Strings + 196)
+#define srecv (LPCSTR)((PBYTE)Strings + 208)
 		__emit 'r'
 		__emit 'e'
 		__emit 'c'
 		__emit 'v'
-		__emit 0
+		__emit 0
 
-
-#define sADVAPI32 (LPCSTR)((PBYTE)Strings + 201)
+#define sADVAPI32 (LPCSTR)((PBYTE)Strings + 213)
 		__emit 'A'
 		__emit 'D'
 		__emit 'V'
@@ -269,10 +264,9 @@
 		__emit 'I'
 		__emit '3'
 		__emit '2'
-		__emit 0
+		__emit 0
 
-
-#define sCryptDecrypt (LPCSTR)((PBYTE)Strings + 210)
+#define sCryptDecrypt (LPCSTR)((PBYTE)Strings + 222)
 		__emit 'C'
 		__emit 'r'
 		__emit 'y'
@@ -285,10 +279,9 @@
 		__emit 'y'
 		__emit 'p'
 		__emit 't'
-		__emit 0
+		__emit 0
 
-
-#define sCryptEncrypt (LPCSTR)((PBYTE)Strings + 223)
+#define sCryptEncrypt (LPCSTR)((PBYTE)Strings + 235)
 		__emit 'C'
 		__emit 'r'
 		__emit 'y'
@@ -301,30 +294,27 @@
 		__emit 'y'
 		__emit 'p'
 		__emit 't'
-		__emit 0
+		__emit 0
 
-
-#define sMSVCRT (LPCSTR)((PBYTE)Strings + 236)
+#define sMSVCRT (LPCSTR)((PBYTE)Strings + 248)
 		__emit 'M'
 		__emit 'S'
 		__emit 'V'
 		__emit 'C'
 		__emit 'R'
 		__emit 'T'
-		__emit 0
+		__emit 0
 
-
-#define smalloc (LPCSTR)((PBYTE)Strings + 243)
+#define smalloc (LPCSTR)((PBYTE)Strings + 255)
 		__emit 'm'
 		__emit 'a'
 		__emit 'l'
 		__emit 'l'
 		__emit 'o'
 		__emit 'c'
-		__emit 0
+		__emit 0
 
-
-#define sfree (LPCSTR)((PBYTE)Strings + 250)
+#define sfree (LPCSTR)((PBYTE)Strings + 262)
 		__emit 'f'
 		__emit 'r'
 		__emit 'e'
