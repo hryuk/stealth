@@ -5,7 +5,7 @@ CONFIG -= qt
 
 QMAKE_CXXFLAGS_RTTI_ON -= -frtti
 QMAKE_CXXFLAGS_RTTI_OFF = -fno-rtti
-QMAKE_CXXFLAGS += -nostdlib -fno-exceptions -fno-rtti
+QMAKE_CXXFLAGS += -nostdlib -fno-exceptions -fno-rtti -fno-omit-frame-pointer
 
 if win32{
    QMAKE_CXXFLAGS += -std=gnu++0x

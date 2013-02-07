@@ -280,15 +280,7 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DAr
         }
     }else{
         printf("comando para plugin\n");
-        plugin* currentPlugin;
-        if((currentPlugin = PlugMgr->getPluginById(opType.PluginID))){
-             char buff[size+1];
-             ZeroMemory(buff,size+1);
-             memcpy(buff,data,size);
-             printf("onReciveData size %x cadena %s\n",(uint)size,(char*)buff);
-
-             currentPlugin->plugInterface->onReciveData(data,size);
-        }
+        PlugMgr->runPluginCMD(opType.PluginID,data,size);
     }
     return result;
 }
