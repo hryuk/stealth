@@ -136,12 +136,22 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
             printf("modulo cargado con exito\n");
             //Buscamos las funciones exportadas
             getInterface = (pgetInterface)GetProcAddress(newPlugin->Module.ModuleBase,"getInterface");
-            if((newPlugin->plugInterface = getInterface())){
+            if(getInterface && (newPlugin->plugInterface = getInterface())){
+                printf("getInterface\n");
                 newPlugin->ID = pluginModule->PluginID;
+                printf("pluginPrivate\n");
                 pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
                 pluginList = pluginPrivate;
                 result = true;
-            }else delete newPlugin;
+            }else{
+                if(!getInterface){
+                    uint error = (uint)GetLastError();
+                    printf("GetProcAddress error: %x(%s)\n",error,
+                           error==ERROR_PROC_NOT_FOUND?"PROC_NOT_FOUND":"");
+                    FreeLibraryFromMemory(Context->FreeLibraryFromMemory,Context,&newPlugin->Module);
+                }
+                delete newPlugin;
+            }
         }
     }else printf("ya cargado");
 
