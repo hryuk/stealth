@@ -1,6 +1,8 @@
 #ifndef BASICTYPES_H
 #define BASICTYPES_H
 
+#define null NULL
+
 //Tipos unsigned
 typedef unsigned char uchar;
 typedef unsigned char byte;

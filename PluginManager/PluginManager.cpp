@@ -3,6 +3,8 @@
 #include "PluginManager.h"
 #include "plugininterface.h"
 
+FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName);
+
 bool WINAPI LoadLibraryFromMemory(PLoadLibraryFromMemory loadLib,SHELLCODE_CONTEXT* pSCC,
                                    const void *data, LPCWSTR dllname, PMEMORYMODULE result);
 void WINAPI FreeLibraryFromMemory(PFreeLibraryFromMemory freeLib,SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module);
@@ -34,6 +36,7 @@ PluginManager::PluginManager(){
 PluginManager::~PluginManager(){
     if(pluginList){
         printf("unloading plugin\n");
+        //__asm__("int3");
         ::FreeLibraryFromMemory(Context->FreeLibraryFromMemory,
                                 Context,&pluginList->getPlugInformation()->Module);
     }
@@ -135,7 +138,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
         if(loadResult){
             printf("modulo cargado con exito\n");
             //Buscamos las funciones exportadas
-            getInterface = (pgetInterface)GetProcAddress(newPlugin->Module.ModuleBase,"getInterface");
+            getInterface = (pgetInterface)GPA_WRAPPER(newPlugin->Module.ModuleBase,"getInterface");
             if(getInterface && (newPlugin->plugInterface = getInterface())){
                 printf("getInterface\n");
                 newPlugin->ID = pluginModule->PluginID;
@@ -207,4 +210,60 @@ bool PluginManager::runPluginCMD(ulong pluginID, char *data, uint size){
 
          currentPlugin->plugInterface->onReciveData(data,size);
     }
+}
+
+#define FNV_PRIME_32 16777619
+#define FNV_OFFSET_32 2166136261U
+#define null NULL
+
+ulong fnv32(register const char *s){
+    register ulong hash = FNV_OFFSET_32;
+
+    while(*s)
+        hash = (hash ^ (*(s++)))*FNV_PRIME_32;
+
+    return hash;
+}
+
+FARPROC WINAPI GetProcAddressByHash(HINSTANCE hModule,ulong hash){
+    register PIMAGE_NT_HEADERS PE;
+    register FARPROC proc = null;
+    register PIMAGE_EXPORT_DIRECTORY ExpDir = null;
+    register char** ExportNames = null;
+
+    //Comprovamos la marca de DOS
+    if(*((ushort*)hModule)==IMAGE_DOS_SIGNATURE){
+        //localizamos la cabecera PE
+        PE = (PIMAGE_NT_HEADERS)(((IMAGE_DOS_HEADER*)hModule)->e_lfanew+(ulong)hModule);
+        //Compruebo la firma de PE y que halla tabla de importaciones
+        if(PE->Signature == IMAGE_NT_SIGNATURE
+                && PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size){
+            //Localizo el directorio de exportaciones
+            ExpDir = (PIMAGE_EXPORT_DIRECTORY)(PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
+                    .VirtualAddress+(ulong)hModule);
+#ifdef DEBUG
+            DebugPrintf("GPA","ExpDir = %p,EXPORT_DIRECTORY = %x",ExpDir,PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
+                        .VirtualAddress);
+#endif
+            //Localizo los nombres de simbolos exportados y busco la funcion
+            ExportNames = (char**)(ExpDir->AddressOfNames+(ulong)hModule);
+            register int i;
+            for(i = 0;ExportNames[i];i++){
+                //Comparo los hash para buscar la funcion
+                if(fnv32(ExportNames[i]+(ulong)hModule) == hash){
+                    ulong* funtionRVAs = (ulong*)(ExpDir->AddressOfFunctions+(ulong)hModule);
+                    ushort* ordinalRVAs = (ushort*)(ExpDir->AddressOfNameOrdinals+(ulong)hModule);
+                    //Calculamos la direccion de la funcion
+                    proc = (FARPROC)(funtionRVAs[ordinalRVAs[i]] +(ulong)hModule);
+                    break;
+                }
+            }
+
+        }
+    }
+    return proc;
+}
+
+FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName){
+   return GetProcAddressByHash(hModule, fnv32(lpProcName));
 }

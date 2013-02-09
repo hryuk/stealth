@@ -38,8 +38,11 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
 }
 
 int WINAPI InitPluginLoader(PSHELLCODE_CONTEXT ShellContext){
+    uint status;
     PluginManager PlugMgr;
     MessageBox(0,"","InitPluginLoader",0);
 
-    return PlugMgr.run(ShellContext);
+    status = PlugMgr.run(ShellContext);
+
+    return status;
 }
