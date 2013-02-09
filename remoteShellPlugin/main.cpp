@@ -1,9 +1,21 @@
-#include <iostream>
+#include "main.h"
 
-using namespace std;
+bool WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserved*/){
+    switch (fdwReason)
+    {
+        case DLL_PROCESS_ATTACH:
+            // attach to process
+            // return FALSE to fail DLL load
+            break;
 
-int main(){
-    cout << "Hello World!"<<endl;
-    return 0;
+        case DLL_PROCESS_DETACH:
+            break;
+
+        case DLL_THREAD_ATTACH:
+            break;
+
+        case DLL_THREAD_DETACH:
+            break;
+    }
+    return true; // succesful
 }
-
