@@ -14,6 +14,11 @@ void __set_app_type(int);
 typedef int (*_controlfp)(unsigned a, unsigned b);
 bool disablePrintf = false;
 
+extern "C"{
+    __declspec(dllexport) int STDCALL start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+}
+
+
 typedef struct
 {
     int newmode;
@@ -31,7 +36,7 @@ typedef int (__cdecl *GETMAINARGS)(int*, char***, char***, int, _startupinfo*);
 typedef int (*_vprintf)(char * s, const char * format, __gnuc_va_list arg );
 _vprintf vprintf;
 
-int STDCALL _start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
+int STDCALL start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
     int argc = 0; char **argv = 0; char **env = 0;
     _startupinfo start_info = {0};
     HINSTANCE  hMsvcrt = LoadLibrary("msvcrt");
@@ -43,12 +48,12 @@ int STDCALL _start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
     vprintf = (_vprintf) GetProcAddress(hMsvcrt,"vprintf");
 
     controlfp(0x10000, 0x30000);
-    //__set_app_type(__CONSOLE_APP);
-    getmainargs(&argc, &argv, &env, 0, &start_info);
 
     #ifdef BUILD_DLL
     return DllMain(hinstDLL,fdwReason,lpvReserved);
     #else
+    __set_app_type(__CONSOLE_APP);
+    getmainargs(&argc, &argv, &env, 0, &start_info);
     int ret;
     ret = main(argc, argv, env);
     exit(ret);
@@ -173,10 +178,9 @@ extern "C" void* __cxa_get_exception_ptr(void* exceptionObject) throw(){
     return 0;
 }
 
-extern "C" void* __cxa_begin_catch(void* exceptionObject) throw(){
+extern "C" void* __cxa_begin_catch(void* /*exceptionObject*/) throw(){
     printf("__cxa_begin_catch");
-    exceptionObject = exceptionObject;
-    return 0;
+    return NULL;
 }
 
 extern "C" void __cxa_end_catch(){

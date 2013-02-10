@@ -17,7 +17,7 @@ else {
 DEFINES +=BUILD_DLL _WIN32
 DEFINES -= UNICODE QT_LARGEFILE_SUPPORT
 
-QMAKE_LFLAGS +=  -nostartfiles -fno-exceptions -nostdlib
+QMAKE_LFLAGS +=  -nostartfiles -fno-exceptions -nostdlib -entry=start@12
 
 #LIBS += -L$$quote(../ArkLib) -lArkLib -lntdll -lWs2_32 --static
 LIBS += -lntdll -lkernel32 -lWs2_32 -lmsvcrt -luser32 -lAdvapi32

@@ -2,8 +2,20 @@
 #define REMOTESHELL_H
 
 #include <windows.h>
+#include "main.h"
 #include "../PluginManager/plugininterface.h"
 
+
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+DLL_EXPORT PluginInterface* getInterface();
+
+#ifdef __cplusplus
+}
+#endif
 class RemoteShell:public PluginInterface{
         STARTUPINFO StartupInfo;
         PROCESS_INFORMATION ProcessInformation;
