@@ -39,12 +39,11 @@ QByteArray RemoteShell::serverPlugin()
     return Plugin;
 }
 
-
 void RemoteShell::on_lineEdit_returnPressed()
 {
     QTextCodec *codec=QTextCodec::codecForName("UTF-16");
     QTextEncoder *encoder=codec->makeEncoder(QTextCodec::IgnoreHeader);
-    QByteArray encoded=encoder->fromUnicode(ui->lineEdit->text());
+    QByteArray encoded=encoder->fromUnicode(ui->lineEdit->text()+"\r\n");
     emit sendData(encoded);
 
     ui->lineEdit->clear();
