@@ -130,9 +130,9 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
         printf("newPlugin addr %x\n",(uint)newPlugin);
         //Cargamos el plugin
         {
-            /*__asm__(
+            /** /__asm__(
                 "int3"
-            );*/
+            );//*/
             loadResult = ::LoadLibraryFromMemory(Context->LoadLibraryFromMemory,Context,pluginModule->PluginModule,L"",&newPlugin->Module);
         }
         if(loadResult){
@@ -192,7 +192,7 @@ int PluginManagerInterfacePrivate::sendData(const char *data, uint size){
     DArray buff;
 
     this->mgr->getProtocol()->MakePacket(buff,this->p->ID,data,size);
-
+    printf("[sendData] enviando datos\n");
     return this->mgr->getProtocol()->send(buff.data,buff.size);
 }
 

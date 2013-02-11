@@ -36,17 +36,21 @@ ulong RPEP::serverLoop(){
 
     ::send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
     printf("writeBuff.size %d \n",(int)writeBuff.size);
+    //Cambio a modo asyncrono
+    ulong async = true;
+    ioctlsocket(hConexion,FIONBIO,&async);
 
     writeBuff.Vaciar();
     int readBytes;
     do{
-        for(readBytes = 0;(readBytes = recv(hConexion,buff,sizeof(buff),0))> 0;){
+        for(readBytes = 0;(readBytes = recv(buff,sizeof(buff)))> 0;){
             //printf("recv readBytes = %d\n",readBytes);
             //Concateno los datos hasta que no quede mas por recibir
             readBuff.addData(buff,readBytes);
             if(((uint)readBytes)<sizeof(buff))break;
         }
         if(readBytes == -1 || !readBytes){
+
             runing = false;
             continue;
         }
@@ -54,19 +58,28 @@ ulong RPEP::serverLoop(){
         //decript(readBuff);
         if(procesPkg(readBuff,writeBuff,workBuff)){
             if(writeBuff.size){
-                ::send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
+                send(writeBuff.data,writeBuff.size);
                 writeBuff.Vaciar();
                 //conexion.write(writeBuff);
             }
         }
         Sleep(1);
     }while(runing);
+    printf("readBytes %x\n",readBytes);
+    //Cambio a modo syncrono el socket
+    async = false;
+    ioctlsocket(hConexion,FIONBIO,&async);
+
     printf("conexion cerrada\n");
 
     return 0;
 }
 int RPEP::send(const void* data,uint size){
-    return ::send(this->hConexion,(char*)data,size,0);
+    int result;
+    printf("send data: %x bytes\n",size);
+    result = ::send(this->hConexion,(char*)data,size,0);
+    printf("datos enviados\n");
+    return result;
 }
 uint RPEP::MakePacket(DArray &outBuff, RPEP_HEADER::Operation op, const void *data, ulong size){
     return MakePacket(outBuff,true,op,data,size);
@@ -357,4 +370,38 @@ uint RPEP::decript(byte* data,ulong size){
         }
     }
     return newSize;
+}
+
+
+int RPEP::recv(char *data, uint size){
+    int recvedData = 0;
+
+    while(!recvedData){
+        ioctlsocket(hConexion,FIONREAD,(ulong*)&recvedData);
+        //printf("recvedData %x\n",recvedData);
+
+        if(recvedData > 0){
+            recvedData = ::recv(hConexion,data,size,0);
+        }else{
+            recvedData = ::recv(hConexion,0,0,MSG_PEEK);
+            if(recvedData == -1){
+                ulong error = WSAGetLastError();
+                switch(error){
+                    case WSAEWOULDBLOCK:
+                        recvedData = 0;
+                        Sleep(10);
+                        break;
+                    case WSAECONNRESET:
+                        //Conexion cerrada
+                        return recvedData;
+                    default:
+                        printf("Error recv desconocido %x\n",error);
+                        break;
+                }
+            }
+        }
+    }
+
+
+    return recvedData;
 }
