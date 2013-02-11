@@ -1,4 +1,4 @@
-TARGET=remoteshellplugin
+TARGET=remoteshell_server
 TEMPLATE = lib
 #CONFIG += console
 CONFIG -= qt

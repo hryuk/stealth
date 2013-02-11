@@ -29,7 +29,7 @@ class RemoteShell:public PluginInterface{
         ~RemoteShell();
         bool open();
         bool close();
-        bool read(char** buffer,ulong* dataSize);
+        bool read(char **buffer, ulong* dataSize);
         bool write(char* buffer,ulong size);
 
         virtual const char* getPluginName();
