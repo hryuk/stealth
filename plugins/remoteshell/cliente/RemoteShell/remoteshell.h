@@ -6,6 +6,8 @@
 #include <QMessageBox>
 #include <QFile>
 #include <QDebug>
+#include <QTextCodec>
+#include <QTextEncoder>
 
 namespace Ui {
 class GUI;
