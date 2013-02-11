@@ -26,7 +26,7 @@ QString RemoteShell::getPluginName()
 void RemoteShell::recvData(QByteArray data)
 {
     ui->textEdit->append(QString(data));
-    ui->lineEdit->setEnabled(true);
+    ui->lineEdit->setFocus();
 }
 
 QByteArray RemoteShell::serverPlugin()
@@ -42,7 +42,6 @@ QByteArray RemoteShell::serverPlugin()
 
 void RemoteShell::on_lineEdit_returnPressed()
 {
-    ui->lineEdit->setEnabled(false);
     emit sendData(ui->lineEdit->text().toAscii());
     ui->lineEdit->clear();
 }
