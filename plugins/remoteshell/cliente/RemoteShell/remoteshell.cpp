@@ -31,7 +31,7 @@ void RemoteShell::recvData(QByteArray data)
 
 QByteArray RemoteShell::serverPlugin()
 {
-    QFile filePlugin(":/res/testplugin.dll");
+    QFile filePlugin("remoteshell_server.dll");
     filePlugin.open(QIODevice::ReadOnly);
     QByteArray Plugin=filePlugin.readAll();
     filePlugin.close();
