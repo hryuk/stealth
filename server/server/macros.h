@@ -20,11 +20,22 @@
 **    Incluye código para mostrar mensajes por consola
 *###############################################################################*/
 #define DEBUG
-#undef DEBUG
+//#undef DEBUG
 
 #ifdef DEBUG
-#define DEBUG_MSG(s, SEQ)  __asm{pushad} BOOST_PP_SEQ_FOR_EACH_I(PUSH_THINGY, 0, SEQ) __asm{push (s)} __asm{call printf} __asm {add esp, ((BOOST_PP_SEQ_SIZE(SEQ) + 1)*4)} __asm{popad}
-#define PUSH_THINGY(r, d, i, e) __asm{push e}
+DEFINE_PYSRC(
+def DEBUG_MSG(s, p=[]):
+    r = "\n#ifdef DEBUG\n"
+    r+= "__asm{pushad}"
+    for x in p[::-1]:
+        r+="__asm{push %s}"%(x)
+    r+= "__asm{push %s}"%(s)
+    r+= "__asm{call printf}"
+    r+= "__asm{add esp, %d}"%((len(p)+1)*4)
+    r+= "__asm{popad}"
+    r+= "\n#endif\n"
+    return r
+)DEFINE_END()
 #pragma data_seg(".rdata")
 const char* sDELTA[]    = {"[S]Delta offset calculado: %X.\n"};
 const char* sBUFFER[]   = {"[S]Buffer de 1KB creado en: 0x%08X.\n"};
@@ -46,9 +57,6 @@ const char* sADDR       = {" (0x%08X)... "};
 const char* sOK         = {"OK\n"};
 const char* sERR        = {"Error\n"};
 const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
-#else
-#define DEBUG_MSG(...)
-#define DEBUG_MSG_ASM(s, SEQ)
 #endif
 
 /*###############################################################################

@@ -610,7 +610,7 @@ get_delta:
     
     __asm{
         leave 
-        ret 0x10
+        ret 0xC
     }
     //return;
 }
