@@ -13,6 +13,7 @@ class pluginManagerInterface{
 class PluginInterface{
     protected:
         PluginInterface(){}
+        virtual ~PluginInterface(){}
     public:
         virtual const char* getPluginName() = 0;
         virtual int onReciveData(char* data,uint size) = 0;

@@ -26,7 +26,7 @@ class RemoteShell:public PluginInterface{
         static int threadReader(RemoteShell *_this);
     public:
         RemoteShell();
-        ~RemoteShell();
+        virtual ~RemoteShell();
         bool open();
         bool close();
         bool read(char **buffer, ulong* dataSize);
