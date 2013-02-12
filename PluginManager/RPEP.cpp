@@ -395,7 +395,7 @@ int RPEP::recv(char *data, uint size){
                         //Conexion cerrada
                         return recvedData;
                     default:
-                        printf("Error recv desconocido %x\n",error);
+                        printf("Error recv desconocido %x\n",(uint)error);
                         break;
                 }
             }
