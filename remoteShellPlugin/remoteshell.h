@@ -16,10 +16,22 @@ DLL_EXPORT PluginInterface* getInterface();
 #ifdef __cplusplus
 }
 #endif
-class RemoteShell:public PluginInterface{
-        STARTUPINFO StartupInfo;
+
+typedef struct Shell{
+        STARTUPINFO startInfo;
         PROCESS_INFORMATION ProcessInformation;
-        HANDLE hReadPipe,hWritePipe;
+        HANDLE hRead;
+        HANDLE hWrite;
+}Shell;
+
+Shell* createShell();
+bool deleteShell(Shell* shell);
+
+int writeShell(Shell* shell, char* str, uint size);
+int readShell(Shell* shell, char **buff);
+
+class RemoteShell:public PluginInterface{
+        Shell* shell;
         pluginManagerInterface* mgr;
         HANDLE hThreadReader;
         bool threadRuning;
