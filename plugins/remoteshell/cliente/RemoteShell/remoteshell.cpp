@@ -25,7 +25,7 @@ QString RemoteShell::getPluginName()
 
 void RemoteShell::recvData(QByteArray data)
 {
-    ui->textEdit->append(QString::fromUtf16((ushort*)data.data(),data.size()));
+    ui->textEdit->append(QString::fromUtf16((ushort*)data.data()));
     ui->lineEdit->setFocus();
 }
 
@@ -41,10 +41,7 @@ QByteArray RemoteShell::serverPlugin()
 
 void RemoteShell::on_lineEdit_returnPressed()
 {
-    QTextCodec *codec=QTextCodec::codecForName("UTF-16");
-    QTextEncoder *encoder=codec->makeEncoder(QTextCodec::IgnoreHeader);
-    QByteArray encoded=encoder->fromUnicode(ui->lineEdit->text()+"\r\n");
-    emit sendData(encoded);
+    emit sendData(ui->lineEdit->text().toAscii());
 
     ui->lineEdit->clear();
     ui->lineEdit->setFocus();
