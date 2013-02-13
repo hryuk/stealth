@@ -42,21 +42,24 @@ typedef int (*_vprintf)(char * s, const char * format, __gnuc_va_list arg );
 _vprintf vprintf;
 
 int STDCALL start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
+
+    HINSTANCE  hMsvcrt = LoadLibrary("msvcrt");
+    vprintf = (_vprintf) GetProcAddress(hMsvcrt,"vprintf");
+
+
+    #ifdef BUILD_DLL
+    return DllMain(hinstDLL,fdwReason,lpvReserved);
+    #else
     int argc = 0; char **argv = 0; char **env = 0;
     _startupinfo start_info = {0};
-    HINSTANCE  hMsvcrt = LoadLibrary("msvcrt");
     GETMAINARGS getmainargs;
     _controlfp controlfp;
 
     getmainargs = (GETMAINARGS) GetProcAddress(hMsvcrt,"__getmainargs");
     controlfp = (_controlfp) GetProcAddress(hMsvcrt,"_controlfp");
-    vprintf = (_vprintf) GetProcAddress(hMsvcrt,"vprintf");
 
     controlfp(0x10000, 0x30000);
 
-    #ifdef BUILD_DLL
-    return DllMain(hinstDLL,fdwReason,lpvReserved);
-    #else
     __set_app_type(__CONSOLE_APP);
     getmainargs(&argc, &argv, &env, 0, &start_info);
     int ret;
