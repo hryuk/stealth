@@ -3,6 +3,12 @@
 
 #define null NULL
 
+#ifdef debug
+#define DebufPrintf(format,...) printf(format,__VA_ARGS__)
+#else
+#define DebufPrintf(format,...)
+#endif
+
 //Tipos unsigned
 typedef unsigned char uchar;
 typedef unsigned char byte;

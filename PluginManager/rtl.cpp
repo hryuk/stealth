@@ -6,13 +6,18 @@
 #include <windows.h>
 
 //#include <unwind.h>
+#include "basicTypes.h"
 
 #define __UNKNOWN_APP    0
 #define __CONSOLE_APP    1
 #define __GUI_APP        2
 void __set_app_type(int);
 typedef int (*_controlfp)(unsigned a, unsigned b);
+#ifdef debug
 bool disablePrintf = false;
+#else
+bool disablePrintf = true;
+#endif
 
 extern "C"{
     __declspec(dllexport) int STDCALL start(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
@@ -162,15 +167,15 @@ extern "C" void __cxa_free_exception(void * thrown_exception) throw(){
     free(thrown_exception);
 }
 extern "C" void* __cxa_allocate_dependent_exception() throw(){
-    printf("__cxa_free_dependent_exception");
+    DebufPrintf("__cxa_free_dependent_exception");
     return 0;
 }
 extern "C" void __cxa_free_dependent_exception (void* /*dependent_exception*/) throw(){
-    printf("__cxa_free_dependent_exception");
+    DebufPrintf("__cxa_free_dependent_exception");
 }
 
 extern "C" void __cxa_throw(void* /*thrown_exception*/, struct std::type_info * /*tinfo*/, void (*/*dest*/)(void*)){
-    printf("__cxa_throw");
+    DebufPrintf("__cxa_throw");
 }
 
 extern "C" void* __cxa_get_exception_ptr(void* exceptionObject) throw(){
@@ -179,30 +184,30 @@ extern "C" void* __cxa_get_exception_ptr(void* exceptionObject) throw(){
 }
 
 extern "C" void* __cxa_begin_catch(void* /*exceptionObject*/) throw(){
-    printf("__cxa_begin_catch");
+    DebufPrintf("__cxa_begin_catch");
     return NULL;
 }
 
 extern "C" void __cxa_end_catch(){
-    printf("__cxa_end_catch");
+    DebufPrintf("__cxa_end_catch");
 }
 
 extern "C" std::type_info* __cxa_current_exception_type(){
-    printf("__cxa_current_exception_type");
+    DebufPrintf("__cxa_current_exception_type");
     return 0;
 }
 
 extern "C" void __cxa_rethrow(){
-    printf("__cxa_rethrow");
+    DebufPrintf("__cxa_rethrow");
 }
 
 extern "C" void* __cxa_current_primary_exception() throw(){
-    printf("__cxa_free_dependent_exception");
+    DebufPrintf("__cxa_free_dependent_exception");
     return 0;
 }
 
 extern "C" void __cxa_decrement_exception_refcount(void* primary_exception) throw(){
-    printf("__cxa_free_dependent_exception");
+    DebufPrintf("__cxa_free_dependent_exception");
 }
 
 //extern "C" __cxa_eh_globals* __cxa_get_globals() throw();

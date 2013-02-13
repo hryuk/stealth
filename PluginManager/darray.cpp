@@ -2,7 +2,7 @@
 #include "stdlib.h"
 
 DArray::DArray(){
-    //printf("DArray ctor\n");
+    //DebufPrintf("DArray ctor\n");
     size = MaxSize = 0;
     data = 0;
 }

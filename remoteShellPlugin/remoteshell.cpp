@@ -17,7 +17,6 @@ int RemoteShell::threadReader(register RemoteShell *_this){
             if(bytesRead>0){
                 *((wchar_t*)(buff+bytesRead)) = 0;
                 bytesRead += sizeof(wchar_t);
-                __asm__("int3");
                 MultiByteToWideChar(CP_ACP, 0,buff,bytesRead,wBuff, bytesRead);
 
                 _this->mgr->sendData((char*)wBuff,bytesRead*sizeof(*wBuff));
@@ -34,7 +33,7 @@ RemoteShell::RemoteShell(){
     recivedData = null;
     ulong threadId;
     hThreadReader = CreateThread(0,0,(LPTHREAD_START_ROUTINE)&threadReader,this,0,&threadId);
-    printf("newThread %x id\n",threadId);
+    DebufPrintf("newThread %x id\n",threadId);
 }
 
 RemoteShell::~RemoteShell(){
@@ -48,7 +47,7 @@ const char *RemoteShell::getPluginName(){
 
 int RemoteShell::onReciveData(char *data, uint size){
     bool writed = false;
-    printf("onReciveData %x bytes\n",size);
+    DebufPrintf("onReciveData %x bytes\n",size);
 
     return writeShell(shell,data,size);
 }
@@ -100,7 +99,7 @@ bool deleteShell(Shell* shell){
 }
 
 int writeShell(Shell* shell,char* str,uint size){
-    printf("%S\n",(wchar_t*)str);
+    DebufPrintf("%S\n",(wchar_t*)str);
 
     WriteFile(shell->hWrite,str,size,(ulong*)&size,0);
 

