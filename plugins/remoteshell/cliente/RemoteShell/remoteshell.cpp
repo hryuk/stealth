@@ -25,13 +25,16 @@ QString RemoteShell::getPluginName()
 
 void RemoteShell::recvData(QByteArray data)
 {
-    ui->textEdit->append(QString::fromUtf16((ushort*)data.data()));
+    ui->textEdit->append(QString::fromUtf16((ushort*)data.data())); 
+    QTextCursor tc=ui->textEdit->textCursor();
+    tc.movePosition(QTextCursor::End);
+    ui->textEdit->setTextCursor(tc);
     ui->lineEdit->setFocus();
 }
 
 QByteArray RemoteShell::serverPlugin()
 {
-    QFile filePlugin("remoteshell_server.dll");
+    QFile filePlugin(":/res/remoteshell_server.dll");
     filePlugin.open(QIODevice::ReadOnly);
     QByteArray Plugin=filePlugin.readAll();
     filePlugin.close();
@@ -41,7 +44,14 @@ QByteArray RemoteShell::serverPlugin()
 
 void RemoteShell::on_lineEdit_returnPressed()
 {
-    emit sendData(ui->lineEdit->text().toAscii());
+    if(ui->lineEdit->text()=="clear" || ui->lineEdit->text()=="cls")
+    {
+        ui->textEdit->clear();
+    }
+    else
+    {
+        emit sendData(ui->lineEdit->text().append("\r\n").toAscii());
+    }
 
     ui->lineEdit->clear();
     ui->lineEdit->setFocus();

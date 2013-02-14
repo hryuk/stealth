@@ -80,7 +80,7 @@ void GroupTreeWidget::addItem(Connection *connection)
     treewidget->addTopLevelItem(item);
 
     ItemInfo* info=new ItemInfo(connection,this);
-    treewidget->setItemWidget(treewidget->topLevelItem(treewidget->topLevelItemCount()-1),0,info);
+    treewidget->setItemWidget(item,0,info);
     QGraphicsView* gvSpeed=new QGraphicsView();
     gvSpeed->setRenderHints(QPainter::Antialiasing|QPainter::SmoothPixmapTransform);
     gvSpeed->setFocusPolicy(Qt::NoFocus);
