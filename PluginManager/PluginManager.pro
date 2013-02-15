@@ -15,6 +15,15 @@ else {
 	DEFINES +=_WIN32
 }
 
+win32 {
+		  build_pass:CONFIG(debug, debug|release) {
+			message("debug")
+		 } else {
+			message("release")
+		 }
+}
+
+
 DEFINES +=BUILD_DLL _WIN32
 DEFINES -= UNICODE QT_LARGEFILE_SUPPORT
 

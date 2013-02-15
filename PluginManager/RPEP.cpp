@@ -5,6 +5,7 @@
 #define MinBlockSize 1024
 
 RPEP::RPEP(SOCKET hConexion, HCRYPTKEY hKey, PluginManager *PlugMgr){
+    DebufPrintf("[pm] RPEP ctor \n");
     Port = NULL;
     CompresAlg = PortCount = 0;
     ver = (version){0,0};
@@ -25,16 +26,16 @@ ulong RPEP::clientLoop(){
     return 0;
 }
 ulong RPEP::serverLoop(){
-    DebufPrintf("serverLoop\n");
+    DebufPrintf("[pm] serverLoop \n");
     DArray readBuff,writeBuff,workBuff;
     char buff[4096];
 
+    DebufPrintf("[pm] MakeServerHello \n");
     MakeServerHello(writeBuff);
-    DebufPrintf("MakeServerHello");
-    //encript(writeBuff);
-    //conexion.write(writeBuff);
 
+    DebufPrintf("[pm] send MakeServerHello \n");
     ::send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
+    DebufPrintf("[pm] send data %d \n",(int)writeBuff.size);
     DebufPrintf("writeBuff.size %d \n",(int)writeBuff.size);
     //Cambio a modo asyncrono
     ulong async = true;
@@ -78,7 +79,7 @@ int RPEP::send(const void* data,uint size){
     int result;
     DebufPrintf("send data: %x bytes\n",size);
     result = ::send(this->hConexion,(char*)data,size,0);
-    //DebufPrintf("datos enviados\n");
+    DebufPrintf("datos enviados\n");
     return result;
 }
 uint RPEP::MakePacket(DArray &outBuff, RPEP_HEADER::Operation op, const void *data, ulong size){

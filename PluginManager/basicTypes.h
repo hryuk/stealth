@@ -2,11 +2,12 @@
 #define BASICTYPES_H
 
 #define null NULL
+#define DEBUG
 
-#ifdef debug
-#define DebufPrintf(format,...) printf(format,__VA_ARGS__)
+#ifdef DEBUG
+#define DebufPrintf(...) printf(__VA_ARGS__)
 #else
-#define DebufPrintf(format,...)
+#define DebufPrintf(...)
 #endif
 
 //Tipos unsigned
