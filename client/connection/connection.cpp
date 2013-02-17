@@ -144,7 +144,7 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
 
     free(Header);
 
-    qDebug("Mensaje enviado");
+    qDebug()<<"Mensaje enviado";
 
     return size;
 }
@@ -152,7 +152,7 @@ int Connection::send(_RPEP_HEADER::_OperationType* operation,char *data,int size
 int Connection::sendPlugin(int ID,QByteArray serverPlugin)
 {
     qWarning()<<"Tamaño plugin: "<<serverPlugin.size();
-    qDebug("Enviando plugin");
+    qDebug()<<"Enviando plugin";
     Connection::RPEP_HEADER::_OperationType* opType=(Connection::RPEP_HEADER::_OperationType*)malloc(sizeof(Connection::RPEP_HEADER::_OperationType));
     opType->bOperation=true;
     opType->Operation=Connection::RPEP_HEADER::LoadPlugin;
@@ -205,7 +205,7 @@ QByteArray Connection::crypt(QByteArray data,bool padding)
     cipher->setup(QCA::Encode,key,*iv);
     QByteArray crypted=cipher->process(data).toByteArray();
 
-    qDebug("Datos cifrados");
+    qDebug()<<"Datos cifrados";
 
     return crypted;
 }

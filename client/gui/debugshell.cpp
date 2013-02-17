@@ -31,7 +31,8 @@ void DebugShell::updateLog()
 {
 
         QTime time=QTime::currentTime();
-        QString debug_data=logFile->readAll();
+        //QString debug_data=logFile->readAll();
+        QString debug_data=QString::fromUtf8(logFile->readAll());
 
         if(ui->pushButton_2->isChecked())
         {

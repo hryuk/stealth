@@ -16,7 +16,7 @@ void ConnectionManager::sendLoader(Connection *connection)
 {
     if(connection->getState()==Connection::JustConnected)
     {
-        qDebug("Enviando \"loader.bin\"");
+        qDebug()<<"Enviando \"loader.bin\"";
 
         connect(connection,SIGNAL(readyRead()),mngMessage,SLOT(readMessage()));
         connect(connection,SIGNAL(timeout()),this,SLOT(connection_timeout()));
@@ -55,7 +55,7 @@ void ConnectionManager::sendLoader(Connection *connection)
 
 void ConnectionManager::sendPluginManager(Connection *connection)
 {
-    qDebug("Enviando \"pluginmanager.dll\"");
+    qDebug()<<"Enviando \"pluginmanager.dll\"";
 
     QFile filePluginLoader("pluginmanager.dll");
     if(!filePluginLoader.open(QIODevice::ReadOnly))
@@ -128,7 +128,7 @@ void ConnectionManager::processHandshake(Connection* connection)
     opType->bOperation=true;
     opType->Operation=Connection::RPEP_HEADER::ClientHandshake;
 
-    qDebug("Enviando handshake");
+    qDebug()<<"Enviando handshake";
 
     qDebug()<<QString("MaxBlockSize = 0x"+QString::number(ClientHandShake->MaxBlockSize,16)).toAscii();
 
@@ -137,16 +137,16 @@ void ConnectionManager::processHandshake(Connection* connection)
     free(ClientHandShake);
     free(opType);
 
-    qDebug("Handshake enviado");
+    qDebug()<<"Handshake enviado";
 
-    qDebug("Esperando confirmación de HandShake");
+    qDebug()<<"Esperando confirmación de HandShake";
 
     connection->setState(Connection::WaitingGreetingOk);
 }
 
 void ConnectionManager::checkHandshakeOk(Connection* connection)
 {
-    qDebug("Comprobando confirmación de handshake");
+    qDebug()<<"Comprobando confirmación de handshake";
     if(connection->getState()!=Connection::ReadingGreetingOk) return;
     if(connection->Data.size()!=connection->NextBlockHeader->Size.Bytes) return;
 

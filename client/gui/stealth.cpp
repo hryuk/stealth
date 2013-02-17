@@ -64,11 +64,11 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 
     //TODO: Mover a main.cpp?
     server=new Server();
-    qDebug()<<"Creado Server()";
+    qDebug()<<"Creada clase Server";
     messageManager=new MessageManager();
-    qDebug()<<"Creado MessageManager()";
+    qDebug()<<"Creada clase MessageManager";
     connectionManager=new ConnectionManager(this,messageManager);
-    qDebug()<<"Creado ConnectionManager";
+    qDebug()<<"Creada clase ConnectionManager";
 
     //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
     connect(server,SIGNAL(newConnection(Connection*)),connectionManager,SLOT(sendLoader(Connection*)));
