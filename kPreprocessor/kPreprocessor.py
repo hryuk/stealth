@@ -36,7 +36,10 @@ if __name__ == "__main__":
         if len(r)>0:
             save2dump(''.join(r) + "\n")
         #Load src
-        exec open("./dump", "r")
+        try:
+            exec open("./dump", "r")
+        except IOError as e:
+            pass
         #Resolve macros
         for fu in re.findall("(?<=#define)(.*?)(?=\(\.\.\.\) *PYTHON_FUNCTION\(\))", raw, re.DOTALL):
             raw = re.sub("("+fu+"\([^\.?].*?\)(?=[^\:]))", lambda m:str(eval(m.group(1))), raw)

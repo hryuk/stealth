@@ -42,7 +42,7 @@ def MY_CONFIG():
     b = Builder()
     b.addBlob(blob)
     b.addString("Stealth")
-    b.addTargets([[0x932B, "192.168.1.4"], [0x932B, "127.0.0.1"]])
+    b.addTargets([[0x932B, "127.0.0.1"]])
     b.addDword(0)
     b.addDword(0)
     b.padd()
