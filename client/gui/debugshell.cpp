@@ -7,13 +7,16 @@ DebugShell::DebugShell(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    /* La ventana se eliminará de la memoria al cerrarse */
     setAttribute(Qt::WA_DeleteOnClose,true);
 
+    /* Abrimos el archivo en el que se van guardando todos los mensajes
+        de debug durante la ejecución */
     logFile=new QFile("debug_log.txt");
     if(!logFile->open(QIODevice::ReadOnly)) return;
 
-    updateLog();
-
+    /* Cada segundo actualizamos el texto de la shell con los nuevos
+        datos del archivo de texto */
     timer.setInterval(1000);
     timer.setSingleShot(false);
     connect(&timer,SIGNAL(timeout()),this,SLOT(updateLog()));
@@ -29,13 +32,17 @@ DebugShell::~DebugShell()
 
 void DebugShell::updateLog()
 {
-
+        /* Obtenemos la hora actual */
         QTime time=QTime::currentTime();
-        //QString debug_data=logFile->readAll();
-        QString debug_data=QString::fromUtf8(logFile->readAll());
 
-        if(ui->pushButton_2->isChecked())
+        /* Leemos los datos nuevos del archivo de texto*/
+        QString debug_data=QString::fromUtf8(logFile->readAll());
+        if(debug_data.isEmpty()) return;
+
+        if(ui->btnEnableLog->isChecked())
         {
+            /* Procesamos cada linea, imprimiendola en un color según
+                su tipo y con la fecha incluída */
             QStringList lines=debug_data.split("\n");
             foreach(QString line,lines)
             {
@@ -47,15 +54,15 @@ void DebugShell::updateLog()
         }
 }
 
-void DebugShell::on_pushButton_2_toggled(bool checked)
+void DebugShell::on_btnEnableLog_toggled(bool checked)
 {
     if(checked)
     {
-        ui->pushButton_2->setIcon(QIcon(":/res/img/cancel.png"));
+        ui->btnEnableLog->setIcon(QIcon(":/res/img/cancel.png"));
     }
     else
     {
-        ui->pushButton_2->setIcon(QIcon(":/res/img/tick.png"));
+        ui->btnEnableLog->setIcon(QIcon(":/res/img/tick.png"));
     }
 }
 

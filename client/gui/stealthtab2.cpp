@@ -7,6 +7,7 @@ StealthTab2::StealthTab2(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    /* Ajustamos el tamaño de los headers para que ocupen todo el treewidget */
     ui->treeWidget->header()->setResizeMode(0,QHeaderView::Stretch);
     ui->treeWidget->header()->setResizeMode(1,QHeaderView::Stretch);
 }

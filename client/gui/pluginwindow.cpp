@@ -43,6 +43,8 @@ PluginWindow::~PluginWindow()
 
 void PluginWindow::showEvent(QShowEvent *)
 {
+    /* Ponemos la dirección del servidor como título de la ventana
+        y enviamos el primer plugin al servidor para que lo cargue */
     setWindowTitle(connection->peerAddress().toString());
     connection->sendPlugin(0,pluginManager->plugins.at(0)->serverPlugin());
 }

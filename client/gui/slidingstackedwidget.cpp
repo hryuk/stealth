@@ -14,7 +14,6 @@ SlidingStackedWidget::SlidingStackedWidget(QWidget *parent)
 
         //Now, initialize some private variables with default values
         m_vertical=false;
-        //setVerticalMode(true);
         m_speed=500;
         m_animationtype = QEasingCurve::Linear;  //check out the QEasingCurve documentation for different styles
         m_now=0;
@@ -23,7 +22,6 @@ SlidingStackedWidget::SlidingStackedWidget(QWidget *parent)
         m_pnow=QPoint(0,0);
         m_active=false;
 }
-
 
 SlidingStackedWidget::~SlidingStackedWidget(){
 }
@@ -51,7 +49,6 @@ void SlidingStackedWidget::slideInNext() {
                 slideInIdx(now+1);
 }
 
-
 void SlidingStackedWidget::slideInPrev() {
         int now=currentIndex();
         if (m_wrap||(now>0))
@@ -71,7 +68,6 @@ void SlidingStackedWidget::slideInIdx(int idx, enum t_direction direction) {
         slideInWgt(widget ( idx ),direction);
         //widget() is a function inherited from QStackedWidget
 }
-
 
 void SlidingStackedWidget::slideInWgt(QWidget * newwidget, enum t_direction  direction) {
 
@@ -166,7 +162,6 @@ void SlidingStackedWidget::slideInWgt(QWidget * newwidget, enum t_direction  dir
         //that we implement here below in animationDoneSlot.
 }
 
-
 void SlidingStackedWidget::animationDoneSlot(void) {
     //when ready, call the QStackedWidget slot setCurrentIndex(int)
     setCurrentIndex(m_next);  //this function is inherit from QStackedWidget
@@ -180,7 +175,3 @@ void SlidingStackedWidget::animationDoneSlot(void) {
     m_active=false;
     emit animationFinished();
 }
-
-
-
-

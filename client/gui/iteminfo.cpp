@@ -7,6 +7,7 @@ ItemInfo::ItemInfo(Connection *connection, QWidget *parent) :
 {
     ui->setupUi(this);
 
+    /* Seteamos la IP, las otras labels de info son de muestra */
     if(connection)
     {
         ui->label_4->setText(connection->peerAddress().toString());

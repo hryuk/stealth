@@ -1,10 +1,7 @@
-#-------------------------------------------------
-#
-# Project created by QtCreator 2011-12-08T18:20:34
-#
-#-------------------------------------------------
-
 QT+=core gui network crypto
+
+#Para deshabilitar los mensajes de debug
+#CONFIG(release, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
 
 TARGET=Stealth
 TEMPLATE=app
@@ -71,8 +68,3 @@ win32 {
 unix {
     LIBS += -L$$quote(qca-2.0.3/lib) -lqca
 }
-
-
-
-
-

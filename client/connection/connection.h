@@ -6,6 +6,11 @@
 
 #include "crypto.h"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4200)
+#endif
+
 class Connection : public QTcpSocket
 {
     Q_OBJECT
@@ -153,7 +158,7 @@ public:
     QByteArray getIV();
     ulong getBlockSize();
 
-    Connection::RPEP_HEADER* NextBlockHeader;
+    Connection::RPEP_HEADER* nextBlockHeader;
     Connection::RPEP_SERVER_HANDSHAKE* HandShake;
     QByteArray Data;
 
@@ -176,6 +181,7 @@ private slots:
 
 public slots:
     int send(RPEP_HEADER::_OperationType* operation,char* data,int size);
+    int sendClientHandshake(Connection::RPEP_CLIENT_HANDSHAKE* ClientHandshake);
     int sendPlugin(int ID, QByteArray serverPlugin);
     int sendPluginData(int ID,QByteArray data);
     QByteArray crypt(QByteArray data,bool padding=true);
@@ -187,5 +193,9 @@ public slots:
 signals:
     void timeout();
 };
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 #endif // CONNECTION_H

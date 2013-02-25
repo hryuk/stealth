@@ -117,7 +117,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
         </widget>
        </item>
        <item row="0" column="1">
-        <widget class="QPushButton" name="pushButton_2">
+        <widget class="QPushButton" name="btnEnableLog">
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>
          </property>
