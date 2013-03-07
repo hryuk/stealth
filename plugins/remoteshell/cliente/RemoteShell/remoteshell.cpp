@@ -6,6 +6,11 @@ Q_EXPORT_PLUGIN2(remoteshell,RemoteShell)
 RemoteShell::RemoteShell(QWidget *parent) : QWidget(parent), ui(new Ui::GUI)
 {
     ui->setupUi(this);
+
+    terminal=new QTerminal();
+    ui->gridLayout->addWidget(terminal);
+
+    connect(terminal,SIGNAL(returnPressed()),this,SLOT(sendCommand()));
 }
 
 QWidget* RemoteShell::getGUI()
@@ -25,11 +30,7 @@ QString RemoteShell::getPluginName()
 
 void RemoteShell::recvData(QByteArray data)
 {
-    ui->textEdit->append(QString::fromUtf16((ushort*)data.data())); 
-    QTextCursor tc=ui->textEdit->textCursor();
-    tc.movePosition(QTextCursor::End);
-    ui->textEdit->setTextCursor(tc);
-    ui->lineEdit->setFocus();
+    terminal->insertOutput(QString::fromUtf16((ushort*)data.data()));
 }
 
 QByteArray RemoteShell::serverPlugin()
@@ -42,17 +43,7 @@ QByteArray RemoteShell::serverPlugin()
     return Plugin;
 }
 
-void RemoteShell::on_lineEdit_returnPressed()
+void RemoteShell::sendCommand()
 {
-    if(ui->lineEdit->text()=="clear" || ui->lineEdit->text()=="cls")
-    {
-        ui->textEdit->clear();
-    }
-    else
-    {
-        emit sendData(ui->lineEdit->text().append("\r\n").toAscii());
-    }
-
-    ui->lineEdit->clear();
-    ui->lineEdit->setFocus();
+    emit sendData(terminal->getCommand().append("\r\n").toAscii());
 }

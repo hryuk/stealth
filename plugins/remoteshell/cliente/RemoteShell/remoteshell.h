@@ -2,6 +2,8 @@
 #define REMOTESHELL_H
 
 #include "plugininterface.h"
+#include "qterminal.h"
+
 #include <QWidget>
 #include <QMessageBox>
 #include <QFile>
@@ -30,11 +32,14 @@ public:
 
 private:
     Ui::GUI* ui;
+    QString prompt;
+    QTerminal* terminal;
 
 signals:
     void sendData(QByteArray);
+
 private slots:
-    void on_lineEdit_returnPressed();
+    void sendCommand();
 };
 
 #endif // REMOTESHELL_H
