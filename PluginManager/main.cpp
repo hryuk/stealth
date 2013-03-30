@@ -3,14 +3,14 @@
 #include "main.h"
 #include "PluginManager.h"
 
-using namespace std;
+using namespace std;/*
 extern "C" bool DLL_EXPORT WINAPI _DllMainCRTStartup(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
     return true;
-}
+}*/
 int main(){
     return 0;
 }
-bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
+bool WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserved*/){
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:

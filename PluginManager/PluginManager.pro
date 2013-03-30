@@ -5,15 +5,7 @@ CONFIG -= qt
 
 QMAKE_CXXFLAGS_RTTI_ON -= -frtti
 QMAKE_CXXFLAGS_RTTI_OFF = -fno-rtti
-QMAKE_CXXFLAGS += -nostdlib -fno-exceptions -fno-rtti -fno-omit-frame-pointer
-
-if win32{
-   QMAKE_CXXFLAGS += -std=gnu++0x
-}
-else {
-	QMAKE_CXXFLAGS += -std=c++0x
-	DEFINES +=_WIN32
-}
+#QMAKE_CXXFLAGS += -nostdlib -fno-exceptions -fno-rtti -fno-omit-frame-pointer
 
 win32 {
 		  build_pass:CONFIG(debug, debug|release) {
@@ -27,10 +19,10 @@ win32 {
 DEFINES +=BUILD_DLL _WIN32
 DEFINES -= UNICODE QT_LARGEFILE_SUPPORT
 
-QMAKE_LFLAGS +=  -nostartfiles -fno-exceptions -nostdlib
+#QMAKE_LFLAGS +=  -nostartfiles -fno-exceptions -nostdlib
 
 #LIBS += -L$$quote(../ArkLib) -lArkLib -lntdll -lWs2_32 --static
-LIBS += -lntdll -lkernel32 -lWs2_32 -lmsvcrt -luser32 -lAdvapi32
+LIBS += -lkernel32 -lWs2_32 -lmsvcrt -luser32 -lAdvapi32
 
 
 SOURCES +=  rtl.cpp\
@@ -46,8 +38,8 @@ HEADERS +=	main.h  \
 			RPEP.h \
 			RPEP_Struc.h \
 			PluginManager.h \
-	serializable.h \
-	objectstream.h \
-	plugininterface.h \
-	basicTypes.h \
-	darray.h
+			serializable.h \
+			objectstream.h \
+			plugininterface.h \
+			basicTypes.h \
+			darray.h

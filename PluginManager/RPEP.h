@@ -1,11 +1,13 @@
 #ifndef RPEP_H
 #define RPEP_H
-#include <winsock2.h>
+
+#include <windows.h>
 #include <wincrypt.h>
 
 #include "basicTypes.h"
 #include "RPEP_Struc.h"
 
+typedef UINT_PTR        SOCKET;
 
 class DArray;
 class PluginManager;

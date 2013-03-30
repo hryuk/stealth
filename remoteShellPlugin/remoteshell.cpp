@@ -4,21 +4,25 @@
 int RemoteShell::threadReader(register RemoteShell *_this){
     char buff[800];
     wchar_t wBuff[800];
+    DebufPrintf("[rs] threadReader \n");
 
     if(_this){
+        DebufPrintf("[rs] threadReader createShell \n");
         _this->shell = createShell();
         _this->threadRuning = true;
         //Espera hasta que se termine de cargar
+        DebufPrintf("[rs] threadReader waitToLoad \n");
         while(!_this->mgr)Sleep(100);
 
         while(_this->threadRuning){
             //long bytesRead = readShell(_this->shell,&readData);
+            DebufPrintf("[rs] threadReader readShell \n");
             long bytesRead = readShell(_this->shell,buff,sizeof(buff)-2);
             if(bytesRead>0){
                 *((wchar_t*)(buff+bytesRead)) = 0;
                 bytesRead += sizeof(wchar_t);
                 MultiByteToWideChar(CP_ACP, 0,buff,bytesRead,wBuff, bytesRead);
-
+                DebufPrintf("[rs] threadReader sendData \n");
                 _this->mgr->sendData((char*)wBuff,bytesRead*sizeof(*wBuff));
                 //free(readData);
             }else Sleep(20);
@@ -32,7 +36,7 @@ RemoteShell::RemoteShell(){
     shell = null;
     recivedData = null;
     ulong threadId;
-    hThreadReader = CreateThread(0,0,(LPTHREAD_START_ROUTINE)&threadReader,this,0,&threadId);
+    hThreadReader = CreateThread(null,0,(LPTHREAD_START_ROUTINE)&threadReader,this,0,&threadId);
     DebufPrintf("newThread %x id\n",threadId);
 }
 
@@ -47,7 +51,8 @@ const char *RemoteShell::getPluginName(){
 
 int RemoteShell::onReciveData(char *data, uint size){
     bool writed = false;
-    DebufPrintf("onReciveData %x bytes\n",size);
+
+    DebufPrintf("[rs] onReciveData %x bytes\n",size);
 
     return writeShell(shell,data,size);
 }
@@ -90,7 +95,9 @@ Shell* createShell(){
 }
 
 bool deleteShell(Shell* shell){
+    DebufPrintf("[rs] deleteShell \n");
     TerminateProcess(shell->ProcessInformation.hProcess,0);
+    DebufPrintf("[rs] CloseHandles \n");
     CloseHandle(shell->hRead);
     CloseHandle(shell->hWrite);
     CloseHandle(shell->startInfo.hStdInput);

@@ -1,14 +1,16 @@
+#include <WinSock2.h>
 #include "RPEP.h"
 #include "PluginManager.h"
 #include "plugininterface.h"
 
+
 #define MinBlockSize 1024
 
-RPEP::RPEP(SOCKET hConexion, HCRYPTKEY hKey, PluginManager *PlugMgr){
+RPEP::RPEP(SOCKET hConexion, HCRYPTKEY hKey, PluginManager *PlugMgr):ver(0,0){
     DebufPrintf("[pm] RPEP ctor \n");
     Port = NULL;
     CompresAlg = PortCount = 0;
-    ver = (version){0,0};
+    //ver = version(0,0);
     MaxPaquetSize = 4096*4;
     runing = true;
     ver.High = 1;
@@ -132,24 +134,30 @@ uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, cons
 
 
 uint RPEP::MakeServerHello(DArray& outBuff){
-    static ulong* CompresAlg = {};
+    static ulong* CompresAlg = null;
     ulong CompresAlgCount = 0;
+    register RPEP_SERVER_HANDSHAKE* sHello;
 
     //calculamos el tamaño dl buffer para contener al ServerHello
-    uint buffSize = sizeof(RPEP_SERVER_HANDSHAKE)+CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm);
+    uint buffSize = sizeof(RPEP_SERVER_HANDSHAKE)
+            +CompresAlgCount*sizeof(*sHello->SupportedCompressionAlgm);
     //Buffert en pila para el hello
-    char buff[buffSize];
-    register RPEP_SERVER_HANDSHAKE* sHello = (RPEP_SERVER_HANDSHAKE*)buff;
+    char* buff = (char*)malloc(buffSize);
+    sHello = (RPEP_SERVER_HANDSHAKE*)buff;
 
     //Inicializo el hello
     *((version*)&sHello->Version) = ver;
     sHello->MaxBlockSize = MaxPaquetSize;
     sHello->SupportedCompressionAlgmCount = CompresAlgCount;
-    if(CompresAlgCount)memcpy(sHello->SupportedCompressionAlgm,CompresAlg,CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm));
+    if(CompresAlgCount)
+        memcpy(sHello->SupportedCompressionAlgm,
+               CompresAlg,
+               CompresAlgCount*sizeof(*sHello->SupportedCompressionAlgm));
 
 
     MakePacket(outBuff,RPEP_HEADER::Operation::ServerHandshake,buff,buffSize);
 
+    free(buff);
     return outBuff.size;
 }
 uint RPEP::MakeError(DArray& outBuff,uint code){
@@ -162,6 +170,7 @@ uint RPEP::MakeError(DArray& outBuff,uint code){
 }
 
 bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
+    DebufPrintf("[pm] procesPkg \n");
     bool result = true;
     uint bytesRead = 0;
     RPEP_HEADER* header = 0;
@@ -189,7 +198,9 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
                     ulong dataSize = decript((byte*)header->Data,header->Size.Blocks*MaxPaquetSize);
                     if(dataSize != (uint)-1){
                         procesCMD(header->opType,header->Data,dataSize,out);
+                        DebufPrintf("[pm] procesPkg workBuff.Vaciar() antes\n");
                         workBuff.Vaciar();
+                        DebufPrintf("[pm] procesPkg workBuff.Vaciar() despues\n");
                     }
                 }
             }
@@ -223,15 +234,13 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
     }else{
         in.DelData(0,bytesRead);
     }
-
-
-
+    DebufPrintf("[pm] procesPkg end\n");
     return result;
 }
 bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DArray& response){
     bool result = false;
 
-    DebufPrintf("procesCMD \n");
+    DebufPrintf("[pm] procesCMD \n");
     if(opType.bOperation){
         DebufPrintf("comando interno\n");
         switch(opType.Operation){
@@ -296,6 +305,7 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DAr
         DebufPrintf("comando para plugin\n");
         PlugMgr->runPluginCMD(opType.PluginID,data,size);
     }
+    DebufPrintf("[pm] procesCMD end\n");
     return result;
 }
 
@@ -330,7 +340,7 @@ bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello,DArray& respons
 
 
 void RPEP::setMaxPaquetSize(ulong s){
-    MaxPaquetSize = s;
+    MaxPaquetSize = (ushort)s;
 }
 
 void RPEP::setCompresAlg(ulong CompresAlg){
@@ -351,7 +361,7 @@ bool RPEP::encript(DArray &data){
         int buffSize = ((data.size>>4)+1)<<4;
         data.Expand(buffSize);
 
-        return CryptEncrypt(hKey,0,true,0,data.data,&data.size,buffSize);
+        return CryptEncrypt(hKey,0,true,0,data.data,&data.size,buffSize) != 0;
     }
     return false;
 }
@@ -375,17 +385,21 @@ uint RPEP::decript(byte* data,ulong size){
 
 
 int RPEP::recv(char *data, uint size){
+    DebufPrintf("[pm] recv \n");
     int recvedData = 0;
 
     while(!recvedData){
         ioctlsocket(hConexion,FIONREAD,(ulong*)&recvedData);
-        //DebufPrintf("recvedData %x\n",recvedData);
+        DebufPrintf("[pm] recvedData %x\n",recvedData);
 
         if(recvedData > 0){
+            DebufPrintf("[pm] recv readData\n");
             recvedData = ::recv(hConexion,data,size,0);
         }else{
+            DebufPrintf("[pm] recv no data\n");
             recvedData = ::recv(hConexion,0,0,MSG_PEEK);
             if(recvedData == -1){
+                DebufPrintf("[pm] recv WSAGetLastError\n");
                 ulong error = WSAGetLastError();
                 switch(error){
                     case WSAEWOULDBLOCK:

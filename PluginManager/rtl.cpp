@@ -4,7 +4,7 @@
 #include <cstdlib>
 #include <float.h>
 #include <windows.h>
-
+/*
 //#include <unwind.h>
 #include "basicTypes.h"
 
@@ -13,7 +13,7 @@
 #define __GUI_APP        2
 void __set_app_type(int);
 typedef int (*_controlfp)(unsigned a, unsigned b);
-#ifdef debug
+#ifdef DEBUG
 bool disablePrintf = false;
 #else
 bool disablePrintf = true;
@@ -72,10 +72,10 @@ extern "C" int __main(){
     return 0;
 }
 
-/* Level 1: Base ABI  */
+/* Level 1: Base ABI  * /
 
 /* @@@ The IA-64 ABI uses uint64 throughout.  Most places this is
-   inefficient for 32-bit and smaller machines.  */
+   inefficient for 32-bit and smaller machines.  * /
 typedef unsigned _Unwind_Word __attribute__((__mode__(__unwind_word__)));
 typedef signed _Unwind_Sword __attribute__((__mode__(__unwind_word__)));
 #if defined(__ia64__) && defined(__hpux__)
@@ -88,11 +88,11 @@ typedef unsigned _Unwind_Internal_Ptr __attribute__((__mode__(__pointer__)));
 /* @@@ The IA-64 ABI uses a 64-bit word to identify the producer and
    consumer of an exception.  We'll go along with this for now even on
    32-bit machines.  We'll need to provide some other option for
-   16-bit machines and for machines with > 8 bits per byte.  */
+   16-bit machines and for machines with > 8 bits per byte.  * /
 typedef unsigned _Unwind_Exception_Class __attribute__((__mode__(__DI__)));
 
 /* The unwind interface uses reason codes in several contexts to
-   identify the reasons for failures or other actions.  */
+   identify the reasons for failures or other actions.  * /
 typedef enum _Unwind_Reason_Code{
   _URC_NO_REASON = 0,
   _URC_FOREIGN_EXCEPTION_CAUGHT = 1,
@@ -110,7 +110,7 @@ typedef enum _Unwind_Reason_Code{
    as its representation of an exception being thrown. In general, the
    full representation of an exception object is language- and
    implementation-specific, but it will be prefixed by a header
-   understood by the unwind interface.  */
+   understood by the unwind interface.  * /
 
 struct _Unwind_Exception;
 
@@ -126,7 +126,7 @@ struct _Unwind_Exception
 
   /* @@@ The IA-64 ABI says that this structure must be double-word aligned.
      Taking that literally does not make much sense generically.  Instead we
-     provide the maximum alignment required by any type for the machine.  */
+     provide the maximum alignment required by any type for the machine.  * /
 } __attribute__((__aligned__));
 
 typedef int _Unwind_Action;
@@ -173,11 +173,11 @@ extern "C" void* __cxa_allocate_dependent_exception() throw(){
     DebufPrintf("__cxa_free_dependent_exception");
     return 0;
 }
-extern "C" void __cxa_free_dependent_exception (void* /*dependent_exception*/) throw(){
+extern "C" void __cxa_free_dependent_exception (void* /*dependent_exception* /) throw(){
     DebufPrintf("__cxa_free_dependent_exception");
 }
 
-extern "C" void __cxa_throw(void* /*thrown_exception*/, struct std::type_info * /*tinfo*/, void (*/*dest*/)(void*)){
+extern "C" void __cxa_throw(void* /*thrown_exception* /, struct std::type_info * /*tinfo* /, void (* /*dest* /)(void*)){
     DebufPrintf("__cxa_throw");
 }
 
@@ -186,7 +186,7 @@ extern "C" void* __cxa_get_exception_ptr(void* exceptionObject) throw(){
     return 0;
 }
 
-extern "C" void* __cxa_begin_catch(void* /*exceptionObject*/) throw(){
+extern "C" void* __cxa_begin_catch(void* /*exceptionObject* /) throw(){
     DebufPrintf("__cxa_begin_catch");
     return NULL;
 }
@@ -225,5 +225,5 @@ extern "C" void __chkstk_ms(void){
 extern "C" int __mingw_vprintf (char * s, const char * format, __gnuc_va_list arg ){
     return !disablePrintf?vprintf(s,format,arg):0;
 }
-//*/
+*/
 
