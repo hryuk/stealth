@@ -4,6 +4,7 @@ Makefile
 Makefile.*
 # Compiled object files
 *.o
+*.pdb
 
 # Generated MOC, resource and UI files
 moc_*.cpp
