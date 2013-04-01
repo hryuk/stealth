@@ -1,7 +1,19 @@
 TARGET=pluginmanager
-TEMPLATE = lib
+TEMPLATE =lib
 #CONFIG += console
 CONFIG -= qt
+
+Release:DESTDIR = ../release
+Release:OBJECTS_DIR = ../release/.obj-pluginmanager
+Release:MOC_DIR = ../release/.moc-pluginmanager
+Release:RCC_DIR = ../release/.rcc-pluginmanager
+Release:UI_DIR = ../release/.ui-pluginmanager
+
+Debug:DESTDIR = ../debug
+Debug:OBJECTS_DIR = ../debug/.obj-pluginmanager
+Debug:MOC_DIR = ../debug/.moc-pluginmanager
+Debug:RCC_DIR = ../debug/.rcc-pluginmanager
+Debug:UI_DIR = ../debug/.ui-pluginmanager
 
 QMAKE_CXXFLAGS_RTTI_ON -= -frtti
 QMAKE_CXXFLAGS_RTTI_OFF = -fno-rtti
