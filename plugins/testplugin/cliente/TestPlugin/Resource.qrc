@@ -1,6 +1,0 @@
-<RCC>
-    <qresource prefix="/">
-        <file>res/img/check.png</file>
-        <file>res/testplugin.dll</file>
-    </qresource>
-</RCC>

@@ -4,7 +4,7 @@ CustomTreeWidget::CustomTreeWidget(QWidget *parent) : QTreeWidget(parent)
 {
 }
 
-void CustomTreeWidget::drawBranches ( QPainter * painter, const QRect & rect, const QModelIndex & index ) const
+void CustomTreeWidget::drawBranches (QPainter*,const QRect&,const QModelIndex&) const
 {
-    //Reimplementado solo para ocultar las ramas
+    /* Reimplementado solo para ocultar las ramas */
 }

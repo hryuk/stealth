@@ -1,12 +1,11 @@
-#include "pluginmanager.h"
+﻿#include "pluginmanager.h"
 
 #include <QMessageBox>
 
 PluginManager::PluginManager(QObject *parent) :
     QObject(parent)
 {
-    /* Cargamos todos los plugins */
-
+    /* Nos desplazamos al directorio de plugins */
     QDir pluginsDir=QDir(qApp->applicationDirPath());
     if(!pluginsDir.cd("plugins"))
     {
@@ -16,6 +15,7 @@ PluginManager::PluginManager(QObject *parent) :
 
     pluginIndex=0;
 
+    /* Recorremos todos los archivos */
     foreach(QString fileName,pluginsDir.entryList(QDir::Files))
     {
         QPluginLoader pluginLoader(pluginsDir.absoluteFilePath(fileName));

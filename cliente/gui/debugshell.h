@@ -25,7 +25,7 @@ private:
 
 private slots:
     void updateLog();
-    void on_pushButton_2_toggled(bool checked);
+    void on_btnEnableLog_toggled(bool checked);
     void on_pushButton_clicked();
 };
 

@@ -33,19 +33,21 @@
        <string notr="true">#topFrame {
 border: none;
 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-stop: 0 #a6a6a6, stop: 0.08 #7f7f7f,
-stop: 0.39999 #717171, stop: 0.4 #626262,
-stop: 0.9 #4c4c4c, stop: 1 #333333);
+stop: 0 #707070, 
+stop: 0.08 #555555,
+stop: 0.4 #2d2d30,
+stop: 0.97 #333333,
+ stop: 1 #000000);
 }
 
 #topFrame QPushButton {
-color: #333;
-border: 2px solid #555;
+color: #999999;
+border: 1px solid #222222;
 border-radius: 11px;
 padding: 5px;
 background: qradialgradient(cx: 0.3, cy: -0.4,
 fx: 0.3, fy: -0.4,
-radius: 1.35, stop: 0 #fff, stop: 1 #888);
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
 min-width: 30px;
 }
 
@@ -64,6 +66,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
         <widget class="QPushButton" name="pushButton">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="toolTip">
           <string/>
          </property>
@@ -84,6 +89,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
        </item>
        <item row="0" column="1">
         <widget class="QPushButton" name="pushButton_2">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="toolTip">
           <string/>
          </property>
@@ -117,6 +125,9 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
        </item>
        <item row="0" column="3">
         <widget class="QPushButton" name="pushButton_4">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
          <property name="text">
           <string/>
          </property>
@@ -146,21 +157,22 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
       <property name="styleSheet">
        <string notr="true">#scrollAreaWidget
 {
-	background-color:#626262;
+	background-color:#2d2d30;
 }
 
 QPushButton {
 
 text-align: left;
-color: #ddd;
+color: #999999;
 border: 0px solid #555;
 padding: 5px;
 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-stop: 0 #a6a6a6, stop: 0.08 #7f7f7f,
-stop: 0.39999 #717171, stop: 0.4 #626262,
-stop: 0.9 #4c4c4c, stop: 1 #333333);
+stop: 0 #707070, 
+stop: 0.08 #555555,
+stop: 0.4 #2d2d30,
+stop: 0.97 #333333
+ stop: 1 #000000);
 min-width: 80px;
-min-height: 30px;
 }
 
 QPushButton:checked {
@@ -189,8 +201,8 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
         <rect>
          <x>0</x>
          <y>0</y>
-         <width>101</width>
-         <height>534</height>
+         <width>69</width>
+         <height>536</height>
         </rect>
        </property>
        <property name="sizePolicy">
@@ -213,8 +225,43 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
       <property name="styleSheet">
        <string notr="true">#centralFrame {
 border: none;
-background: white;
-}</string>
+	background-color: white;
+}
+
+#centralFrame QPushButton {
+color: #efefef;
+border: 1px solid #222222;
+border-radius: 8px;
+padding: 6px;
+background: qradialgradient(cx: 0.3, cy: -0.4,
+fx: 0.3, fy: -0.4,
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
+min-width: 80px;
+}
+
+#centralFrame QPushButton:pressed {
+background: qradialgradient(cx: 0.4, cy: -0.1,
+fx: 0.4, fy: -0.1,
+radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
+}
+
+#centralFrame QPushButton:disabled
+{
+background: qradialgradient(cx: 0.4, cy: -0.1,
+fx: 0.4, fy: -0.1,
+radius: 1.35, stop: 0 #ddd, stop: 1 #999)
+}
+
+#centralFrame QHeaderView::section {
+background: qradialgradient(cx: 0.3, cy: -0.4,
+fx: 0.3, fy: -0.4,
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
+     color: #efefef;
+     padding: 4px;
+     border:0.5px solid black;
+border-radius: 2px;
+border-style: outset;
+ }</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
@@ -222,7 +269,14 @@ background: white;
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <layout class="QGridLayout" name="gridLayout_4"/>
+      <layout class="QGridLayout" name="gridLayout_4">
+       <property name="margin">
+        <number>0</number>
+       </property>
+       <property name="spacing">
+        <number>0</number>
+       </property>
+      </layout>
      </widget>
     </item>
    </layout>

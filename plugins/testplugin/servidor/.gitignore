@@ -1,4 +1,4 @@
-# In repository we don't need to have:
+﻿# In repository we don't need to have:
 # makefiles
 Makefile
 Makefile.*
@@ -32,3 +32,18 @@ desktop.ini
 
 # Editors temporary files 
 *~
+
+# C++ objects and libs
+*.slo
+*.lo
+*.a
+*.la
+*.lai
+*.so
+*.dylib
+
+# Qt-es
+*.pro.user
+*.pro.user.*
+Makefile
+*-build-*

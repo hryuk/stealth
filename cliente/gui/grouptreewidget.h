@@ -32,17 +32,8 @@ private:
     QFrame* frame;
     QLabel* iconLabel;
 
-private slots:
-    void on_btnExpand_clicked();
-    void on_treewidget_itemClicked(QTreeWidgetItem *item, int column);
-
 public slots:
-    void setExpanded(bool expanded);
-    bool isExpanded();
     void addItem(Connection*);
-
-signals:
-    void expandedChanged(GroupTreeWidget* newExpanded);
 };
 
 #endif // CUSTOMTREEWIDGET_H

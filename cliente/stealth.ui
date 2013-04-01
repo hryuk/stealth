@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="UTF-8"?>
+﻿<?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>Stealth</class>
  <widget class="QMainWindow" name="Stealth">
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Stealth - Demo</string>
+   <string>Demo</string>
   </property>
   <property name="styleSheet">
    <string notr="true"/>
@@ -40,33 +40,34 @@
       <property name="styleSheet">
        <string notr="true">#leftFrame
 {
-	background-color:#626262;
+	background-color:#2d2d30;
+}
+QToolButton {
+text-align: center;
+font-size: 10px;
+color: #999999;
+border: 0px;
+
+background-color: qradialgradient(cx: 0.3, cy: -0.4,
+fx: 0.3, fy: -0.4,
+radius: 1.35, stop: 0  #404040, stop: 1 #202020);
+
+min-width: 90px;
+padding-left: 2px;
+padding-right: 2px;
 }
 
-QPushButton {
-
-text-align: left;
-color: #ddd;
-border: 0px solid #555;
-padding: 5px;
-background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-stop: 0 #a6a6a6, stop: 0.08 #7f7f7f,
-stop: 0.39999 #717171, stop: 0.4 #626262,
-stop: 0.9 #4c4c4c, stop: 1 #333333);
-min-width: 80px;
-}
-
-QPushButton:checked {
+QToolButton:checked {
 color:  #000;
-background: qradialgradient(cx: 0.4, cy: -0.1,
+background-color: qradialgradient(cx: 0.4, cy: -0.1,
 fx: 0.4, fy: -0.1,
 radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
 }
 
-QPushButton:pressed
+QToolButton:pressed
 {
 color:  #000;
-background: qradialgradient(cx: 0.4, cy: -0.1,
+background-color: qradialgradient(cx: 0.4, cy: -0.1,
 fx: 0.4, fy: -0.1,
 radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
 }</string>
@@ -90,33 +91,18 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
           <enum>QLayout::SetFixedSize</enum>
          </property>
          <item>
-          <widget class="QPushButton" name="pushButton_3">
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>90</width>
-             <height>50</height>
-            </size>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::NoFocus</enum>
-           </property>
+          <widget class="QToolButton" name="btnConnections">
            <property name="text">
             <string>CONEXIONES</string>
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
-             <normaloff>:/res/img/connection_2.png</normaloff>:/res/img/connection_2.png</iconset>
+             <normaloff>:/res/img/blue-iconset/eye.png</normaloff>:/res/img/blue-iconset/eye.png</iconset>
            </property>
            <property name="iconSize">
             <size>
-             <width>32</width>
-             <height>32</height>
+             <width>48</width>
+             <height>48</height>
             </size>
            </property>
            <property name="checkable">
@@ -128,128 +114,92 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
            <property name="autoExclusive">
             <bool>true</bool>
            </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
+           <property name="autoRaise">
+            <bool>false</bool>
+           </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_5">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>90</width>
-             <height>50</height>
-            </size>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::NoFocus</enum>
-           </property>
+          <widget class="QToolButton" name="btnConfiguration">
            <property name="text">
             <string>CONFIGURACIÓN</string>
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
-             <normaloff>:/res/img/settings_1.png</normaloff>:/res/img/settings_1.png</iconset>
+             <normaloff>:/res/img/blue-iconset/config.png</normaloff>:/res/img/blue-iconset/config.png</iconset>
            </property>
            <property name="iconSize">
             <size>
-             <width>32</width>
-             <height>32</height>
+             <width>48</width>
+             <height>48</height>
             </size>
            </property>
            <property name="checkable">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="autoExclusive">
             <bool>true</bool>
            </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_4">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>90</width>
-             <height>50</height>
-            </size>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::NoFocus</enum>
-           </property>
+          <widget class="QToolButton" name="btnPlugins">
            <property name="text">
             <string>PLUGINS</string>
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
-             <normaloff>:/res/img/plugin.png</normaloff>:/res/img/plugin.png</iconset>
+             <normaloff>:/res/img/blue-iconset/adressbook.png</normaloff>:/res/img/blue-iconset/adressbook.png</iconset>
            </property>
            <property name="iconSize">
             <size>
-             <width>32</width>
-             <height>32</height>
+             <width>48</width>
+             <height>48</height>
             </size>
            </property>
            <property name="checkable">
-            <bool>false</bool>
+            <bool>true</bool>
            </property>
            <property name="autoExclusive">
             <bool>true</bool>
            </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
+           </property>
           </widget>
          </item>
          <item>
-          <widget class="QPushButton" name="pushButton_2">
-           <property name="enabled">
-            <bool>false</bool>
-           </property>
-           <property name="sizePolicy">
-            <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
-            </sizepolicy>
-           </property>
-           <property name="minimumSize">
-            <size>
-             <width>90</width>
-             <height>50</height>
-            </size>
-           </property>
-           <property name="focusPolicy">
-            <enum>Qt::NoFocus</enum>
-           </property>
+          <widget class="QToolButton" name="btnServer">
            <property name="text">
             <string>SERVIDOR</string>
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
-             <normaloff>:/res/img/server_add.png</normaloff>:/res/img/server_add.png</iconset>
+             <normaloff>:/res/img/blue-iconset/newfile.png</normaloff>:/res/img/blue-iconset/newfile.png</iconset>
            </property>
            <property name="iconSize">
             <size>
-             <width>32</width>
-             <height>32</height>
+             <width>48</width>
+             <height>48</height>
             </size>
            </property>
            <property name="checkable">
+            <bool>true</bool>
+           </property>
+           <property name="autoRepeat">
             <bool>false</bool>
            </property>
            <property name="autoExclusive">
             <bool>true</bool>
+           </property>
+           <property name="toolButtonStyle">
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
            </property>
           </widget>
          </item>
@@ -276,8 +226,43 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
       <property name="styleSheet">
        <string notr="true">#centralFrame {
 border: none;
-background: white;
-}</string>
+	background-color: white;
+}
+
+#centralFrame QPushButton {
+color: #efefef;
+border: 1px solid #222222;
+border-radius: 8px;
+padding: 6px;
+background: qradialgradient(cx: 0.3, cy: -0.4,
+fx: 0.3, fy: -0.4,
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
+min-width: 80px;
+}
+
+#centralFrame QPushButton:pressed {
+background: qradialgradient(cx: 0.4, cy: -0.1,
+fx: 0.4, fy: -0.1,
+radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
+}
+
+#centralFrame QPushButton:disabled
+{
+background: qradialgradient(cx: 0.4, cy: -0.1,
+fx: 0.4, fy: -0.1,
+radius: 1.35, stop: 0 #ddd, stop: 1 #999)
+}
+
+#centralFrame QHeaderView::section {
+background: qradialgradient(cx: 0.3, cy: -0.4,
+fx: 0.3, fy: -0.4,
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
+     color: #efefef;
+     padding: 4px;
+     border:0.5px solid black;
+border-radius: 2px;
+border-style: outset;
+ }</string>
       </property>
       <property name="frameShape">
        <enum>QFrame::StyledPanel</enum>
@@ -307,19 +292,21 @@ background: white;
        <string notr="true">#topFrame {
 border: none;
 background: qlineargradient(x1: 0, y1: 0, x2: 0, y2: 1,
-stop: 0 #a6a6a6, stop: 0.08 #7f7f7f,
-stop: 0.39999 #717171, stop: 0.4 #626262,
-stop: 0.9 #4c4c4c, stop: 1 #333333);
+stop: 0 #707070, 
+stop: 0.08 #555555,
+stop: 0.4 #2d2d30,
+stop: 0.97 #333333,
+ stop: 1 #000000);
 }
 
 #topFrame QPushButton {
-color: #333;
-border: 2px solid #555;
+color: #999999;
+border: 1px solid #222222;
 border-radius: 11px;
 padding: 5px;
 background: qradialgradient(cx: 0.3, cy: -0.4,
 fx: 0.3, fy: -0.4,
-radius: 1.35, stop: 0 #fff, stop: 1 #888);
+radius: 1.35, stop: 0  #707070, stop: 1 #2d2d30);
 min-width: 80px;
 }
 
@@ -327,6 +314,11 @@ min-width: 80px;
 background: qradialgradient(cx: 0.4, cy: -0.1,
 fx: 0.4, fy: -0.1,
 radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
+}
+
+QLabel
+{
+	color: #999999;
 }</string>
       </property>
       <property name="frameShape">
@@ -335,21 +327,25 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
       <property name="frameShadow">
        <enum>QFrame::Raised</enum>
       </property>
-      <layout class="QHBoxLayout" name="horizontalLayout">
-       <item>
-        <spacer name="horizontalSpacer">
-         <property name="orientation">
-          <enum>Qt::Horizontal</enum>
+      <layout class="QGridLayout" name="gridLayout_2">
+       <property name="leftMargin">
+        <number>30</number>
+       </property>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Versión 1.0 Alpha</string>
          </property>
-         <property name="sizeHint" stdset="0">
-          <size>
-           <width>40</width>
-           <height>20</height>
-          </size>
-         </property>
-        </spacer>
+        </widget>
        </item>
-       <item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Escuchando conexiones por el puerto 11155</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3" rowspan="2">
         <widget class="QPushButton" name="btnDebug">
          <property name="focusPolicy">
           <enum>Qt::NoFocus</enum>
@@ -375,7 +371,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
          </property>
         </widget>
        </item>
-       <item>
+       <item row="0" column="4" rowspan="2">
         <widget class="QPushButton" name="pushButton">
          <property name="enabled">
           <bool>false</bool>
@@ -397,6 +393,19 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);
           </size>
          </property>
         </widget>
+       </item>
+       <item row="0" column="2" rowspan="2">
+        <spacer name="horizontalSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
        </item>
       </layout>
      </widget>

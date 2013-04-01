@@ -1,6 +1,12 @@
-#include <QtGui/QApplication>
+﻿#include <QtGui/QApplication>
 #include "stealth.h"
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4996)
+#endif
+
+/* Todos los qDebug, qWarning, qCritical y qFatal van a parar aquí */
 void mMsgOut(QtMsgType type, const char *msg)
 {
     FILE* hFile=fopen("debug_log.txt","a+");
@@ -24,12 +30,20 @@ void mMsgOut(QtMsgType type, const char *msg)
     fclose(hFile);
 }
 
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 int main(int argc, char *argv[])
 {
+    /* Eliminamos el log anterior que pueda haber */
     remove("debug_log.txt");
+
+    /* Indicamos la función que manejará los qDebug, QWarning, etc */
     qInstallMsgHandler(mMsgOut);
+
     QApplication a(argc, argv);
-    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
+    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("latin1"));
     Stealth w;
     w.show();
 

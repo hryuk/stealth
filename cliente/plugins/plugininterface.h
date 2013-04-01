@@ -1,4 +1,4 @@
-#ifndef PLUGININTERFACE_H
+﻿#ifndef PLUGININTERFACE_H
 #define PLUGININTERFACE_H
 
 #include <QtPlugin>
@@ -17,7 +17,7 @@ public:
 };
 
 QT_BEGIN_NAMESPACE
-Q_DECLARE_INTERFACE(PluginInterface,"Stealth.Plugins/1.0")
+Q_DECLARE_INTERFACE(PluginInterface,"MainWnd.Plugins/1.0")
 QT_END_NAMESPACE
 
 #endif // PLUGININTERFACE_H
