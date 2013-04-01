@@ -1,13 +1,16 @@
+#include <WinSock2.h>
 #include "RPEP.h"
 #include "PluginManager.h"
 #include "plugininterface.h"
 
+
 #define MinBlockSize 1024
 
-RPEP::RPEP(SOCKET hConexion, HCRYPTKEY hKey, PluginManager *PlugMgr){
+RPEP::RPEP(SOCKET hConexion, HCRYPTKEY hKey, PluginManager *PlugMgr):ver(0,0){
+    DebufPrintf("[pm] RPEP ctor \n");
     Port = NULL;
     CompresAlg = PortCount = 0;
-    ver = (version){0,0};
+    //ver = version(0,0);
     MaxPaquetSize = 4096*4;
     runing = true;
     ver.High = 1;
@@ -25,28 +28,32 @@ ulong RPEP::clientLoop(){
     return 0;
 }
 ulong RPEP::serverLoop(){
-    printf("serverLoop\n");
+    DebufPrintf("[pm] serverLoop \n");
     DArray readBuff,writeBuff,workBuff;
     char buff[4096];
 
+    DebufPrintf("[pm] MakeServerHello \n");
     MakeServerHello(writeBuff);
-    printf("MakeServerHello");
-    //encript(writeBuff);
-    //conexion.write(writeBuff);
 
+    DebufPrintf("[pm] send MakeServerHello \n");
     ::send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
-    printf("writeBuff.size %d \n",(int)writeBuff.size);
+    DebufPrintf("[pm] send data %d \n",(int)writeBuff.size);
+    DebufPrintf("writeBuff.size %d \n",(int)writeBuff.size);
+    //Cambio a modo asyncrono
+    ulong async = true;
+    ioctlsocket(hConexion,FIONBIO,&async);
 
     writeBuff.Vaciar();
     int readBytes;
     do{
-        for(readBytes = 0;(readBytes = recv(hConexion,buff,sizeof(buff),0))> 0;){
-            //printf("recv readBytes = %d\n",readBytes);
+        for(readBytes = 0;(readBytes = recv(buff,sizeof(buff)))> 0;){
+            //DebufPrintf("recv readBytes = %d\n",readBytes);
             //Concateno los datos hasta que no quede mas por recibir
             readBuff.addData(buff,readBytes);
             if(((uint)readBytes)<sizeof(buff))break;
         }
         if(readBytes == -1 || !readBytes){
+
             runing = false;
             continue;
         }
@@ -54,19 +61,28 @@ ulong RPEP::serverLoop(){
         //decript(readBuff);
         if(procesPkg(readBuff,writeBuff,workBuff)){
             if(writeBuff.size){
-                ::send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
+                send(writeBuff.data,writeBuff.size);
                 writeBuff.Vaciar();
                 //conexion.write(writeBuff);
             }
         }
         Sleep(1);
     }while(runing);
-    printf("conexion cerrada\n");
+    DebufPrintf("readBytes %x\n",readBytes);
+    //Cambio a modo syncrono el socket
+    async = false;
+    ioctlsocket(hConexion,FIONBIO,&async);
+
+    DebufPrintf("conexion cerrada\n");
 
     return 0;
 }
 int RPEP::send(const void* data,uint size){
-    return ::send(this->hConexion,(char*)data,size,0);
+    int result;
+    DebufPrintf("send data: %x bytes\n",size);
+    result = ::send(this->hConexion,(char*)data,size,0);
+    DebufPrintf("datos enviados\n");
+    return result;
 }
 uint RPEP::MakePacket(DArray &outBuff, RPEP_HEADER::Operation op, const void *data, ulong size){
     return MakePacket(outBuff,true,op,data,size);
@@ -111,31 +127,37 @@ uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, cons
         outBuff.addData(encriptBuff.data,encriptBuff.size);
     }
     //Mensajes de depuracion
-    //printf("header.Size.Bytes %d \nheader.opType.bOperation %d \n",(int)header.Size.Bytes,(int)header.opType.bOperation);
-    printf("mkPkg\n\tsize %x\n\toriginalSize %x\n\tbOperation %x\n\tcode %x\n",(uint)header.Size.Bytes,(uint)size,(uint)header.opType.bOperation,(uint)header.opType.Operation);
+    //DebufPrintf("header.Size.Bytes %d \nheader.opType.bOperation %d \n",(int)header.Size.Bytes,(int)header.opType.bOperation);
+    DebufPrintf("mkPkg\n\tsize %x\n\toriginalSize %x\n\tbOperation %x\n\tcode %x\n",(uint)header.Size.Bytes,(uint)size,(uint)header.opType.bOperation,(uint)header.opType.Operation);
     return 0;
 }
 
 
 uint RPEP::MakeServerHello(DArray& outBuff){
-    static ulong* CompresAlg = {};
+    static ulong* CompresAlg = null;
     ulong CompresAlgCount = 0;
+    register RPEP_SERVER_HANDSHAKE* sHello;
 
     //calculamos el tamaño dl buffer para contener al ServerHello
-    uint buffSize = sizeof(RPEP_SERVER_HANDSHAKE)+CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm);
+    uint buffSize = sizeof(RPEP_SERVER_HANDSHAKE)
+            +CompresAlgCount*sizeof(*sHello->SupportedCompressionAlgm);
     //Buffert en pila para el hello
-    char buff[buffSize];
-    register RPEP_SERVER_HANDSHAKE* sHello = (RPEP_SERVER_HANDSHAKE*)buff;
+    char* buff = (char*)malloc(buffSize);
+    sHello = (RPEP_SERVER_HANDSHAKE*)buff;
 
     //Inicializo el hello
     *((version*)&sHello->Version) = ver;
     sHello->MaxBlockSize = MaxPaquetSize;
     sHello->SupportedCompressionAlgmCount = CompresAlgCount;
-    if(CompresAlgCount)memcpy(sHello->SupportedCompressionAlgm,CompresAlg,CompresAlgCount*sizeof(RPEP_SERVER_HANDSHAKE::SupportedCompressionAlgm));
+    if(CompresAlgCount)
+        memcpy(sHello->SupportedCompressionAlgm,
+               CompresAlg,
+               CompresAlgCount*sizeof(*sHello->SupportedCompressionAlgm));
 
-    //printf("MakeServerHello \n");
+
     MakePacket(outBuff,RPEP_HEADER::Operation::ServerHandshake,buff,buffSize);
 
+    free(buff);
     return outBuff.size;
 }
 uint RPEP::MakeError(DArray& outBuff,uint code){
@@ -148,6 +170,7 @@ uint RPEP::MakeError(DArray& outBuff,uint code){
 }
 
 bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
+    DebufPrintf("[pm] procesPkg \n");
     bool result = true;
     uint bytesRead = 0;
     RPEP_HEADER* header = 0;
@@ -160,8 +183,8 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
             if((in.size-bytesRead)<(MaxPaquetSize+sizeof(RPEP_HEADER)))break;
             ///////////////////////////////////////////////////////
             //mensages de depuracion
-            printf("procesPkg \n");
-            printf("header \n\tbBlocks %x\n\tOperation %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation);
+            DebufPrintf("procesPkg \n");
+            DebufPrintf("header \n\tbBlocks %x\n\tOperation %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation);
             /////////////////////////////////////////////////////////
             //Voy acumulando los datos hasta tener suficientes
             if(workBuff.size){
@@ -175,7 +198,9 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
                     ulong dataSize = decript((byte*)header->Data,header->Size.Blocks*MaxPaquetSize);
                     if(dataSize != (uint)-1){
                         procesCMD(header->opType,header->Data,dataSize,out);
+                        DebufPrintf("[pm] procesPkg workBuff.Vaciar() antes\n");
                         workBuff.Vaciar();
+                        DebufPrintf("[pm] procesPkg workBuff.Vaciar() despues\n");
                     }
                 }
             }
@@ -190,8 +215,8 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
             }
             ///////////////////////////////////////////////////////
             //mensages de depuracion
-            printf("procesPkg \n");
-            printf("header \n\tbBlocks %x\n\tOperation %x\n\n\tSize %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation,(uint)header->Size.Bytes);
+            DebufPrintf("procesPkg \n");
+            DebufPrintf("header \n\tbBlocks %x\n\tOperation %x\n\n\tSize %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation,(uint)header->Size.Bytes);
             /////////////////////////////////////////////////////////
 
             //Se procesa el comando
@@ -209,87 +234,78 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
     }else{
         in.DelData(0,bytesRead);
     }
-
-
-
+    DebufPrintf("[pm] procesPkg end\n");
     return result;
 }
 bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DArray& response){
     bool result = false;
 
-    printf("procesCMD \n");
+    DebufPrintf("[pm] procesCMD \n");
     if(opType.bOperation){
-        printf("comando interno\n");
+        DebufPrintf("comando interno\n");
         switch(opType.Operation){
             case RPEP_HEADER::Operation::ClientHandshake:
-                printf("ClientHandshake \n");
+                DebufPrintf("ClientHandshake \n");
                 processClientHello((RPEP_CLIENT_HANDSHAKE*)data,response);
                 break;
             case RPEP_HEADER::Operation::ServerHandshake:
-                printf("ServerHandshake \n");
+                DebufPrintf("ServerHandshake \n");
                 break;
             case RPEP_HEADER::Operation::SetBlockSize:
-                printf("SetBlockSize \n");
+                DebufPrintf("SetBlockSize \n");
                 break;
             case RPEP_HEADER::Operation::SetCompressionAlgm:
-                printf("SetCompressionAlgm \n");
+                DebufPrintf("SetCompressionAlgm \n");
                 break;
             case RPEP_HEADER::Operation::PingRequest:
-                printf("PingRequest \n");
+                DebufPrintf("PingRequest \n");
                 break;
             case RPEP_HEADER::Operation::PingResponse:
-                printf("PingResponse \n");
+                DebufPrintf("PingResponse \n");
                 break;
             case RPEP_HEADER::Operation::Error:
-                printf("Error \n");
+                DebufPrintf("Error \n");
                 break;
             //
             case RPEP_HEADER::Operation::LoadPlugin:
-                printf("LoadPlugin \n");
+                DebufPrintf("LoadPlugin \n");
                 result = PlugMgr->loadPlugin((RPEP_LOAD_PLUGIN*)data);
                 break;
             case RPEP_HEADER::Operation::CancelPluginLoad:
-                printf("CancelPluginLoad \n");
+                DebufPrintf("CancelPluginLoad \n");
                break;
             case RPEP_HEADER::Operation::InitPlugin:
-                printf("InitPlugin \n");
+                DebufPrintf("InitPlugin \n");
                break;
             case RPEP_HEADER::Operation::StopPlugin:
-                printf("StopPlugin \n");
+                DebufPrintf("StopPlugin \n");
                break;
             case RPEP_HEADER::Operation::UnloadPlugin:
-                printf("UnloadPlugin \n");
+                DebufPrintf("UnloadPlugin \n");
                break;
             case RPEP_HEADER::Operation::EnumLoadedPlugins:
-                printf("EnumLoadedPlugins \n");
+                DebufPrintf("EnumLoadedPlugins \n");
                break;
             //
             case RPEP_HEADER::Operation::UpdateLoader:
-                printf("UpdateLoader \n");
+                DebufPrintf("UpdateLoader \n");
                break;
             case RPEP_HEADER::Operation::UpdateServer:
-                printf("UpdateServer \n");
+                DebufPrintf("UpdateServer \n");
                break;
             case RPEP_HEADER::Operation::StopServer:
-                printf("StopServer \n");
+                DebufPrintf("StopServer \n");
                break;
             default:
-                printf("default \n");
+                DebufPrintf("default \n");
                //Desconocido
                ;
         }
     }else{
-        printf("comando para plugin\n");
-        plugin* currentPlugin;
-        if((currentPlugin = PlugMgr->getPluginById(opType.PluginID))){
-             char buff[size+1];
-             ZeroMemory(buff,size+1);
-             memcpy(buff,data,size);
-             printf("onReciveData size %x cadena %s\n",(uint)size,(char*)buff);
-
-             currentPlugin->plugInterface->onReciveData(data,size);
-        }
+        DebufPrintf("comando para plugin\n");
+        PlugMgr->runPluginCMD(opType.PluginID,data,size);
     }
+    DebufPrintf("[pm] procesCMD end\n");
     return result;
 }
 
@@ -298,7 +314,7 @@ bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello,DArray& respons
     int error = -1;
     if(clientHello){
        //MessageBox(0,"pause","pause",0);
-       printf("ClientHello \n\tMaxBlockSize %x\n\tPortCount %x\n\tCompressionALGM %x\n\tVersion %x.%x\n",
+       DebufPrintf("ClientHello \n\tMaxBlockSize %x\n\tPortCount %x\n\tCompressionALGM %x\n\tVersion %x.%x\n",
               clientHello->MaxBlockSize,
               (uint)clientHello->PortCount,
               (uint)clientHello->CompressionALGM,
@@ -324,7 +340,7 @@ bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello,DArray& respons
 
 
 void RPEP::setMaxPaquetSize(ulong s){
-    MaxPaquetSize = s;
+    MaxPaquetSize = (ushort)s;
 }
 
 void RPEP::setCompresAlg(ulong CompresAlg){
@@ -345,7 +361,7 @@ bool RPEP::encript(DArray &data){
         int buffSize = ((data.size>>4)+1)<<4;
         data.Expand(buffSize);
 
-        return CryptEncrypt(hKey,0,true,0,data.data,&data.size,buffSize);
+        return CryptEncrypt(hKey,0,true,0,data.data,&data.size,buffSize) != 0;
     }
     return false;
 }
@@ -365,4 +381,42 @@ uint RPEP::decript(byte* data,ulong size){
         }
     }
     return newSize;
+}
+
+
+int RPEP::recv(char *data, uint size){
+    DebufPrintf("[pm] recv \n");
+    int recvedData = 0;
+
+    while(!recvedData){
+        ioctlsocket(hConexion,FIONREAD,(ulong*)&recvedData);
+        DebufPrintf("[pm] recvedData %x\n",recvedData);
+
+        if(recvedData > 0){
+            DebufPrintf("[pm] recv readData\n");
+            recvedData = ::recv(hConexion,data,size,0);
+        }else{
+            DebufPrintf("[pm] recv no data\n");
+            recvedData = ::recv(hConexion,0,0,MSG_PEEK);
+            if(recvedData == -1){
+                DebufPrintf("[pm] recv WSAGetLastError\n");
+                ulong error = WSAGetLastError();
+                switch(error){
+                    case WSAEWOULDBLOCK:
+                        recvedData = 0;
+                        Sleep(10);
+                        break;
+                    case WSAECONNRESET:
+                        //Conexion cerrada
+                        return recvedData;
+                    default:
+                        DebufPrintf("Error recv desconocido %x\n",(uint)error);
+                        break;
+                }
+            }
+        }
+    }
+
+
+    return recvedData;
 }

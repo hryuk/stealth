@@ -14,6 +14,7 @@ class PluginInterface{
     protected:
         PluginInterface(){}
     public:
+        virtual ~PluginInterface(){}
         virtual const char* getPluginName() = 0;
         virtual int onReciveData(char* data,uint size) = 0;
         virtual void setPluginManager(pluginManagerInterface* mgr) = 0;

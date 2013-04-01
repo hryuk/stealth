@@ -1,9 +1,17 @@
 #ifndef RPEP_STRUC_H_INCLUDED
 #define RPEP_STRUC_H_INCLUDED
 
+//#pragma warning(push)
+#pragma warning(disable: 4200)
+#pragma warning(disable: 4482)
+
 typedef struct version{
     char Low;
     char High;
+    version(char Low,char High){
+        this->Low = Low;
+        this->High = High;
+    }
 } version;
 
 typedef struct _RPEP_HEADER
@@ -128,4 +136,5 @@ usa tamaño por bloques, este campo es obligatorio */
         ulong Value;
     } RPEP_SET_COMPRESSION_ALGORITHM;
 
+//#pragma warning(pop)
 #endif // RPEP_STRUC_H_INCLUDED

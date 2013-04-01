@@ -1,6 +1,15 @@
 #ifndef BASICTYPES_H
 #define BASICTYPES_H
 
+#define null NULL
+#define DEBUG
+
+#ifdef DEBUG
+#define DebufPrintf(...) printf(__VA_ARGS__)
+#else
+#define DebufPrintf(...)
+#endif
+
 //Tipos unsigned
 typedef unsigned char uchar;
 typedef unsigned char byte;

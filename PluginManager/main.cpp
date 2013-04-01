@@ -3,14 +3,14 @@
 #include "main.h"
 #include "PluginManager.h"
 
-using namespace std;
+using namespace std;/*
 extern "C" bool DLL_EXPORT WINAPI _DllMainCRTStartup(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
     return true;
-}
+}*/
 int main(){
     return 0;
 }
-bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
+bool WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserved*/){
     switch (fdwReason)
     {
         case DLL_PROCESS_ATTACH:
@@ -37,9 +37,12 @@ bool WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved){
     return true; // succesful
 }
 
-int WINAPI InitPluginLoader(SOCKET hConexion,HCRYPTKEY hKey,LoaderFunTable& lFunc){
+int WINAPI InitPluginLoader(PSHELLCODE_CONTEXT ShellContext){
+    uint status;
     PluginManager PlugMgr;
-    //MessageBox(0,"","InitPluginLoader",0);
+    //MessageBox(0,"InitPluginLoader","",0);
 
-    return PlugMgr.run(hConexion,hKey,lFunc);
+    status = PlugMgr.run(ShellContext);
+
+    return status;
 }

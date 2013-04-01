@@ -1,9 +1,10 @@
-# In repository we don't need to have:
+﻿# In repository we don't need to have:
 # makefiles
 Makefile
 Makefile.*
 # Compiled object files
 *.o
+*.pdb
 
 # Generated MOC, resource and UI files
 moc_*.cpp

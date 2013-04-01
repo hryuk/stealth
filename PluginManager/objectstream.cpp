@@ -179,7 +179,7 @@ int SerializeNode::queryValue(Serializable &Object){
 int SerializeNode::toBytes(DArray &buff){
     ushort nameLen = strlen(name);
     ushort size = nameLen+sizeof(nameLen);
-    int sizeIndex = buff.size;
+    //int sizeIndex = buff.size;
 
     for(SerializeNode* currentNode = childs;currentNode;currentNode = currentNode->next){
         size += currentNode->toBytes(buff);
@@ -192,8 +192,8 @@ int SerializeNode::toBytes(DArray &buff){
 SerializeObjects::SerializeObjects(){
 
 }
-SerializeObjects* SerializeObjects::parse(DArray &byteObjects){
-
+SerializeObjects* SerializeObjects::parse(DArray &/*byteObjects*/){
+    return null;
 }
 DArray SerializeObjects::toBytes(){
     DArray buff;
