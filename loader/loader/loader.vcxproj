@@ -75,6 +75,7 @@
     <ClInclude Include="main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <Import Project="..\..\kPreprocessor\kPreprocessor.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
 </Project>
