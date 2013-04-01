@@ -1,0 +1,6 @@
+.moc-cliente/
+.obj-cliente/
+.rcc-cliente/
+.ui-cliente/
+plugins/*.exp
+plugins/*.lib
