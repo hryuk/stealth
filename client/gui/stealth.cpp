@@ -183,20 +183,52 @@ void Stealth::debugSheell_destroyed()
 
 void Stealth::on_btnConnections_toggled(bool checked)
 {
-    if(checked) slidingStackedWidget->slideInIdx(0);
+    if(checked)
+    {
+        slidingStackedWidget->slideInIdx(0);
+        ui->btnConnections->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    }
+    else
+    {
+        ui->btnConnections->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    }
 }
 
 void Stealth::on_btnConfiguration_toggled(bool checked)
 {
-    if(checked) slidingStackedWidget->slideInIdx(1);
+    if(checked)
+    {
+        slidingStackedWidget->slideInIdx(0);
+        ui->btnConfiguration->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    }
+    else
+    {
+        ui->btnConfiguration->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    }
 }
 
 void Stealth::on_btnPlugins_toggled(bool checked)
 {
-    if(checked) slidingStackedWidget->slideInIdx(2);
+    if(checked)
+    {
+        slidingStackedWidget->slideInIdx(0);
+        ui->btnPlugins->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    }
+    else
+    {
+        ui->btnPlugins->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    }
 }
 
 void Stealth::on_btnServer_toggled(bool checked)
 {
-    if(checked) slidingStackedWidget->slideInIdx(3);
+    if(checked)
+    {
+        slidingStackedWidget->slideInIdx(0);
+        ui->btnServer->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+    }
+    else
+    {
+        ui->btnServer->setToolButtonStyle(Qt::ToolButtonIconOnly);
+    }
 }
