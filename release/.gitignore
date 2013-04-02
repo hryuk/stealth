@@ -1,0 +1,8 @@
+.moc-*/
+.obj-*/
+.rcc-*/
+.ui-*/
+plugins/*.exp
+plugins/*.lib
+*.exp
+*.lib
