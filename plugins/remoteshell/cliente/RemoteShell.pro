@@ -11,10 +11,12 @@ TEMPLATE = lib
 
 DEFINES += REMOTESHELL_LIBRARY
 
-SOURCES += remoteshell.cpp
+SOURCES += remoteshell.cpp \
+    qterminal.cpp
 
 HEADERS += remoteshell.h \
-    plugininterface.h
+    plugininterface.h \
+    qterminal.h
 
 
 FORMS += \

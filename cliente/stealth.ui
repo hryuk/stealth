@@ -144,7 +144,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             <bool>true</bool>
            </property>
            <property name="toolButtonStyle">
-            <enum>Qt::ToolButtonTextUnderIcon</enum>
+            <enum>Qt::ToolButtonIconOnly</enum>
            </property>
           </widget>
          </item>
@@ -170,7 +170,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             <bool>true</bool>
            </property>
            <property name="toolButtonStyle">
-            <enum>Qt::ToolButtonTextUnderIcon</enum>
+            <enum>Qt::ToolButtonIconOnly</enum>
            </property>
           </widget>
          </item>
@@ -199,7 +199,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             <bool>true</bool>
            </property>
            <property name="toolButtonStyle">
-            <enum>Qt::ToolButtonTextUnderIcon</enum>
+            <enum>Qt::ToolButtonIconOnly</enum>
            </property>
           </widget>
          </item>
