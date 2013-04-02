@@ -28,3 +28,18 @@ desktop.ini
 
 # Editors temporary files 
 *~
+
+# C++ objects and libs
+*.slo
+*.lo
+*.a
+*.la
+*.lai
+*.so
+*.dylib
+
+# Qt-es
+*.pro.user
+*.pro.user.*
+Makefile
+*-build-*
