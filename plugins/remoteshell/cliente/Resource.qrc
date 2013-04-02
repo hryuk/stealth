@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/img/shell.png</file>
+        <file>res/remoteshell_server.dll</file>
+    </qresource>
+</RCC>
