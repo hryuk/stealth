@@ -1,4 +1,5 @@
 TARGET=remoteshell_server
+DESTDIR=../cliente/res
 TEMPLATE = lib
 #CONFIG += console
 CONFIG -= qt
@@ -17,12 +18,13 @@ DEFINES -= UNICODE QT_LARGEFILE_SUPPORT
 LIBS += -lkernel32 -lWs2_32 -lmsvcrt -luser32 -lAdvapi32
 
 SOURCES +=\
-	../PluginManager/rtl.cpp \
+        rtl.cpp \
 	main.cpp \
 	remoteshell.cpp
 
 HEADERS += \
-	../PluginManager/plugininterface.h\
+        plugininterface.h\
 	main.h \
-	remoteshell.h
+        remoteshell.h \
+        basicTypes.h
 

@@ -50,8 +50,6 @@ const char *RemoteShell::getPluginName(){
 }
 
 int RemoteShell::onReciveData(char *data, uint size){
-    bool writed = false;
-
     DebufPrintf("[rs] onReciveData %x bytes\n",size);
 
     return writeShell(shell,data,size);
