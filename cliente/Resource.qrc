@@ -1,7 +1,5 @@
 <RCC>
     <qresource prefix="/">
-        <file>res/loader.bin</file>
-        <file>res/pluginloader.dll</file>
         <file>res/img/bullet_arrow_left.png</file>
         <file>res/img/bullet_arrow_down.png</file>
         <file>res/img/connection_1.png</file>

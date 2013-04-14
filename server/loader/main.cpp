@@ -633,7 +633,7 @@ int main(int argc, char **argv){
 
     dwSize = (PBYTE)main - (PBYTE)Start;
 
-    sprintf_s(szBinFile, MAX_PATH, "%s.bin", argv[0]);
+	sprintf_s(szBinFile, MAX_PATH, "loader.bin");
     
     fopen_s(&pfBin, szBinFile, "wb");
     fwrite((PBYTE)Start, dwSize, 1, pfBin);

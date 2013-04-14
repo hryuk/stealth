@@ -1,4 +1,3 @@
 TEMPLATE = subdirs
-
-SUBDIRS = servidor \
-          cliente
+SUBDIRS = servidor cliente
+cliente.depends=servidor

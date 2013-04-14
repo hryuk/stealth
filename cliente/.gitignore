@@ -32,3 +32,5 @@ desktop.ini
 
 # Editors temporary files 
 *~
+#VS
+*.pdb
