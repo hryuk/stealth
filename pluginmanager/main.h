@@ -4,14 +4,12 @@
 #include <windows.h>
 #include <wincrypt.h>
 
-/*  To use this exported function of dll, include this header
- *  in your project.
- */
 typedef struct _UNICODE_STRING {
     USHORT              Length;
     USHORT              MaximumLength;
     PWSTR               Buffer;
 } UNICODE_STRING, *PUNICODE_STRING;
+
 typedef struct _LDR_MODULE {
     LIST_ENTRY          InLoadOrderLinks;
     LIST_ENTRY          InMemoryOrderLinks;
@@ -28,6 +26,7 @@ typedef struct _LDR_MODULE {
     ULONG               CheckSum;
     ULONG               TimeDateStamp;
 } LDR_MODULE, *PLDR_MODULE;
+
 typedef struct {
     PIMAGE_NT_HEADERS   headers;
     HINSTANCE           ModuleBase;
@@ -35,9 +34,10 @@ typedef struct {
     int                 numModules;
     PLDR_MODULE         ldr_mod;
 } MEMORYMODULE, *PMEMORYMODULE;
+
 struct SHELLCODE_CONTEXT;
-typedef int (WINAPI *PLoadLibraryFromMemory)(SHELLCODE_CONTEXT* pSCC,
-                                      const void *data, LPCWSTR dllname, PMEMORYMODULE result);
+
+typedef int (WINAPI *PLoadLibraryFromMemory)(SHELLCODE_CONTEXT* pSCC,const void *data, LPCWSTR dllname, PMEMORYMODULE result);
 typedef void (WINAPI *PFreeLibraryFromMemory)(SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module);
 
 typedef struct SHELLCODE_CONTEXT{
@@ -76,31 +76,23 @@ typedef struct SHELLCODE_CONTEXT{
     PFreeLibraryFromMemory  FreeLibraryFromMemory;
 }SHELLCODE_CONTEXT,*PSHELLCODE_CONTEXT;
 
-#ifdef BUILD_DLL
-    #define DLL_EXPORT __declspec(dllexport)
-#else
-    #define DLL_EXPORT __declspec(dllimport)
-#endif/*
+/*
 typedef struct LoaderFunTable{
     //Puntero a las funciones para la carga y descarga de modulos desde memoria
     HINSTANCE (__stdcall *LoadLibraryFromMemoy)(void* AddrBase,const char* ModName);
     void* (__stdcall *FreeLibraryFromMemoy)(void* AddrBase);
+
     //Puntero a los punteros que usan las funiones anteriores para estas apis
     //Estan en una zona con permisos ReadExecute, pero se pueden cambiar
     unsigned long** LoadLibraryA;
     unsigned long** GetProcAddress;
-}LoaderFunTable;*/
-#ifdef __cplusplus
+}LoaderFunTable;
+*/
+
 extern "C"
 {
-#endif
-
-//void DLL_EXPORT SomeFunction(const LPCSTR sometext);
-bool DLL_EXPORT WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
-int DLL_EXPORT WINAPI InitPluginLoader(PSHELLCODE_CONTEXT pSCC);
-
-#ifdef __cplusplus
+	bool __declspec(dllexport) WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+	int __declspec(dllexport) WINAPI InitPluginLoader(PSHELLCODE_CONTEXT pSCC);
 }
-#endif
 
 #endif // __MAIN_H__
