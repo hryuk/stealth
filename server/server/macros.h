@@ -13,14 +13,21 @@
 **            +Posibilidad de hacer melt con el ejecutable a %APPDATA%
 *###############################################################################*/
 
-#include "..\..\kPreprocessor\kPreprocessor.h"
+#include "..\kPreprocessor\kPreprocessor.h"
+
+/*###############################################################################
+** AUTOSTART:
+**    Incluye código para la persistencia tras reinicio
+*###############################################################################*/
+#define AUTOSTART
+#undef AUTOSTART
 
 /*###############################################################################
 ** DEBUG:
 **    Incluye código para mostrar mensajes por consola
 *###############################################################################*/
 #define DEBUG
-#undef DEBUG
+//#undef DEBUG
 
 #ifdef DEBUG
 DEFINE_PYSRC(
@@ -30,7 +37,7 @@ def DEBUG_MSG(s, p=[]):
     for x in p[::-1]:
         r+="__asm{push %s}"%(x)
     r+= "__asm{push %s}"%(s)
-    r+= "__asm{call printf}"
+    r+= "__asm{call DWORD PTR[printf]}"
     r+= "__asm{add esp, %d}"%((len(p)+1)*4)
     r+= "__asm{popad}"
     r+= "\n#endif\n"
