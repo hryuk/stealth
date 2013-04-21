@@ -7,7 +7,11 @@
 #include "basicTypes.h"
 #include "RPEP_Struc.h"
 
-typedef UINT_PTR        SOCKET;
+typedef UINT_PTR SOCKET;
+typedef int (WINAPI* t_send)(SOCKET s,const char* buf,int len,int flags);
+typedef int (WINAPI* t_recv)(SOCKET s,char* buf,int len,int flags);
+typedef int (WINAPI* t_ioctlsocket)(SOCKET s,long cmd,u_long* argp);
+typedef int (WINAPI* t_WSAGetLastError)(void);
 
 class DArray;
 class PluginManager;
@@ -29,6 +33,10 @@ class RPEP{
         ulong CompresAlg;
         ulong PortCount;
         ushort* Port;
+        t_send m_send;
+        t_recv m_recv;
+        t_ioctlsocket m_ioctlsocket;
+        t_WSAGetLastError m_WSAGetLastError;
 
         bool runing;
 

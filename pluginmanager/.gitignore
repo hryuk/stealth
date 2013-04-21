@@ -32,3 +32,7 @@ desktop.ini
 
 # Editors temporary files 
 *~
+ipch/
+*.sdf
+*.suo
+*.user

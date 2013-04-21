@@ -6,3 +6,5 @@ plugins/*.exp
 plugins/*.lib
 *.exp
 *.lib
+*.pdb
+debug_log.txt

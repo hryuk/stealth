@@ -2,9 +2,8 @@
 #define DARRAY_H
 
 #undef __DECLSPEC_SUPPORTED
-#include <stdio.h>
-#include <string.h>
 #include "basicTypes.h"
+#include "rtl.h"
 
 class  DArray{
     protected:

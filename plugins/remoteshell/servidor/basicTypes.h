@@ -2,6 +2,7 @@
 #define BASICTYPES_H
 
 #define null NULL
+#define DEBUG
 
 #ifdef DEBUG
 #define DebufPrintf(...) printf(__VA_ARGS__)
