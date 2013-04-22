@@ -1,31 +1,35 @@
 #include "darray.h"
-#include "stdlib.h"
 
 DArray::DArray(){
     //DebufPrintf("DArray ctor\n");
     size = MaxSize = 0;
     data = 0;
 }
+
 DArray::DArray(void* Data,ulong size){
     this->size = MaxSize = 0;
     data = 0;
     addData(Data,size);
 }
+
 DArray::~DArray(){
     if(data){
         free(data);
     }
 }
+
 DArray& DArray::operator=(DArray& ArrayCp){
     Resize(ArrayCp.MaxSize);
     addData(ArrayCp.data,ArrayCp.size);
     return *this;
 }
+
 DArray::DArray(DArray& ArrayCp){
     size = MaxSize = 0;
     data = 0;
     *this=ArrayCp;
 }
+
 DArray* DArray::DelData(ulong offset,ulong Size){
     if((Size+offset)>this->size)
         return 0;
@@ -35,7 +39,8 @@ DArray* DArray::DelData(ulong offset,ulong Size){
     this->size-=Size;
 
     return this;
-};
+}
+
 DArray* DArray::Insert(ulong offset,char* ToInsert,ulong size){
     char* TMP;
     if(MaxSize<(this->size+size)){
@@ -51,11 +56,12 @@ DArray* DArray::Insert(ulong offset,char* ToInsert,ulong size){
 
     return this;
 }
-/*
-ulong DArray::operator[](ulong index){
+
+/*ulong DArray::operator[](ulong index){
     if(index>=Size)return -1;
     return ((ulong*)Data)[index];
 };*/
+
 uchar* DArray::Resize(ulong NewSize){
     if(NewSize!=MaxSize){
     if(NewSize<size)size = NewSize;
@@ -70,9 +76,11 @@ uchar* DArray::Resize(ulong NewSize){
     }
     return data;
 }
+
 DArray* DArray::addData(DArray& ToAdd){
     return addData(ToAdd.cadena,ToAdd.size);
 }
+
 DArray* DArray::addData(const void* data,ulong Size){
     DArray* NewArray = this;
     if((Size+size)>MaxSize){
@@ -82,6 +90,7 @@ DArray* DArray::addData(const void* data,ulong Size){
     NewArray->size += Size;
     return NewArray;
 }
+
 uchar* DArray::Expand(ulong NewSize){
     NewSize++;
     if(MaxSize<NewSize){

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
     <Filter Include="Header Files">
@@ -19,9 +19,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="PluginManager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="RPEP.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -31,20 +28,14 @@
     <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="objectstream.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="rtl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="serializable.cpp">
+    <ClCompile Include="pluginmanager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="PluginManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="RPEP.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -60,13 +51,13 @@
     <ClInclude Include="main.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="objectstream.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="plugininterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="serializable.h">
+    <ClInclude Include="rtl.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PluginManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

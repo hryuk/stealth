@@ -29,7 +29,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <GenerateManifest>false</GenerateManifest>
-    <OutDir>..\..\$(Configuration)</OutDir>
+    <OutDir>..\..\$(Configuration)\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -66,6 +66,9 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="macros.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\builder\intrabuilder.py" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <Import Project="..\kPreprocessor\kPreprocessor.targets" />

