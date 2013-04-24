@@ -2,6 +2,7 @@
 #define REMOTESHELL_H
 
 #include <windows.h>
+
 #include "main.h"
 #include "plugininterface.h"
 
