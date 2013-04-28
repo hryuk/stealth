@@ -1,4 +1,5 @@
 #include "remoteshell.h"
+#include "rtl.h"
 
 int RemoteShell::threadReader(register RemoteShell *_this){
     char buff[800];

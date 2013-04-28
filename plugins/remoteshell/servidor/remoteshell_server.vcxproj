@@ -141,6 +141,7 @@
     <ClInclude Include="main.h" />
     <ClInclude Include="plugininterface.h" />
     <ClInclude Include="remoteshell.h" />
+    <ClInclude Include="rtl.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets" />
