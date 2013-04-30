@@ -1,8 +1,16 @@
+#include <windows.h>
+#include <stdarg.h>
+
+
+// Force the linker to include USER32.LIB
+#pragma comment(linker, "/defaultlib:user32.lib")
+#pragma comment(linker, "/nodefaultlib" )
 #include "rtl.h"
+
 
 int __cdecl _purecall(void)
 {
-	return 0;
+    return 0;
 }
 
 void * __cdecl operator new(unsigned int s)
@@ -13,7 +21,7 @@ void * __cdecl operator new(unsigned int s)
 void __cdecl operator delete(void* p)
 {
   if (p)
-    HeapFree(GetProcessHeap(), 0, p ); 
+    HeapFree(GetProcessHeap(), 0, p );
 }
 
 void * __cdecl malloc(size_t size)
@@ -41,7 +49,7 @@ memcpy_tail:
       mov     ecx, [esp+20];
       and     ecx, 3;
       rep     movsb;
-      
+
       pop     edi;
       pop     esi;
       ret;
@@ -81,7 +89,7 @@ memset_tail:
 
 void __cdecl free(void *ptr)
 {
-	HeapFree(GetProcessHeap(),0,ptr);
+    HeapFree(GetProcessHeap(),0,ptr);
 }
 
 void * __cdecl realloc(void * p, size_t size)
@@ -90,4 +98,21 @@ void * __cdecl realloc(void * p, size_t size)
         return HeapReAlloc( GetProcessHeap(), 0, p, size );
     else    // 'p' is 0, and HeapReAlloc doesn't act like realloc() here
         return HeapAlloc( GetProcessHeap(), 0, size );
+}
+
+int __cdecl _printf(const char * format, ...)
+{
+    char szBuff[1024];
+    int retValue;
+    DWORD cbWritten;
+    va_list argptr;
+
+    va_start( argptr, format );
+    retValue = wvsprintf( szBuff, format, argptr );
+    va_end( argptr );
+
+    WriteFile(  GetStdHandle(STD_OUTPUT_HANDLE), szBuff, retValue,
+                &cbWritten, 0 );
+
+    return retValue;
 }

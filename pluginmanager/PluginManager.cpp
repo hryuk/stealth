@@ -1,5 +1,6 @@
 #include "PluginManager.h"
 #include "plugininterface.h"
+#include "arraylist.h"
 
 FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName);
 
@@ -15,6 +16,7 @@ class pluginEvent{
 };
 
 PluginManagerInterfacePrivate* PluginManager::pluginList;
+//ArrayList<PluginManagerInterfacePrivate*> PluginManager::pluginList;
 
 class PluginManagerInterfacePrivate :public pluginManagerInterface{
         PluginManager* mgr;
@@ -52,18 +54,18 @@ uint PluginManager::run(SHELLCODE_CONTEXT* Context){
     return client.serverLoop();
 }
 
-bool PluginManager::updateServer(DArray& /*newServer*/){
+bool PluginManager::updateServer(DArray& /*newServer*/){/*
     char FileName[1024];
     char FileNameNew[1024];
     long FilenameSize;
     FilenameSize = GetModuleFileName(0,FileName,sizeof(FileName)-1);
 
-	StringCchCopy(FileNameNew,1024,FileName);
+    StringCchCopy(FileNameNew,1024,FileName);
 
     FileNameNew[FilenameSize] = '_';
     FileNameNew[FilenameSize+1] = 0;
 
-    MoveFile(FileName,FileNameNew);
+    MoveFile(FileName,FileNameNew);^*/
 
     return true;
 }
@@ -196,7 +198,7 @@ int PluginManagerInterfacePrivate::sendData(const char *data, uint size){
         DArray buff;
 
         this->mgr->getProtocol()->MakePacket(buff,(ushort)this->p->ID,data,size);
-        return this->mgr->getProtocol()->send(buff.data,buff.size);
+        return this->mgr->getProtocol()->send(buff.data(),buff.size());
     }
     return 0;
 }
