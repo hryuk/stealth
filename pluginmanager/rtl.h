@@ -10,3 +10,5 @@ void * __cdecl memset(void *dst,int c,size_t count);
 #pragma intrinsic(memset)
 void __cdecl free(void *ptr);
 void * __cdecl realloc(void * p, size_t size);
+
+int __cdecl _printf(const char * format, ...);

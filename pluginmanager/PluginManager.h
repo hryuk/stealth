@@ -6,7 +6,7 @@
 #include "darray.h"
 #include "RPEP.h"
 
-#include <strsafe.h>
+//#include <strsafe.h>
 
 class DArray;
 

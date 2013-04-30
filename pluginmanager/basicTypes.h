@@ -1,10 +1,13 @@
 #ifndef BASICTYPES_H
 #define BASICTYPES_H
 
+#pragma comment(linker, "/nodefaultlib" )
+
 #define null NULL
 
+#define DEBUG
 #ifdef DEBUG
-#define DebufPrintf(...) printf(__VA_ARGS__)
+#define DebufPrintf(...) _printf(__VA_ARGS__)
 #else
 #define DebufPrintf(...)
 #endif
