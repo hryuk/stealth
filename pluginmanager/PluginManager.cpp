@@ -15,8 +15,8 @@ class pluginEvent{
         ulong size;
 };
 
-PluginManagerInterfacePrivate* PluginManager::pluginList;
-//ArrayList<PluginManagerInterfacePrivate*> PluginManager::pluginList;
+//PluginManagerInterfacePrivate* PluginManager::pluginList;
+ArrayList<PluginManagerInterfacePrivate*>* PluginManager::pluginList;
 
 class PluginManagerInterfacePrivate :public pluginManagerInterface{
         PluginManager* mgr;
@@ -36,9 +36,12 @@ PluginManager::PluginManager(){
 PluginManager::~PluginManager(){
     if(pluginList){
         DebufPrintf("unloading plugin\n");
-        //__asm__("int3");
-        delete pluginList->p->plugInterface;
-        ::FreeLibraryFromMemory(Context,&pluginList->getPlugInformation()->Module);
+        while(pluginList->size()) {
+            FreeLibraryFromMemory(Context,&(*pluginList)[0]->getPlugInformation()->Module);
+            delete (*pluginList)[0];
+            pluginList->remove(0);
+        }
+        delete pluginList;
     }
 }
 
@@ -147,7 +150,8 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
                 DebufPrintf("[pm] getInterface \n");
                 newPlugin->ID = pluginModule->PluginID;
                 pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
-                pluginList = pluginPrivate;
+                //pluginList = pluginPrivate;
+                pluginList->add(pluginPrivate);
                 result = true;
             }else{
                 DebufPrintf("[pm] getInterface not fund\n");
@@ -165,8 +169,16 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     return result;
 }
 
-plugin* PluginManager::getPluginById(ulong /*id*/){
-    return pluginList->getPlugInformation();
+plugin* PluginManager::getPluginById(ulong id){
+    plugin* result = null;
+    if(pluginList)
+        for (int i = 0; i < pluginList->size(); ++i) {
+            if((*pluginList)[0]->getPlugInformation()->ID == id){
+                result = (*pluginList)[0]->getPlugInformation();
+                break;
+            }
+    }
+    return result;
 }
 
 RPEP *PluginManager::getProtocol(){
@@ -175,11 +187,7 @@ RPEP *PluginManager::getProtocol(){
 
 bool PluginManager::isPluginLoad(ushort ID){
     DebufPrintf("[pm] isPluginLoad \n");
-    bool result = false;
-    if(pluginList && pluginList->getPlugInformation()){
-        result = pluginList->getPlugInformation()->ID == ID;
-    }
-    return result;
+    return getPluginById(ID)!= null;
 }
 
 PluginManagerInterfacePrivate::PluginManagerInterfacePrivate(PluginManager &mgr, plugin &p){

@@ -19,6 +19,10 @@ Debug:UI_DIR = ../debug/.ui-pluginmanager
 
 QMAKE_CXXFLAGS_RTTI_ON -= -frtti
 QMAKE_CXXFLAGS_RTTI_OFF = -fno-rtti
+
+QMAKE_CFLAGS_RELEASE = /GR-
+QMAKE_CXXFLAGS = /GS- /GR- /QIfist
+QMAKE_LFLAGS += /SAFESEH:NO
 #QMAKE_CXXFLAGS += -nostdlib -fno-exceptions -fno-rtti -fno-omit-frame-pointer
 
 win32 {

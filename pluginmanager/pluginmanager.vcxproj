@@ -143,6 +143,7 @@
     <ClCompile Include="rtl.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="arraylist.h" />
     <ClInclude Include="PluginManager.h" />
     <ClInclude Include="RPEP.h" />
     <ClInclude Include="RPEP_Struc.h" />
