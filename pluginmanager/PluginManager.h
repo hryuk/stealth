@@ -5,6 +5,7 @@
 #include "basicTypes.h"
 #include "darray.h"
 #include "RPEP.h"
+#include "arraylist.h"
 
 //#include <strsafe.h>
 
@@ -22,7 +23,7 @@ class RPEP;
 class PluginManager{
         SHELLCODE_CONTEXT* Context;
         RPEP* protocol;
-        static PluginManagerInterfacePrivate* pluginList;
+        static ArrayList<PluginManagerInterfacePrivate*>* pluginList;
     public:
         PluginManager();
         ~PluginManager();

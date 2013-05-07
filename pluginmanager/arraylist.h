@@ -47,8 +47,8 @@ template <class T> T& ArrayList<T>::operator[](ulong index){
     if(m_size>index){
         returned = &m_data[index];
     }else{
-        fprintf(stderr,"out of range: index %x this: %p\n",(uint)index,this);
-        __asm__("int3;");
+		DebufPrintf("out of range: index %x this: %p\n",(uint)index,this);
+        DebugBreak();
     }
     return *returned;
 }
