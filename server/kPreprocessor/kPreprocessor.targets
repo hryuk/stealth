@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" TreatAsLocalProperty="OutDir">
+    <Target Name="kPreprocessor" BeforeTargets="CLCompile">
+        <Exec Command='python "..\kPreprocessor\kPreprocessor.py" %(CLInclude.FullPath) %(CLCompile.FullPath)' />
+    </Target>
+    <Target Name="kCleanPreProc" AfterTargets="Link">
+        <Exec Command='python "..\kPreprocessor\kPreprocessor.py" -clean' />
+    </Target>
+</Project>

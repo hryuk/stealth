@@ -1,0 +1,29 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/img/bullet_arrow_left.png</file>
+        <file>res/img/bullet_arrow_down.png</file>
+        <file>res/img/connection_1.png</file>
+        <file>res/img/connection_2.png</file>
+        <file>res/img/plugin.png</file>
+        <file>res/img/settings_1.png</file>
+        <file>res/img/settings_2.png</file>
+        <file>res/img/settings_3.png</file>
+        <file>res/img/settings_4.png</file>
+        <file>res/img/server.png</file>
+        <file>res/img/server_add.png</file>
+        <file>res/img/server_alt.png</file>
+        <file>res/img/server_down.png</file>
+        <file>res/img/server_remove.png</file>
+        <file>res/img/debug.png</file>
+        <file>res/img/cancel.png</file>
+        <file>res/img/restart.png</file>
+        <file>res/img/tick.png</file>
+        <file>res/img/restart_2.png</file>
+        <file>res/img/clear_3.png</file>
+        <file>res/img/blue-iconset/adressbook.png</file>
+        <file>res/img/blue-iconset/config.png</file>
+        <file>res/img/blue-iconset/eye.png</file>
+        <file>res/img/blue-iconset/newfile.png</file>
+        <file>res/img/blue-iconset/user.png</file>
+    </qresource>
+</RCC>
