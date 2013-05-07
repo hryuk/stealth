@@ -27,7 +27,7 @@ GroupTreeWidget::GroupTreeWidget(bool expanded,QWidget*)
     treewidget->setIndentation(0);
     treewidget->setAnimated(true);
     treewidget->header()->setStretchLastSection(true);
-    treewidget->setFrameShape(QFrame::NoFrame);
+    //treewidget->setFrameShape(QFrame::NoFrame);
     if(!expanded) treewidget->hide();
     frameLayout->addWidget(treewidget);
 

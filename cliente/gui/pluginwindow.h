@@ -3,6 +3,8 @@
 
 #include <QMainWindow>
 #include <QVBoxLayout>
+#include <QDesktopWidget>
+
 #include "connection.h"
 #include "pluginmanager.h"
 #include "QHostAddress"

@@ -7,6 +7,18 @@ DebugShell::DebugShell(QWidget *parent) :
 {
     ui->setupUi(this);
 
+    setGeometry(
+            (int)(QApplication::desktop()->width() -
+                (QApplication::desktop()->width() -
+                (QApplication::desktop()->width() / 2)) * 1.2) / 2,
+            (int)(QApplication::desktop()->height() -
+                (QApplication::desktop()->height() -
+                (QApplication::desktop()->height() / 2)) * 1.2) / 2,
+            (int)((QApplication::desktop()->width() -
+                (QApplication::desktop()->width() / 2)) * 1.2),
+            (int)((QApplication::desktop()->height() -
+                (QApplication::desktop()->height() / 2)) * 1.2));
+
     /* La ventana se eliminará de la memoria al cerrarse */
     setAttribute(Qt::WA_DeleteOnClose,true);
 
@@ -21,6 +33,7 @@ DebugShell::DebugShell(QWidget *parent) :
     timer.setSingleShot(false);
     connect(&timer,SIGNAL(timeout()),this,SLOT(updateLog()));
     timer.start();
+    updateLog();
 }
 
 DebugShell::~DebugShell()
@@ -39,7 +52,7 @@ void DebugShell::updateLog()
         QString debug_data=QString::fromUtf8(logFile->readAll());
         if(debug_data.isEmpty()) return;
 
-        if(ui->btnEnableLog->isChecked())
+        if(ui->checkBox->isChecked())
         {
             /* Procesamos cada linea, imprimiendola en un color según
                 su tipo y con la fecha incluída */
@@ -52,18 +65,6 @@ void DebugShell::updateLog()
                 else if(line.startsWith("Fatal:")) ui->textEdit->append("<font color=\"red\">[X]["+time.toString()+"] "+line.replace("Fatal: ","").replace("\"","")+"</font>");
             }
         }
-}
-
-void DebugShell::on_btnEnableLog_toggled(bool checked)
-{
-    if(checked)
-    {
-        ui->btnEnableLog->setIcon(QIcon(":/res/img/cancel.png"));
-    }
-    else
-    {
-        ui->btnEnableLog->setIcon(QIcon(":/res/img/tick.png"));
-    }
 }
 
 void DebugShell::on_pushButton_clicked()

@@ -43,23 +43,23 @@ ItemInfo::ItemInfo(Connection *connection, QWidget *parent) :
 
         QPen pen;
         pen.setColor(color);
-        pen.setWidth(2);
+        pen.setWidth(1.2);
         pen.setCapStyle(Qt::RoundCap);
         pen.setJoinStyle(Qt::RoundJoin);
         int lastX=0,lastY=0;
 
         for(int i=0;i<20;i++)
         {
-            int newHeight=qrand()%48;
-            scene->addLine(lastX,lastY,lastX+10,newHeight,pen);
-            lastX+=10;
+            int newHeight=qrand()%38;
+            scene->addLine(lastX,lastY,lastX+5,newHeight,pen);
+            lastX+=5;
             lastY=newHeight;
         }
     }
 
     QGraphicsTextItem* textItem = new QGraphicsTextItem();
-    textItem->setPos(60,0);
-    textItem->setHtml("<font size=\"14\"><b>DEMO</b></font>");
+    textItem->setPos(10,0);
+    textItem->setHtml("<font size=\"10\"><b>DEMO</b></font>");
     scene->addItem(textItem);
 
     ui->gvSpeed->setScene(scene);

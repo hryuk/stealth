@@ -8,6 +8,18 @@ PluginWindow::PluginWindow(Connection* connection,QWidget* parent) :
 
     ui->setupUi(this);
 
+    setGeometry(
+            (int)(QApplication::desktop()->width() -
+                (QApplication::desktop()->width() -
+                (QApplication::desktop()->width() / 2)) * 1.35) / 2,
+            (int)(QApplication::desktop()->height() -
+                (QApplication::desktop()->height() -
+                (QApplication::desktop()->height() / 2)) * 1.35) / 2,
+            (int)((QApplication::desktop()->width() -
+                (QApplication::desktop()->width() / 2)) * 1.35),
+            (int)((QApplication::desktop()->height() -
+                (QApplication::desktop()->height() / 2)) * 1.35));
+
     this->connection=connection;
     this->ID=connection->getID();
     this->pluginManager=new PluginManager();
