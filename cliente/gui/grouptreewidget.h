@@ -6,9 +6,6 @@
 #include <QGridLayout>
 #include <QPushButton>
 #include <QHeaderView>
-#include <QGraphicsView>
-#include <QGraphicsScene>
-#include <QGraphicsTextItem>
 #include <QTime>
 
 #include "customtreewidget.h"

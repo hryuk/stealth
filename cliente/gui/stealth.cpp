@@ -106,6 +106,7 @@ void Stealth::itemDoubleClicked(QTreeWidgetItem *item,int)
     {
         if(pw->getID()==id.toInt())
         {
+            qDebug()<<"Mostrando pluginWindow #"+QString::number(pw->getID());
             pw->show();
             return;
         }
@@ -157,6 +158,7 @@ void Stealth::processPluginMessage(Connection* connection,int PluginID,QByteArra
     {
         if(pw->getID()==connection->getID())
         {
+            qWarning()<<"Mensaje recivido, conexión #"+QString::number(connection->getID())+", pluginwindows #"+QString::number(pw->getID());
             pw->pluginManager->on_plugin_recvData(PluginID,data);
             return;
         }
