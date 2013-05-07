@@ -30,7 +30,8 @@ class PluginManagerInterfacePrivate :public pluginManagerInterface{
 };
 
 PluginManager::PluginManager(){
-    pluginList = 0;
+    if(!pluginList)
+		pluginList = new ArrayList<PluginManagerInterfacePrivate*>();
 }
 
 PluginManager::~PluginManager(){

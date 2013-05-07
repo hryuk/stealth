@@ -1,4 +1,6 @@
 # In repository we don't need to have:
+#archivos de visual estudio
+*.pdb
 # makefiles
 Makefile
 Makefile.*
