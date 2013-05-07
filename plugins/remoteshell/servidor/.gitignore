@@ -1,4 +1,7 @@
 # In repository we don't need to have:
+# makefiles
+Makefile
+Makefile.*
 # Compiled object files
 *.o
 
@@ -18,8 +21,9 @@ Release/
 # NOTE: PROJECT is a your project's name, analog of PROJECT.exe in Linux
 *.exe
 *.dll
+*.bin
 PROJECT
-
+*.pro.*
 # Windows-specific files
 Thumbs.db
 desktop.ini
@@ -28,21 +32,8 @@ desktop.ini
 
 # Editors temporary files 
 *~
-
-# C++ objects and libs
-*.slo
-*.lo
-*.a
-*.la
-*.lai
-*.so
-*.dylib
-res/*.exp
-res/*.lib
-
-# Qt-es
-*.pro.user
-*.pro.user.*
-Makefile
-Makefile*
-*-build-*
+ipch/
+*.sdf
+*.suo
+*.user
+*.pdb
