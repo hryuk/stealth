@@ -43,7 +43,9 @@ int main(int argc, char *argv[])
     qInstallMsgHandler(mMsgOut);
 
     QApplication a(argc, argv);
-    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
+    QTextCodec* codec=QTextCodec::codecForName("UTF-8");
+    QTextCodec::setCodecForLocale(codec);
+    QTextCodec::setCodecForCStrings(codec);
     Stealth w;
     w.show();
 

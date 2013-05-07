@@ -23,7 +23,7 @@ PluginManager::PluginManager(QObject *parent) :
 
         if(!qobject_cast<PluginInterface*>(pluginLoader.instance()))
         {
-            qWarning()<<"Error al cargar plugin inválido \""+fileName+"\"";
+            qWarning()<<"Error al cargar plugin \""+fileName+"\"";
         }
         else
         {
