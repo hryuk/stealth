@@ -13,6 +13,11 @@ RemoteShell::RemoteShell(QWidget *parent) : QWidget(parent), ui(new Ui::GUI)
     connect(terminal,SIGNAL(returnPressed()),this,SLOT(sendCommand()));
 }
 
+QObject* RemoteShell::createInstance()
+{
+    return new RemoteShell();
+}
+
 QWidget* RemoteShell::getGUI()
 {
     return this;

@@ -3,6 +3,9 @@
 
 #include <QWidget>
 #include <QHostAddress>
+#include <QGraphicsView>
+#include <QGraphicsScene>
+#include <QGraphicsTextItem>
 #include "connection.h"
 
 namespace Ui {

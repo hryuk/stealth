@@ -17,6 +17,8 @@ PluginWindow::PluginWindow(Connection* connection,QWidget* parent) :
     leftBoxLayout=new QVBoxLayout();
     leftBoxLayout->setMargin(0);
 
+    qDebug()<<"Cargados "<<pluginManager->plugins.count()<<" plugins";
+
     foreach(PluginInterface* plugin,pluginManager->plugins)
     //PluginInterface* plugin=pluginManager->plugins.at(0); /*Cargar solo un plugin */
     {

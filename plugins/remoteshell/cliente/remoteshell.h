@@ -24,6 +24,7 @@ public:
 
     explicit RemoteShell(QWidget *parent = 0);
 
+    QObject* createInstance();
     QWidget* getGUI();
     QString getPluginName();
     QIcon getIcon();
