@@ -125,7 +125,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
          <item>
           <widget class="QToolButton" name="btnConfiguration">
            <property name="text">
-            <string>CONFIGURACIÓN</string>
+            <string> </string>
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
@@ -144,14 +144,14 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             <bool>true</bool>
            </property>
            <property name="toolButtonStyle">
-            <enum>Qt::ToolButtonIconOnly</enum>
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="btnPlugins">
            <property name="text">
-            <string>PLUGINS</string>
+            <string> </string>
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
@@ -170,14 +170,14 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             <bool>true</bool>
            </property>
            <property name="toolButtonStyle">
-            <enum>Qt::ToolButtonIconOnly</enum>
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
            </property>
           </widget>
          </item>
          <item>
           <widget class="QToolButton" name="btnServer">
            <property name="text">
-            <string>SERVIDOR</string>
+            <string> </string>
            </property>
            <property name="icon">
             <iconset resource="Resource.qrc">
@@ -199,7 +199,7 @@ radius: 1.35, stop: 0 #fff, stop: 1 #ddd);;
             <bool>true</bool>
            </property>
            <property name="toolButtonStyle">
-            <enum>Qt::ToolButtonIconOnly</enum>
+            <enum>Qt::ToolButtonTextUnderIcon</enum>
            </property>
           </widget>
          </item>

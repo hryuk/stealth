@@ -188,11 +188,13 @@ void Stealth::on_btnConnections_toggled(bool checked)
     if(checked)
     {
         slidingStackedWidget->slideInIdx(0);
-        ui->btnConnections->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+        ui->btnConnections->setText("CONEXIONES");
     }
     else
     {
-        ui->btnConnections->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        /* Cambiamos el texto por un espacio para que no haya cambio del tamñaño
+            del boton al mostrar y ocultar el texto */
+        ui->btnConnections->setText(" ");
     }
 }
 
@@ -201,11 +203,12 @@ void Stealth::on_btnConfiguration_toggled(bool checked)
     if(checked)
     {
         slidingStackedWidget->slideInIdx(0);
-        ui->btnConfiguration->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+        ui->btnConfiguration->setText("CONFIGURACIÓN");
+
     }
     else
     {
-        ui->btnConfiguration->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        ui->btnConfiguration->setText(" ");
     }
 }
 
@@ -214,11 +217,11 @@ void Stealth::on_btnPlugins_toggled(bool checked)
     if(checked)
     {
         slidingStackedWidget->slideInIdx(0);
-        ui->btnPlugins->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+        ui->btnPlugins->setText("PLUGINS");
     }
     else
     {
-        ui->btnPlugins->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        ui->btnPlugins->setText(" ");
     }
 }
 
@@ -227,10 +230,10 @@ void Stealth::on_btnServer_toggled(bool checked)
     if(checked)
     {
         slidingStackedWidget->slideInIdx(0);
-        ui->btnServer->setToolButtonStyle(Qt::ToolButtonTextUnderIcon);
+        ui->btnServer->setText("SERVER");
     }
     else
     {
-        ui->btnServer->setToolButtonStyle(Qt::ToolButtonIconOnly);
+        ui->btnServer->setText(" ");
     }
 }
