@@ -20,6 +20,7 @@ public:
 
 private:
     int pluginIndex;
+    QList<int> runningPlugins;
     
 signals:
     void sendData(int PluginID,QByteArray data);
@@ -29,7 +30,8 @@ public slots:
     int getPluginID(PluginInterface* plugin);
     void on_plugin_sendData(QByteArray data);
     void on_plugin_recvData(int ID,QByteArray data);
-    
+    bool isPluginRunning(int ID);
+    void setPluginRunning(int ID);
 };
 
 #endif // PLUGINMANAGER_H

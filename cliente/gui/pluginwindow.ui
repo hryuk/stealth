@@ -276,6 +276,11 @@ border-style: outset;
        <property name="spacing">
         <number>0</number>
        </property>
+       <item row="0" column="0">
+        <widget class="QStackedWidget" name="stackedWidget">
+         <widget class="QWidget" name="page"/>
+        </widget>
+       </item>
       </layout>
      </widget>
     </item>

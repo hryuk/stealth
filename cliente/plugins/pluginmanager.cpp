@@ -27,7 +27,7 @@ PluginManager::PluginManager(QObject *parent) :
             {
                 connect(plugin,SIGNAL(sendData(QByteArray)),this,SLOT(on_plugin_sendData(QByteArray)));
                 plugins<<stealthPlugin;
-                qDebug()<<"Cargado plugin #"+plugins.count()-1+stealthPlugin->getPluginName();
+                qDebug()<<"Cargado plugin #"+QString::number(plugins.count()-1)+" "+stealthPlugin->getPluginName();
             }
             else
             {
@@ -54,4 +54,14 @@ void PluginManager::on_plugin_recvData(int ID, QByteArray data)
 {
     qDebug()<<"Transfiriendo mensaje al plugin #"+QString::number(ID);
     plugins.at(ID)->recvData(data);
+}
+
+bool PluginManager::isPluginRunning(int ID)
+{
+    if(runningPlugins.contains(ID)) return true;
+    return false;
+}
+void PluginManager::setPluginRunning(int ID)
+{
+    runningPlugins.append(ID);
 }

@@ -2,6 +2,7 @@
 #define PLUGINWINDOW_H
 
 #include <QMainWindow>
+#include <QVBoxLayout>
 #include "connection.h"
 #include "pluginmanager.h"
 #include "QHostAddress"
@@ -21,9 +22,13 @@ public:
     PluginManager* pluginManager;
     
 private:
-    Ui::PluginWindow *ui;
+    Ui::PluginWindow* ui;
     int ID;
     Connection* connection;
+    QVBoxLayout* leftBoxLayout;
+
+private slots:
+    void leftBoxButton_clicked(bool);
 
 public slots:
     int getID();
