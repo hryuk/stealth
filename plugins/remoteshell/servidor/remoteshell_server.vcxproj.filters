@@ -19,33 +19,18 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="RPEP.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="darray.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="main.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="remoteshell.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="rtl.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pluginmanager.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="RPEP.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="RPEP_Struc.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="basicTypes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="darray.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="main.h">
@@ -54,13 +39,10 @@
     <ClInclude Include="plugininterface.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="remoteshell.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="rtl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PluginManager.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="arraylist.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

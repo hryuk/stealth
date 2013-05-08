@@ -1,5 +1,5 @@
 #include "remoteshell.h"
-#include <stdio.h>
+#include "rtl.h"
 
 int RemoteShell::threadReader(register RemoteShell *_this){
     char buff[800];
@@ -50,8 +50,6 @@ const char *RemoteShell::getPluginName(){
 }
 
 int RemoteShell::onReciveData(char *data, uint size){
-    bool writed = false;
-
     DebufPrintf("[rs] onReciveData %x bytes\n",size);
 
     return writeShell(shell,data,size);

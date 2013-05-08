@@ -1,4 +1,8 @@
+#pragma comment(linker,"/NODEFAULTLIB")
+#pragma comment(linker,"/ENTRY:DllMain")
+
 #include "main.h"
+#include "rtl.h"
 
 bool WINAPI DllMain(HINSTANCE /*hinstDLL*/, DWORD fdwReason, LPVOID /*lpvReserved*/){
     switch (fdwReason)

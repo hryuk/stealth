@@ -3,6 +3,8 @@ TEMPLATE =lib
 #CONFIG += console
 CONFIG -= qt
 
+DEFINES += DEBUG
+
 Release:DESTDIR = ../release
 Release:OBJECTS_DIR = ../release/.obj-pluginmanager
 Release:MOC_DIR = ../release/.moc-pluginmanager
@@ -17,6 +19,10 @@ Debug:UI_DIR = ../debug/.ui-pluginmanager
 
 QMAKE_CXXFLAGS_RTTI_ON -= -frtti
 QMAKE_CXXFLAGS_RTTI_OFF = -fno-rtti
+
+QMAKE_CFLAGS_RELEASE = /GR-
+QMAKE_CXXFLAGS = /GS- /GR- /QIfist
+QMAKE_LFLAGS += /SAFESEH:NO
 #QMAKE_CXXFLAGS += -nostdlib -fno-exceptions -fno-rtti -fno-omit-frame-pointer
 
 win32 {
@@ -34,24 +40,22 @@ DEFINES -= UNICODE QT_LARGEFILE_SUPPORT
 #QMAKE_LFLAGS +=  -nostartfiles -fno-exceptions -nostdlib
 
 #LIBS += -L$$quote(../ArkLib) -lArkLib -lntdll -lWs2_32 --static
-LIBS += -lkernel32 -lWs2_32 -lmsvcrt -luser32 -lAdvapi32
+LIBS += -lkernel32 -lWs2_32 -luser32 -lAdvapi32
 
 
 SOURCES +=  rtl.cpp\
 			main.cpp \
 			RPEP.cpp \
 			PluginManager.cpp \
-			serializable.cpp \
-			objectstream.cpp \
-			darray.cpp
+			darray.cpp \
+	arraylist.cpp
 
 
 HEADERS +=	main.h  \
 			RPEP.h \
 			RPEP_Struc.h \
 			PluginManager.h \
-			serializable.h \
-			objectstream.h \
 			plugininterface.h \
 			basicTypes.h \
-			darray.h
+			darray.h \
+	arraylist.h

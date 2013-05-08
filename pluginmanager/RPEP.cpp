@@ -1,8 +1,6 @@
-#include <WinSock2.h>
 #include "RPEP.h"
 #include "PluginManager.h"
 #include "plugininterface.h"
-
 
 #define MinBlockSize 1024
 
@@ -21,6 +19,11 @@ RPEP::RPEP(SOCKET hConexion, HCRYPTKEY hKey, PluginManager *PlugMgr):ver(0,0){
 
     this->PlugMgr = PlugMgr;
 
+    this->m_send=(t_send)GetProcAddress(LoadLibrary("WS2_32"),"send");
+    this->m_recv=(t_recv)GetProcAddress(LoadLibrary("WS2_32"),"recv");
+    this->m_ioctlsocket=(t_ioctlsocket)GetProcAddress(LoadLibrary("WS2_32"),"ioctlsocket");
+    this->m_WSAGetLastError=(t_WSAGetLastError)GetProcAddress(LoadLibrary("WS2_32"),"WSAGetLastError");
+
 }
 RPEP::~RPEP(){}
 
@@ -36,14 +39,14 @@ ulong RPEP::serverLoop(){
     MakeServerHello(writeBuff);
 
     DebufPrintf("[pm] send MakeServerHello \n");
-    ::send(hConexion,(char*)writeBuff.data,writeBuff.size,0);
-    DebufPrintf("[pm] send data %d \n",(int)writeBuff.size);
-    DebufPrintf("writeBuff.size %d \n",(int)writeBuff.size);
+    m_send(hConexion,(char*)writeBuff.data(),writeBuff.size(),0);
+    DebufPrintf("[pm] send data %d \n",(int)writeBuff.size());
+    DebufPrintf("writeBuff.size %d \n",(int)writeBuff.size());
     //Cambio a modo asyncrono
     ulong async = true;
-    ioctlsocket(hConexion,FIONBIO,&async);
+    m_ioctlsocket(hConexion,FIONBIO,&async);
 
-    writeBuff.Vaciar();
+    writeBuff.clear();
     int readBytes;
     do{
         for(readBytes = 0;(readBytes = recv(buff,sizeof(buff)))> 0;){
@@ -60,9 +63,9 @@ ulong RPEP::serverLoop(){
         //conexion.read(readBuff);
         //decript(readBuff);
         if(procesPkg(readBuff,writeBuff,workBuff)){
-            if(writeBuff.size){
-                send(writeBuff.data,writeBuff.size);
-                writeBuff.Vaciar();
+            if(writeBuff.size()){
+                send(writeBuff.data(),writeBuff.size());
+                writeBuff.clear();
                 //conexion.write(writeBuff);
             }
         }
@@ -71,7 +74,7 @@ ulong RPEP::serverLoop(){
     DebufPrintf("readBytes %x\n",readBytes);
     //Cambio a modo syncrono el socket
     async = false;
-    ioctlsocket(hConexion,FIONBIO,&async);
+    m_ioctlsocket(hConexion,FIONBIO,&async);
 
     DebufPrintf("conexion cerrada\n");
 
@@ -79,9 +82,9 @@ ulong RPEP::serverLoop(){
 }
 int RPEP::send(const void* data,uint size){
     int result;
-    DebufPrintf("send data: %x bytes\n",size);
-    result = ::send(this->hConexion,(char*)data,size,0);
-    DebufPrintf("datos enviados\n");
+    DebufPrintf("[pm] send data: %x bytes\n",size);
+    result = m_send(this->hConexion,(char*)data,size,0);
+    DebufPrintf("[pm]datos enviados\n");
     return result;
 }
 uint RPEP::MakePacket(DArray &outBuff, RPEP_HEADER::Operation op, const void *data, ulong size){
@@ -116,15 +119,15 @@ uint RPEP::MakePacket(DArray &outBuff, bool IsOperation, ushort opOrIDCode, cons
             //Agrego la cabecera
             outBuff.addData(&header,sizeof(header));
             //Agrego los datos frgmentados
-            outBuff.addData(((char*)encriptBuff.data)+header.BlockIndex*MaxPaquetSize,
-                            ((((header.BlockIndex+1)*MaxPaquetSize)<=encriptBuff.size)?MaxPaquetSize:encriptBuff.size%MaxPaquetSize));
+            outBuff.addData(((char*)encriptBuff.data())+header.BlockIndex*MaxPaquetSize,
+                            ((((header.BlockIndex+1)*MaxPaquetSize)<=encriptBuff.size())?MaxPaquetSize:encriptBuff.size()%MaxPaquetSize));
         }
 
     }else{
         //Tamaño por bytes
-        header.Size.Bytes = encriptBuff.size;
+        header.Size.Bytes = encriptBuff.size();
         outBuff.addData(&header,sizeof(header));
-        outBuff.addData(encriptBuff.data,encriptBuff.size);
+        outBuff.addData(encriptBuff.data(),encriptBuff.size());
     }
     //Mensajes de depuracion
     //DebufPrintf("header.Size.Bytes %d \nheader.opType.bOperation %d \n",(int)header.Size.Bytes,(int)header.opType.bOperation);
@@ -158,7 +161,7 @@ uint RPEP::MakeServerHello(DArray& outBuff){
     MakePacket(outBuff,RPEP_HEADER::Operation::ServerHandshake,buff,buffSize);
 
     free(buff);
-    return outBuff.size;
+    return outBuff.size();
 }
 uint RPEP::MakeError(DArray& outBuff,uint code){
     RPEP_ERROR error;
@@ -176,30 +179,30 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
     RPEP_HEADER* header = 0;
 
     //Pasamos los datos al buffer de trabajo
-    while(bytesRead < in.size){
-        header = (RPEP_HEADER*)(in.cadena+bytesRead);
+    while(bytesRead < in.size()){
+        header = (RPEP_HEADER*)(((byte*)in.data())+bytesRead);
         if(header->Size.bBlocks){
             //Si no hay datos suficientes salimos
-            if((in.size-bytesRead)<(MaxPaquetSize+sizeof(RPEP_HEADER)))break;
+            if((in.size()-bytesRead)<(MaxPaquetSize+sizeof(RPEP_HEADER)))break;
             ///////////////////////////////////////////////////////
             //mensages de depuracion
             DebufPrintf("procesPkg \n");
             DebufPrintf("header \n\tbBlocks %x\n\tOperation %x\n",(uint)header->Size.bBlocks,(uint)header->opType.Operation);
             /////////////////////////////////////////////////////////
             //Voy acumulando los datos hasta tener suficientes
-            if(workBuff.size){
-                workBuff.addData(in.cadena,MaxPaquetSize+sizeof(RPEP_HEADER));
+            if(workBuff.size()){
+                workBuff.addData(in.data(),MaxPaquetSize+sizeof(RPEP_HEADER));
             }else{
                 workBuff.addData(header->Data,MaxPaquetSize);
-                header = (RPEP_HEADER*)workBuff.data;
+                header = (RPEP_HEADER*)workBuff.data();
 
-                if(workBuff.size >= (header->Size.Blocks*MaxPaquetSize+sizeof(RPEP_HEADER))){
+                if(workBuff.size() >= (header->Size.Blocks*MaxPaquetSize+sizeof(RPEP_HEADER))){
                     //Proceso el comando
                     ulong dataSize = decript((byte*)header->Data,header->Size.Blocks*MaxPaquetSize);
                     if(dataSize != (uint)-1){
                         procesCMD(header->opType,header->Data,dataSize,out);
                         DebufPrintf("[pm] procesPkg workBuff.Vaciar() antes\n");
-                        workBuff.Vaciar();
+                        workBuff.clear();
                         DebufPrintf("[pm] procesPkg workBuff.Vaciar() despues\n");
                     }
                 }
@@ -207,9 +210,9 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
             bytesRead += MaxPaquetSize+sizeof(RPEP_HEADER);
         }else{
             //Si no hay datos suficientes salimos
-            if((in.size-bytesRead)<header->Size.Bytes)break;
+            if((in.size()-bytesRead)<header->Size.Bytes)break;
             //Compruevo que lo recibido sea acorde con lo esperado
-            if(header->Size.Bytes > in.size){
+            if(header->Size.Bytes > in.size()){
                 bytesRead = -1;
                 break;
             }
@@ -229,10 +232,10 @@ bool RPEP::procesPkg(DArray& in, DArray& out, DArray &workBuff){
         }
     }
     //limpio el buffer
-    if(in.size <= bytesRead){
-        in.Vaciar();
+    if(in.size() <= bytesRead){
+        in.clear();
     }else{
-        in.DelData(0,bytesRead);
+        in.remove(0,bytesRead);
     }
     DebufPrintf("[pm] procesPkg end\n");
     return result;
@@ -356,12 +359,12 @@ void RPEP::setPort(ushort *Port, ulong count){
 
 
 bool RPEP::encript(DArray &data){
-    if(data.size){
+    if(data.size()){
         //Coloco el paddingpo
-        int buffSize = ((data.size>>4)+1)<<4;
+        int buffSize = ((data.size()>>4)+1)<<4;
         data.Expand(buffSize);
 
-        return CryptEncrypt(hKey,0,true,0,data.data,&data.size,buffSize) != 0;
+        return CryptEncrypt(hKey,0,true,0,(byte*)data.data(),&data.rSize(),buffSize) != 0;
     }
     return false;
 }
@@ -389,18 +392,18 @@ int RPEP::recv(char *data, uint size){
     int recvedData = 0;
 
     while(!recvedData){
-        ioctlsocket(hConexion,FIONREAD,(ulong*)&recvedData);
-        DebufPrintf("[pm] recvedData %x\n",recvedData);
+        m_ioctlsocket(hConexion,FIONREAD,(ulong*)&recvedData);
+        //DebufPrintf("[pm] recvedData %x\n",recvedData);
 
         if(recvedData > 0){
             DebufPrintf("[pm] recv readData\n");
-            recvedData = ::recv(hConexion,data,size,0);
+            recvedData = m_recv(hConexion,data,size,0);
         }else{
-            DebufPrintf("[pm] recv no data\n");
-            recvedData = ::recv(hConexion,0,0,MSG_PEEK);
+            //DebufPrintf("[pm] recv no data\n");
+            recvedData = m_recv(hConexion,0,0,MSG_PEEK);
             if(recvedData == -1){
-                DebufPrintf("[pm] recv WSAGetLastError\n");
-                ulong error = WSAGetLastError();
+                //DebufPrintf("[pm] recv WSAGetLastError\n");
+                ulong error = m_WSAGetLastError();
                 switch(error){
                     case WSAEWOULDBLOCK:
                         recvedData = 0;

