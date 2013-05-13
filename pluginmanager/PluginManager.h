@@ -28,7 +28,7 @@ class PluginManager{
         PluginManager();
         ~PluginManager();
 
-        bool loadPlugin(RPEP_LOAD_PLUGIN *pluginModule);
+        bool loadPlugin(RPEP_LOAD_PLUGIN *pluginModule,DArray& response);
         bool unload(ushort ID);
         bool initPlugin();
         bool stopPlugin();

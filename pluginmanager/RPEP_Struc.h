@@ -103,7 +103,10 @@ usa tamaño por bloques, este campo es obligatorio */
     /* Mensaje de error*/
     typedef struct _RPEP_ERROR
     {
-        ushort Level;
+		typedef enum level{info,warning,fatal}level;
+		level Level;
+		
+		_RPEP_HEADER::Operation Operation;
         ushort Code;
         ulong SourceID;
         ulong ExtendSize;

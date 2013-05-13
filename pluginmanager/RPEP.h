@@ -59,7 +59,6 @@ class RPEP{
         //Generan paquetes determinados
         uint MakeServerHello(DArray& outBuff);
         uint MakeClienHello(DArray& outBuff,ushort ver,ulong MaxPaquetSize,ulong CompresAlg,ulong PortCount = 1, ushort* Port = 0);
-        uint MakeError(DArray &outBuff, uint code);
 
         bool procesPkg(DArray& in, DArray& out, DArray& workBuff);
         bool procesCMD(RPEP_HEADER::OperationType opType, char* data, uint size, DArray &response);
@@ -77,6 +76,9 @@ class RPEP{
         //Manda los datos al otro extremo
         int send(const void *data, uint size);
         int recv(char *data, uint size);
+		
+		uint MakeError(DArray &outBuff,_RPEP_HEADER::Operation Operation,uint code
+			,_RPEP_ERROR::level Level = _RPEP_ERROR::level::info,void* extra = NULL,int size = 0);
     protected:
     private:
 };

