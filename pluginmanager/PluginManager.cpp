@@ -32,7 +32,7 @@ class PluginManagerInterfacePrivate :public pluginManagerInterface{
 
 PluginManager::PluginManager(){
     if(!pluginList)
-		pluginList = new ArrayList<PluginManagerInterfacePrivate*>();
+        pluginList = new ArrayList<PluginManagerInterfacePrivate*>();
 }
 
 PluginManager::~PluginManager(){
@@ -135,7 +135,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule,DArray& response){
     ulong loadResult;
     PluginManagerInterfacePrivate* pluginPrivate;
     bool result = false;
-	uint loatedPluginID = -1;
+    uint loatedPluginID = -1;
 
 
     if(!isPluginLoad((ushort)pluginModule->PluginID)){
@@ -152,8 +152,8 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule,DArray& response){
             getInterface = (pgetInterface)GPA_WRAPPER(newPlugin->Module.ModuleBase,"getInterface");
             if(getInterface && (newPlugin->plugInterface = getInterface())){
                 DebufPrintf("[pm] getInterface \n");
-                newPlugin->ID = pluginModule->PluginID;
-				DebufPrintf("[pm new plugin: id=%i\n]",newPlugin->ID);
+                loatedPluginID = newPlugin->ID = pluginModule->PluginID;
+                DebufPrintf("[pm new plugin: id=%i\n]",newPlugin->ID);
                 pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
                 //pluginList = pluginPrivate;
                 pluginList->add(pluginPrivate);
@@ -169,7 +169,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule,DArray& response){
             }
         }
     }else DebufPrintf("ya cargado");
-	protocol->MakeError(response,RPEP_HEADER::Operation::LoadPlugin,result?ERROR_SUCCESS:-1,RPEP_ERROR::level::info,&loatedPluginID,sizeof(loatedPluginID));
+    protocol->MakeError(response,RPEP_HEADER::Operation::LoadPlugin,result?ERROR_SUCCESS:-1,RPEP_ERROR::level::info,&loatedPluginID,sizeof(loatedPluginID));
 
     DebufPrintf("[pm]Cargado plugin: %s\n",result?"true":"false");
     return result;
@@ -183,9 +183,9 @@ plugin* PluginManager::getPluginById(ulong id){
                 result = (*pluginList)[i]->getPlugInformation();
                 break;
             }
-		}
-		DebufPrintf("getPluginById( %i ) = %x, list count %i\n",id,result,pluginList->size());
-	}
+        }
+        DebufPrintf("getPluginById( %i ) = %x, list count %i\n",id,result,pluginList->size());
+    }
     return result;
 }
 
