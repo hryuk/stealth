@@ -1,4 +1,4 @@
-#include "stealth.h"
+﻿#include "stealth.h"
 #include "ui_stealth.h"
 
 #include "crypto.h"
@@ -13,14 +13,9 @@ Stealth::Stealth(QWidget *parent) : QMainWindow(parent),
     /* En windows omprobamos que las dlls que necesitamos están en su sitio */
     QDir dir=QDir::currentPath();
     QFile file;
-    if(!file.exists(dir.filePath("ssleay32.dll"))) qFatal("No se encontró \"ssleay32.dll\"");
-    else qDebug()<<"Cargada ssleay32.dll";
 
     if(!file.exists(dir.filePath("qca2.dll"))) qFatal("No se encontró \"qca2.dll\"");
     else qDebug()<<"Cargada qca2.dll";
-
-    if(!file.exists(dir.filePath("libeay32.dll"))) qFatal("No se encontró \"libeay32.dll\"");
-    else qDebug()<<"Cargada libeay32.dll";
 
     if(!dir.cd("crypto")) qFatal("No se encontró \"/crypto\"");
     else

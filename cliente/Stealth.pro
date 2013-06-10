@@ -1,5 +1,4 @@
-﻿QT+=core gui crypto
-QT+=network
+QT+=core gui network
 
 #Para deshabilitar los mensajes de debug
 #CONFIG(release, debug|release):DEFINES += QT_NO_DEBUG_OUTPUT
@@ -76,7 +75,7 @@ INCLUDEPATH += $$quote(gui)
 INCLUDEPATH += $$quote(plugins)
 
 win32 {
-    LIBS += -L$$quote(qca-2.0.3/lib) -lqca2
+    LIBS += -L$$quote($$_PRO_FILE_PWD_/qca-2.0.3/lib) -lqca2
 }
 unix {
     LIBS += -L$$quote(qca-2.0.3/lib) -lqca

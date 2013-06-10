@@ -5,7 +5,6 @@
 #include "qterminal.h"
 
 #include <QWidget>
-#include <QMessageBox>
 #include <QFile>
 #include <QDebug>
 #include <QTextCodec>
