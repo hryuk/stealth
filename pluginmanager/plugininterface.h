@@ -18,6 +18,8 @@ class PluginInterface{
         virtual const char* getPluginName() = 0;
         virtual int onReciveData(char* data,uint size) = 0;
         virtual void setPluginManager(pluginManagerInterface* mgr) = 0;
+        virtual void run() = 0;
+        static void CALLBACK startThread(PluginInterface* i);
 };
 
 typedef PluginInterface* (*pgetInterface)();
