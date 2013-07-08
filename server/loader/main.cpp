@@ -210,7 +210,7 @@ BOOL BuildImportTable(PSHELLCODE_CONTEXT pSCC, PMEMORYMODULE module){
 			while(*thunkRef){
 				if IMAGE_SNAP_BY_ORDINAL(*thunkRef){
                     //Si se trata de un ordinal
-					*funcRef = (DWORD)pSCC->GetProcAddressA_(handle, (LPCSTR)IMAGE_ORDINAL(*thunkRef));
+					*funcRef = (DWORD)pSCC->GetProcAddressA_(handle, (LPCSTR)*thunkRef);
                 }else{
                     //Si no es un ordinal cargamos por nombre
 					PIMAGE_IMPORT_BY_NAME thunkData = (PIMAGE_IMPORT_BY_NAME)(codeBase + *thunkRef);

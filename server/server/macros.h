@@ -27,7 +27,7 @@
 **    Incluye código para mostrar mensajes por consola
 *###############################################################################*/
 #define DEBUG
-//#undef DEBUG
+#undef DEBUG
 
 #ifdef DEBUG
 DEFINE_PYSRC(
@@ -118,7 +118,7 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 #define SC_DELTA
 #define SC_NULL
 #undef SC_NULL
-#undef SC_DELTA
+//#undef SC_DELTA
 
 #pragma message("[i] COMPILANDO CON LAS SIGUIENTES FLAGS ACTIVADAS:")
 
