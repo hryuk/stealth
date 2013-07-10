@@ -131,7 +131,7 @@ kernel32_symbol_hashes:
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    7
-        API_DEFINE("WSASocketA")
+        API_DEFINE("socket")
         API_DEFINE("connect")
         API_DEFINE("WSAStartup")
         API_DEFINE("closesocket")
@@ -680,14 +680,11 @@ newSocket:
         //Creamos el socket AF_INET y SOCK_STREAM
         xor  edx, edx                   //EDX = 0
         push edx                        //v
-        push edx                        //v
-        push edx                        //v
-        push edx                        //v
         inc  edx                        //v EDX = 1 (SOCK_STREAM)
         push edx                        //v
         inc  edx                        //v EDX = 2 (AF_INET)
         push edx                        //v
-        call [ebp+_WSASocketA]          //>WSASocketA(AF_INET, SOCK_STREAM, 0, 0, 0, 0);
+        call [ebp+_socket]				//>socket(AF_INET, SOCK_STREAM, 0);
         mov  [ebp+_hSocket], eax        //hSocket = EAX
 
         DEBUG_MSG("sNEWSOCKT", ["eax"])
