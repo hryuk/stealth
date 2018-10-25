@@ -163,11 +163,17 @@ uint RPEP::MakeServerHello(DArray& outBuff){
     free(buff);
     return outBuff.size();
 }
-uint RPEP::MakeError(DArray& outBuff,uint code){
+uint RPEP::MakeError(DArray &outBuff,_RPEP_HEADER::Operation operation,uint code
+			,_RPEP_ERROR::level Level,void* extra,int size){
+	DArray data;
     RPEP_ERROR error;
 
-    ZeroMemory(&error,sizeof(error));
     error.Code = code;
+	error.Level = Level;
+	error.Operation = operation;
+	error.ExtendSize = size;
+	data.addData(&error,sizeof(error));
+	if(size)data.addData(extra,size);
 
     return MakePacket(outBuff,RPEP_HEADER::Operation::Error,&error,sizeof(error));
 }
@@ -272,7 +278,7 @@ bool RPEP::procesCMD(RPEP_HEADER::OperationType opType, char* data,uint size,DAr
             //
             case RPEP_HEADER::Operation::LoadPlugin:
                 DebufPrintf("LoadPlugin \n");
-                result = PlugMgr->loadPlugin((RPEP_LOAD_PLUGIN*)data);
+                result = PlugMgr->loadPlugin((RPEP_LOAD_PLUGIN*)data,response);
                 break;
             case RPEP_HEADER::Operation::CancelPluginLoad:
                 DebufPrintf("CancelPluginLoad \n");
@@ -336,7 +342,7 @@ bool RPEP::processClientHello(RPEP_CLIENT_HANDSHAKE *clientHello,DArray& respons
 
            error = 0;
        }
-       MakeError(response,error);
+	   MakeError(response,RPEP_HEADER::Operation::ClientHandshake,error);
     }
     return result;
 }

