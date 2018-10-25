@@ -7,9 +7,9 @@ StealthTab4::StealthTab4(QWidget *parent) :
 {
     ui->setupUi(this);
 
-    ui->treeWidget->header()->setResizeMode(0,QHeaderView::Stretch);
-    ui->treeWidget->header()->setResizeMode(1,QHeaderView::Stretch);
-    ui->treeWidget->header()->setResizeMode(2,QHeaderView::Stretch);
+    ui->treeWidget->header()->setSectionResizeMode(0,QHeaderView::Stretch);
+    ui->treeWidget->header()->setSectionResizeMode(1,QHeaderView::Stretch);
+    ui->treeWidget->header()->setSectionResizeMode(2,QHeaderView::Stretch);
 }
 
 StealthTab4::~StealthTab4()

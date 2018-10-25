@@ -28,6 +28,13 @@
 
 class MessageManager;
 class ConnectionManager;
+class PluginManager;
+class PluginWindow;
+class StealthTab1;
+class StealthTab2;
+class StealthTab3;
+class StealthTab4;
+class SlidingStackedWidget;
 
 namespace Ui {
     class Stealth;

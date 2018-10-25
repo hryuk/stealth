@@ -1,4 +1,4 @@
-﻿#include <QtGui/QApplication>
+﻿#include <QtWidgets/QApplication>
 #include "stealth.h"
 
 #ifdef _MSC_VER
@@ -7,23 +7,27 @@
 #endif
 
 /* Todos los qDebug, qWarning, qCritical y qFatal van a parar aquí */
-void mMsgOut(QtMsgType type, const char *msg)
+void mMsgOut(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
     FILE* hFile=fopen("debug_log.txt","a+");
+    QByteArray localMsg = msg.toLocal8Bit();
 
     switch (type)
     {
         case QtDebugMsg:
-            fprintf(hFile, "Debug: %s\n",msg);
+            fprintf(hFile, "Debug: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
+            break;
+        case QtInfoMsg:
+            fprintf(hFile, "Info: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
             break;
         case QtWarningMsg:
-            fprintf(hFile, "Warning: %s\n",msg);
+            fprintf(hFile, "Warning: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
             break;
         case QtCriticalMsg:
-            fprintf(hFile, "Critical: %s\n",msg);
+            fprintf(hFile, "Critical: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
             break;
         case QtFatalMsg:
-            fprintf(hFile, "Fatal: %s\n",msg);
+            fprintf(hFile, "Fatal: %s (%s:%u, %s)\n", localMsg.constData(), context.file, context.line, context.function);
             fclose(hFile);
             abort();
     }
@@ -40,12 +44,9 @@ int main(int argc, char *argv[])
     remove("debug_log.txt");
 
     /* Indicamos la función que manejará los qDebug, QWarning, etc */
-    qInstallMsgHandler(mMsgOut);
+    qInstallMessageHandler(mMsgOut);
 
     QApplication a(argc, argv);
-    QTextCodec* codec=QTextCodec::codecForName("UTF-8");
-    QTextCodec::setCodecForLocale(codec);
-    QTextCodec::setCodecForCStrings(codec);
     Stealth w;
     w.show();
 

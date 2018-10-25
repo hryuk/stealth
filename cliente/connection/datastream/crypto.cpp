@@ -14,7 +14,7 @@ QByteArray Crypto::sha1(QByteArray data)
 
 QByteArray Crypto::sha1(QString data)
 {
-    return sha1(data.toAscii());
+    return sha1(data.toLatin1());
 }
 
 QByteArray Crypto::FNV1a(QByteArray data)

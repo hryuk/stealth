@@ -1,4 +1,4 @@
-#include "SlidingStackedWidget.h"
+#include "slidingstackedwidget.h"
 
 
 SlidingStackedWidget::SlidingStackedWidget(QWidget *parent)

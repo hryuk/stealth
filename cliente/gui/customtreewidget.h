@@ -1,7 +1,7 @@
 #ifndef CUSTOMTREEWIDGET_H
 #define CUSTOMTREEWIDGET_H
 
-#include <QtGui/QTreeWidget>
+#include <QtWidgets/QTreeWidget>
 
 class CustomTreeWidget : public QTreeWidget
 {
